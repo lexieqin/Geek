@@ -19,7 +19,7 @@ func NewK8sConfig() *K8sConfig {
 
 // 初始化k8s配置
 func (k *K8sConfig) InitRestConfig() *K8sConfig {
-	config, _ := clientcmd.BuildConfigFromFlags("", "C:\\Users\\xingyy\\.kube\\config")
+	config, _ := clientcmd.BuildConfigFromFlags("", "/Users/qinqin/.kube/config")
 	k.Config = config
 
 	return k

@@ -2,10 +2,8 @@ package ai
 
 import (
 	"context"
-	"log"
-	"os"
-
 	openai "github.com/sashabaranov/go-openai"
+	"log"
 )
 
 var MessageStore ChatMessages
@@ -17,7 +15,7 @@ func init() {
 }
 
 func NewOpenAiClient() *openai.Client {
-	token := os.Getenv("DashScope")
+	token := "sk-07d4040e83824cea8df0da757f10844f"
 	dashscope_url := "https://dashscope.aliyuncs.com/compatible-mode/v1"
 	config := openai.DefaultConfig(token)
 	config.BaseURL = dashscope_url
@@ -44,7 +42,7 @@ func Chat(message []openai.ChatCompletionMessage) openai.ChatCompletionMessage {
 func ToolsChat(message []openai.ChatCompletionMessage, tools []openai.Tool) openai.ChatCompletionMessage {
 	c := NewOpenAiClient()
 	rsp, err := c.CreateChatCompletion(context.TODO(), openai.ChatCompletionRequest{
-		Model:      "qwen-turbo",
+		Model:      "qwen-plus",
 		Messages:   message,
 		Tools:      tools,
 		ToolChoice: "auto",

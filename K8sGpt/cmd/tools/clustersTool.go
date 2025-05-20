@@ -4,21 +4,21 @@ import (
 	"github.com/xingyunyang01/K8sGpt/cmd/utils"
 )
 
-// ListTool 表示一个工具，用于列出 k8s 资源命令。
+// ClusterTool represents a tool for listing k8s cluster commands.
 type ClusterTool struct {
 	Name        string
 	Description string
 }
 
-// NewListTool 创建一个新的 ListTool 实例。
+// NewClusterTool creates a new ClusterTool instance.
 func NewClusterTool() *ClusterTool {
 	return &ClusterTool{
 		Name:        "ClusterTool",
-		Description: "用于列出集群列表",
+		Description: "Used to list cluster information",
 	}
 }
 
-// Run 执行命令并返回输出。
+// Run executes the command and returns the output.
 func (l *ClusterTool) Run() (string, error) {
 
 	url := "http://localhost:8081/clusters"

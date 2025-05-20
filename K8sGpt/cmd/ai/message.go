@@ -3,7 +3,6 @@ package ai
 import (
 	"context"
 	"log"
-	"os"
 
 	openai "github.com/sashabaranov/go-openai"
 )
@@ -12,12 +11,11 @@ var MessageStore ChatMessages
 
 func init() {
 	MessageStore = make(ChatMessages, 0)
-	MessageStore.Clear() //清理和初始化
-
+	MessageStore.Clear() // Clean and initialize
 }
 
 func NewOpenAiClient() *openai.Client {
-	token := os.Getenv("DashScope")
+	token := "sk-07d4040e83824cea8df0da757f10844f"
 	dashscope_url := "https://dashscope.aliyuncs.com/compatible-mode/v1"
 
 	config := openai.DefaultConfig(token)
@@ -26,7 +24,7 @@ func NewOpenAiClient() *openai.Client {
 	return openai.NewClientWithConfig(config)
 }
 
-// chat对话
+// NormalChat handles the chat conversation
 func NormalChat(message []openai.ChatCompletionMessage) openai.ChatCompletionMessage {
 	c := NewOpenAiClient()
 	rsp, err := c.CreateChatCompletion(context.TODO(), openai.ChatCompletionRequest{
@@ -41,13 +39,13 @@ func NormalChat(message []openai.ChatCompletionMessage) openai.ChatCompletionMes
 	return rsp.Choices[0].Message
 }
 
-// 定义chat模型
+// Define chat model
 type ChatMessages []*ChatMessage
 type ChatMessage struct {
 	Msg openai.ChatCompletionMessage
 }
 
-// 枚举出角色
+// Define roles
 const (
 	RoleUser      = "user"
 	RoleAssistant = "assistant"
@@ -55,13 +53,13 @@ const (
 	RoleTool      = "tool"
 )
 
-// 定义人设
+// Define personality
 func (cm *ChatMessages) Clear() {
-	*cm = make([]*ChatMessage, 0) //重新初始化
+	*cm = make([]*ChatMessage, 0) // Reinitialize
 	cm.AddForSystem("You are a helpful k8s assistant!")
 }
 
-// 添加角色和对应的prompt
+// Add role and corresponding prompt
 func (cm *ChatMessages) AddFor(msg string, role string) {
 	*cm = append(*cm, &ChatMessage{
 		Msg: openai.ChatCompletionMessage{
@@ -71,22 +69,22 @@ func (cm *ChatMessages) AddFor(msg string, role string) {
 	})
 }
 
-// 添加System角色的prompt
+// Add System role prompt
 func (cm *ChatMessages) AddForSystem(msg string) {
 	cm.AddFor(msg, RoleSystem)
 }
 
-// 添加User角色的prompt
+// Add User role prompt
 func (cm *ChatMessages) AddForUser(msg string) {
 	cm.AddFor(msg, RoleUser)
 }
 
-// 添加Assistant角色的prompt
+// Add Assistant role prompt
 func (cm *ChatMessages) AddForAssistant(msg string) {
 	cm.AddFor(msg, RoleAssistant)
 }
 
-// 组装prompt
+// Assemble prompt
 func (cm *ChatMessages) ToMessage() []openai.ChatCompletionMessage {
 	ret := make([]openai.ChatCompletionMessage, len(*cm))
 	for index, c := range *cm {
@@ -95,10 +93,10 @@ func (cm *ChatMessages) ToMessage() []openai.ChatCompletionMessage {
 	return ret
 }
 
-// 得到返回的消息
+// Get the last message
 func (cm *ChatMessages) GetLast() string {
 	if len(*cm) == 0 {
-		return "什么都没找到"
+		return "Nothing found"
 	}
 
 	return (*cm)[len(*cm)-1].Msg.Content

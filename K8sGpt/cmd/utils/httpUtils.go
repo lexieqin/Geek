@@ -6,16 +6,16 @@ import (
 	"net/http"
 )
 
-// getHTTP 执行一个GET HTTP请求到指定的URL，并打印响应体。
+// GetHTTP executes a GET HTTP request to the specified URL and returns the response body.
 func GetHTTP(url string) (string, error) {
-	// 创建HTTP GET请求
+	// Create HTTP GET request
 	resp, err := http.Get(url)
 	if err != nil {
 		return "", err
 	}
 	defer resp.Body.Close()
 
-	// 读取响应体
+	// Read response body
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return "", err
@@ -25,14 +25,14 @@ func GetHTTP(url string) (string, error) {
 }
 
 func PostHTTP(url string, body []byte) (string, error) {
-	// 创建HTTP POST请求
+	// Create HTTP POST request
 	resp, err := http.Post(url, "application/json", bytes.NewBuffer(body))
 	if err != nil {
 		return "", err
 	}
 	defer resp.Body.Close()
 
-	// 读取响应体
+	// Read response body
 	respBody, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return "", err
@@ -41,9 +41,9 @@ func PostHTTP(url string, body []byte) (string, error) {
 	return string(respBody), nil
 }
 
-// DeleteHTTP 执行一个DELETE HTTP请求到指定的URL，并打印响应体。
+// DeleteHTTP executes a DELETE HTTP request to the specified URL and returns the response body.
 func DeleteHTTP(url string) (string, error) {
-	// 创建HTTP DELETE请求
+	// Create HTTP DELETE request
 	req, err := http.NewRequest("DELETE", url, nil)
 	if err != nil {
 		return "", err
@@ -56,7 +56,7 @@ func DeleteHTTP(url string) (string, error) {
 	}
 	defer resp.Body.Close()
 
-	// 读取响应体
+	// Read response body
 	respBody, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return "", err

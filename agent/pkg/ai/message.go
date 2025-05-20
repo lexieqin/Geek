@@ -2,10 +2,8 @@ package ai
 
 import (
 	"context"
-	"log"
-	"os"
-
 	openai "github.com/sashabaranov/go-openai"
+	"log"
 )
 
 var MessageStore ChatMessages
@@ -17,7 +15,7 @@ func init() {
 }
 
 func NewOpenAiClient() *openai.Client {
-	token := os.Getenv("DashScope")
+	token := "sk-07d4040e83824cea8df0da757f10844f"
 	dashscope_url := "https://dashscope.aliyuncs.com/compatible-mode/v1"
 	config := openai.DefaultConfig(token)
 	config.BaseURL = dashscope_url

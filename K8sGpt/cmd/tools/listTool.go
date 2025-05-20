@@ -1,6 +1,8 @@
 package tools
 
 import (
+	"encoding/json"
+	"fmt"
 	"strings"
 
 	"github.com/xingyunyang01/K8sGpt/cmd/utils"
@@ -9,31 +11,69 @@ import (
 type ListToolParam struct {
 	Resource  string `json:"resource"`
 	Namespace string `json:"namespace"`
+	Name      string `json:"name,omitempty"`
+	Type      string `json:"type,omitempty"`
 }
 
-// ListTool 表示一个工具，用于列出 k8s 资源命令。
+type APIResponse struct {
+	Data interface{} `json:"data"`
+	Meta interface{} `json:"meta,omitempty"`
+}
+
+// ListTool represents a tool for listing k8s resource commands.
 type ListTool struct {
 	Name        string
 	Description string
 	ArgsSchema  string
 }
 
-// NewListTool 创建一个新的 ListTool 实例。
+// NewListTool creates a new ListTool instance.
 func NewListTool() *ListTool {
 	return &ListTool{
 		Name:        "ListTool",
-		Description: "用于列出指定命名空间的指定 Kubernetes 资源列表，例如 pod列表等等",
-		ArgsSchema:  `{"type":"object","properties":{"resource":{"type":"string", "description": "指定的 k8s 资源类型，例如 pod, service等等"}, "namespace":{"type":"string", "description": "指定的 k8s 命名空间"}}`,
+		Description: "Used to list and get details of Kubernetes resources. Can list all resources of a type in a namespace, get specific resource details, or filter resources by type.",
+		ArgsSchema:  `{"type":"object","properties":{"resource":{"type":"string", "description": "Specified k8s resource type, e.g. pod, service, etc."}, "namespace":{"type":"string", "description": "Specified k8s namespace"}, "name":{"type":"string", "description": "Optional: Name of specific resource to get details for"}, "type":{"type":"string", "description": "Optional: Filter resources by type"}}}`,
 	}
 }
 
-// Run 执行命令并返回输出。
-func (l *ListTool) Run(resource string, ns string) (string, error) {
+// Run executes the command and returns the output.
+func (l *ListTool) Run(resource string, ns string, name string, resourceType string) (string, error) {
 	resource = strings.ToLower(resource)
+	var url string
 
-	url := "http://localhost:8080/" + resource + "?ns=" + ns
+	if name != "" {
+		// Get specific resource details
+		url = fmt.Sprintf("http://localhost:8080/%s?ns=%s&name=%s", resource, ns, name)
+	} else if resourceType != "" {
+		// Filter resources by type
+		url = fmt.Sprintf("http://localhost:8080/get/resource?resource=%s&type=%s", resource, resourceType)
+	} else {
+		// List all resources
+		if resource == "pod" || resource == "pods" {
+			// Use the namespace-specific endpoint for pods
+			url = fmt.Sprintf("http://localhost:8080/namespaces/%s/pods", ns)
+		} else {
+			// Use the generic resource endpoint for other resources
+			url = fmt.Sprintf("http://localhost:8080/%s?ns=%s", resource, ns)
+		}
+	}
 
-	s, err := utils.GetHTTP(url)
+	response, err := utils.GetHTTP(url)
+	if err != nil {
+		return "", fmt.Errorf("failed to get resource: %v", err)
+	}
 
-	return s, err
+	// Parse the API response
+	var apiResp APIResponse
+	if err := json.Unmarshal([]byte(response), &apiResp); err != nil {
+		return "", fmt.Errorf("failed to parse API response: %v", err)
+	}
+
+	// Convert the data to a readable string
+	data, err := json.MarshalIndent(apiResp.Data, "", "  ")
+	if err != nil {
+		return "", fmt.Errorf("failed to format response data: %v", err)
+	}
+
+	return string(data), nil
 }

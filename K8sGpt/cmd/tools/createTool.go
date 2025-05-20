@@ -15,30 +15,30 @@ type CreateToolParam struct {
 	Resource string `json:"resource"`
 }
 
-// 定义结构体来解析 JSON 响应
+// Define struct to parse JSON response
 type response struct {
 	Data string `json:"data"`
 }
 
-// CreateTool 表示一个工具，用于列出 k8s 资源命令。
+// CreateTool represents a tool for creating k8s resources.
 type CreateTool struct {
 	Name        string
 	Description string
 	ArgsSchema  string
 }
 
-// NewCreateTool 创建一个新的 CreateTool 实例。
+// NewCreateTool creates a new CreateTool instance.
 func NewCreateTool() *CreateTool {
 	return &CreateTool{
 		Name:        "CreateTool",
-		Description: "用于在指定命名空间创建指定 Kubernetes 资源，例如创建某 pod 等等",
-		ArgsSchema:  `{"type":"object","properties":{"prompt":{"type":"string", "description": "把用户提出的创建资源的prompt原样放在这，不要做任何改变"},"resource":{"type":"string", "description": "指定的 k8s 资源类型，例如 pod, service等等"}}}`,
+		Description: "Used to create specified Kubernetes resources in a given namespace, such as creating pods, services, etc.",
+		ArgsSchema:  `{"type":"object","properties":{"prompt":{"type":"string", "description": "Place the user's resource creation prompt here exactly as provided, without any modifications"},"resource":{"type":"string", "description": "Specified k8s resource type, e.g. pod, service, etc."}}}`,
 	}
 }
 
-// Run 执行命令并返回输出。
+// Run executes the command and returns the output.
 func (c *CreateTool) Run(prompt string, resource string) string {
-	//让大模型生成yaml
+	// Let the large model generate yaml
 	messages := make([]openai.ChatCompletionMessage, 2)
 
 	messages[0] = openai.ChatCompletionMessage{Role: "system", Content: promptTpl.SystemPrompt}
@@ -48,7 +48,7 @@ func (c *CreateTool) Run(prompt string, resource string) string {
 	fmt.Println("-----------------------")
 	fmt.Println(rsp.Content)
 
-	// 创建 JSON 对象 {"yaml":"xxx"}
+	// Create JSON object {"yaml":"xxx"}
 	body := map[string]string{"yaml": rsp.Content}
 	jsonBody, err := json.Marshal(body)
 	if err != nil {
@@ -62,7 +62,7 @@ func (c *CreateTool) Run(prompt string, resource string) string {
 	}
 
 	var response response
-	// 解析 JSON 响应
+	// Parse JSON response
 	err = json.Unmarshal([]byte(s), &response)
 	if err != nil {
 		return err.Error()

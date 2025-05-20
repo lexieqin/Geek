@@ -23,9 +23,22 @@ func main() {
 	r.GET("/:resource", resourceCtl.List())
 	r.DELETE("/:resource", resourceCtl.Delete())
 	r.POST("/:resource", resourceCtl.Create())
+	r.PUT("/:resource", resourceCtl.Update())
+	r.PATCH("/:resource", resourceCtl.Patch())
+	r.GET("/:resource/status", resourceCtl.GetStatus())
 	r.GET("/get/gvr", resourceCtl.GetGVR())
-	r.GET("/pods/logs", podLogCtl.GetLog())
-	r.GET("/pods/events", podLogCtl.GetEvent())
+	r.GET("/get/resource", resourceCtl.GetResource())
+	r.POST("/get/resource", resourceCtl.GetResourceByType())
+
+	// Handle pod logs and events
+	r.GET("/namespaces/:namespace/pods", podLogCtl.ListPods())
+	r.GET("/namespaces/:namespace/pods/:podName", podLogCtl.GetPod())
+	r.GET("/namespaces/:namespace/pods/:podName/logs", podLogCtl.GetLog())
+	r.GET("/namespaces/:namespace/pods/:podName/events", podLogCtl.GetEvent())
+
+	// Handle all pod logs and events
+	r.GET("/namespaces/:namespace/pods/logs", podLogCtl.GetLog())
+	r.GET("/namespaces/:namespace/pods/events", podLogCtl.GetEvent())
 
 	r.Run(":8080")
 }

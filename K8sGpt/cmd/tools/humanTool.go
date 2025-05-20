@@ -6,23 +6,23 @@ type HumanToolParam struct {
 	Prompt string `json:"prompt"`
 }
 
-// HumanTool 表示一个工具，用于列出 k8s 资源命令。
+// HumanTool represents a tool for human interaction.
 type HumanTool struct {
 	Name        string
 	Description string
 	ArgsSchema  string
 }
 
-// NewDeleteTool 创建一个新的 HumanTool 实例。
+// NewHumanTool creates a new HumanTool instance.
 func NewHumanTool() *HumanTool {
 	return &HumanTool{
 		Name:        "HumanTool",
-		Description: "当你判断出要执行一些不可逆的危险操作时，比如删除动作，需要先用本工具向人类发起确认",
-		ArgsSchema:  `{"type":"object","properties":{"prompt":{"type":"string", "description": "你要向人类寻求帮助的内容", "example": "请确认是否要删除 default 命名空间下的 foo-app pod"}}}`,
+		Description: "When you need to perform irreversible dangerous operations, such as deletion actions, use this tool to request human confirmation first",
+		ArgsSchema:  `{"type":"object","properties":{"prompt":{"type":"string", "description": "Content for which you need human assistance", "example": "Please confirm if you want to delete the foo-app pod in the default namespace"}}}`,
 	}
 }
 
-// Run 执行命令并返回输出。
+// Run executes the command and returns the output.
 func (d *HumanTool) Run(prompt string) string {
 	fmt.Print(prompt, " ")
 	var input string

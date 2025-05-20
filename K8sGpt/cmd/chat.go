@@ -31,9 +31,11 @@ to quickly create a Cobra application.`,
 		deleteTool := tools.NewDeleteTool()
 		humanTool := tools.NewHumanTool()
 		clustersTool := tools.NewClusterTool()
+		podTool := tools.NewPodTool()
+		resourceInfoTool := tools.NewResourceInfoTool()
 
 		scanner := bufio.NewScanner(cmd.InOrStdin())
-		fmt.Println("你好，我是k8s助手，请问有什么可以帮你？（输入 'exit' 退出程序）:")
+		fmt.Println("Hello, I am your K8s assistant. How can I help you? (Type 'exit' to quit):")
 		for {
 			fmt.Print("> ")
 			if !scanner.Scan() {
@@ -41,22 +43,22 @@ to quickly create a Cobra application.`,
 			}
 			input := scanner.Text()
 			if input == "exit" {
-				fmt.Println("再见！")
+				fmt.Println("Goodbye!")
 				return
 			}
 
-			prompt := buildPrompt(createTool, listTool, deleteTool, humanTool, clustersTool, input)
+			prompt := buildPrompt(createTool, listTool, deleteTool, humanTool, clustersTool, podTool, resourceInfoTool, input)
 			ai.MessageStore.AddForUser(prompt)
 			i := 1
 			for {
 				first_response := ai.NormalChat(ai.MessageStore.ToMessage())
-				fmt.Printf("========第%d轮回答========\n", i)
+				fmt.Printf("========Round %d Response========\n", i)
 				fmt.Println(first_response.Content)
 
 				regexPattern := regexp.MustCompile(`Final Answer:\s*(.*)`)
 				finalAnswer := regexPattern.FindStringSubmatch(first_response.Content)
 				if len(finalAnswer) > 1 {
-					fmt.Println("========最终 GPT 回复========")
+					fmt.Println("========Final GPT Response========")
 					fmt.Println(first_response.Content)
 					break
 				}
@@ -82,7 +84,7 @@ to quickly create a Cobra application.`,
 						var param tools.ListToolParam
 						_ = json.Unmarshal([]byte(actionInput[1]), &param)
 
-						output, _ := listTool.Run(param.Resource, param.Namespace)
+						output, _ := listTool.Run(param.Resource, param.Namespace, param.Name, param.Type)
 						Observation = fmt.Sprintf(Observation, output)
 					} else if action[1] == deleteTool.Name {
 						var param tools.DeleteToolParam
@@ -90,9 +92,9 @@ to quickly create a Cobra application.`,
 
 						err := deleteTool.Run(param.Resource, param.Name, param.Namespace)
 						if err != nil {
-							Observation = fmt.Sprintf(Observation, "删除失败")
+							Observation = fmt.Sprintf(Observation, "Deletion failed")
 						} else {
-							Observation = fmt.Sprintf(Observation, "删除成功")
+							Observation = fmt.Sprintf(Observation, "Deletion successful")
 						}
 					} else if action[1] == humanTool.Name {
 						var param tools.HumanToolParam
@@ -103,10 +105,30 @@ to quickly create a Cobra application.`,
 					} else if action[1] == clustersTool.Name {
 						output, _ := clustersTool.Run()
 						Observation = fmt.Sprintf(Observation, output)
+					} else if action[1] == podTool.Name {
+						var param tools.PodToolParam
+						_ = json.Unmarshal([]byte(actionInput[1]), &param)
+
+						output, err := podTool.Run(param)
+						if err != nil {
+							Observation = fmt.Sprintf(Observation, "Error: "+err.Error())
+						} else {
+							Observation = fmt.Sprintf(Observation, output)
+						}
+					} else if action[1] == resourceInfoTool.Name {
+						var param tools.ResourceInfoToolParam
+						_ = json.Unmarshal([]byte(actionInput[1]), &param)
+
+						output, err := resourceInfoTool.Run(param)
+						if err != nil {
+							Observation = fmt.Sprintf(Observation, "Error: "+err.Error())
+						} else {
+							Observation = fmt.Sprintf(Observation, output)
+						}
 					}
 
 					prompt = first_response.Content + Observation
-					fmt.Printf("========第%d轮的prompt========\n", i)
+					fmt.Printf("========Round %d Prompt========\n", i)
 					fmt.Println(prompt)
 					ai.MessageStore.AddForUser(prompt)
 				}
@@ -115,18 +137,20 @@ to quickly create a Cobra application.`,
 	},
 }
 
-func buildPrompt(createTool *tools.CreateTool, listTool *tools.ListTool, deleteTool *tools.DeleteTool, humanTool *tools.HumanTool, clustersTool *tools.ClusterTool, query string) string {
+func buildPrompt(createTool *tools.CreateTool, listTool *tools.ListTool, deleteTool *tools.DeleteTool, humanTool *tools.HumanTool, clustersTool *tools.ClusterTool, podTool *tools.PodTool, resourceInfoTool *tools.ResourceInfoTool, query string) string {
 	createToolDef := "Name: " + createTool.Name + "\nDescription: " + createTool.Description + "\nArgsSchema: " + createTool.ArgsSchema + "\n"
 	listToolDef := "Name: " + listTool.Name + "\nDescription: " + listTool.Description + "\nArgsSchema: " + listTool.ArgsSchema + "\n"
 	deleteToolDef := "Name: " + deleteTool.Name + "\nDescription: " + deleteTool.Description + "\nArgsSchema: " + deleteTool.ArgsSchema + "\n"
 	humanToolDef := "Name: " + humanTool.Name + "\nDescription: " + humanTool.Description + "\nArgsSchema: " + humanTool.ArgsSchema + "\n"
 	clusterToolDef := "Name: " + clustersTool.Name + "\nDescription: " + clustersTool.Description + "\n"
+	podToolDef := "Name: " + podTool.Name + "\nDescription: " + podTool.Description + "\nArgsSchema: " + podTool.ArgsSchema + "\n"
+	resourceInfoToolDef := "Name: " + resourceInfoTool.Name + "\nDescription: " + resourceInfoTool.Description + "\nArgsSchema: " + resourceInfoTool.ArgsSchema + "\n"
 
 	toolsList := make([]string, 0)
-	toolsList = append(toolsList, createToolDef, listToolDef, deleteToolDef, humanToolDef, clusterToolDef)
+	toolsList = append(toolsList, createToolDef, listToolDef, deleteToolDef, humanToolDef, clusterToolDef, podToolDef, resourceInfoToolDef)
 
 	tool_names := make([]string, 0)
-	tool_names = append(tool_names, createTool.Name, listTool.Name, deleteTool.Name, humanTool.Name, clustersTool.Name)
+	tool_names = append(tool_names, createTool.Name, listTool.Name, deleteTool.Name, humanTool.Name, clustersTool.Name, podTool.Name, resourceInfoTool.Name)
 
 	prompt := fmt.Sprintf(promptTpl.Template, toolsList, tool_names, "", query)
 

@@ -12,23 +12,23 @@ type DeleteToolParam struct {
 	Namespace string `json:"namespace"`
 }
 
-// DeleteTool 表示一个工具，用于列出 k8s 资源命令。
+// DeleteTool represents a tool for deleting k8s resources.
 type DeleteTool struct {
 	Name        string
 	Description string
 	ArgsSchema  string
 }
 
-// NewDeleteTool 创建一个新的 DeleteTool 实例。
+// NewDeleteTool creates a new DeleteTool instance.
 func NewDeleteTool() *DeleteTool {
 	return &DeleteTool{
 		Name:        "DeleteTool",
-		Description: "用于删除指定命名空间的指定 Kubernetes 资源，例如删除某 pod 等等",
-		ArgsSchema:  `{"type":"object","properties":{"resource":{"type":"string", "description": "指定的 k8s 资源类型，例如 pod, service等等"}, "name":{"type":"string", "description": "指定的某 k8s 资源实例的名称"}, "namespace":{"type":"string", "description": "指定的 k8s 资源所在命名空间"}}`,
+		Description: "Used to delete specified Kubernetes resources in a given namespace, such as deleting pods, services, etc.",
+		ArgsSchema:  `{"type":"object","properties":{"resource":{"type":"string", "description": "Specified k8s resource type, e.g. pod, service, etc."}, "name":{"type":"string", "description": "Name of the specified k8s resource instance"}, "namespace":{"type":"string", "description": "Namespace where the specified k8s resource is located"}}`,
 	}
 }
 
-// Run 执行命令并返回输出。
+// Run executes the command and returns the output.
 func (d *DeleteTool) Run(resource, name, ns string) error {
 	resource = strings.ToLower(resource)
 
