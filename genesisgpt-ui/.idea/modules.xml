@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/k8sgpt-ui.iml" filepath="$PROJECT_DIR$/.idea/k8sgpt-ui.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/genesisgpt-ui.iml" filepath="$PROJECT_DIR$/.idea/genesisgpt-ui.iml" />
     </modules>
   </component>
 </project>

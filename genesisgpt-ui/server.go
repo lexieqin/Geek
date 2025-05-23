@@ -10,9 +10,9 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/lexieqin/Geek/K8sGpt/cmd/ai"
-	"github.com/lexieqin/Geek/K8sGpt/cmd/promptTpl"
-	"github.com/lexieqin/Geek/K8sGpt/cmd/tools"
+	"github.com/lexieqin/Geek/GenesisGpt/cmd/ai"
+	"github.com/lexieqin/Geek/GenesisGpt/cmd/promptTpl"
+	"github.com/lexieqin/Geek/GenesisGpt/cmd/tools"
 )
 
 type QueryRequest struct {
@@ -234,7 +234,7 @@ func main() {
 		port = "3000"
 	}
 	
-	fmt.Printf("K8sGPT UI Server running on port %s\n", port)
+	fmt.Printf("GenesisGPT UI Server running on port %s\n", port)
 	fmt.Printf("Open http://localhost:%s in your browser\n", port)
 	
 	if err := http.ListenAndServe(":"+port, nil); err != nil {

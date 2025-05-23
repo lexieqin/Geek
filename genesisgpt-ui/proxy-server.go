@@ -19,10 +19,10 @@ type QueryResponse struct {
 }
 
 func main() {
-	// K8sGpt backend URL
-	k8sgptURL := os.Getenv("K8SGPT_URL")
-	if k8sgptURL == "" {
-		k8sgptURL = "http://localhost:8090"
+	// GenesisGpt backend URL
+	genesisgptURL := os.Getenv("GENESISGPT_URL")
+	if genesisgptURL == "" {
+		genesisgptURL = "http://localhost:8090"
 	}
 
 	// Serve the UI
@@ -30,7 +30,7 @@ func main() {
 		http.ServeFile(w, r, "index.html")
 	})
 
-	// Proxy API requests to K8sGpt
+	// Proxy API requests to GenesisGpt
 	http.HandleFunc("/api/query", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != "POST" {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -44,13 +44,13 @@ func main() {
 			return
 		}
 
-		// Forward to K8sGpt
-		resp, err := http.Post(k8sgptURL+"/query", "application/json", bytes.NewBuffer(body))
+		// Forward to GenesisGpt
+		resp, err := http.Post(genesisgptURL+"/query", "application/json", bytes.NewBuffer(body))
 		if err != nil {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusServiceUnavailable)
 			json.NewEncoder(w).Encode(map[string]string{
-				"error": "K8sGpt service unavailable: " + err.Error(),
+				"error": "GenesisGpt service unavailable: " + err.Error(),
 			})
 			return
 		}
@@ -67,6 +67,6 @@ func main() {
 		port = "3000"
 	}
 
-	fmt.Printf("K8sGPT UI running on http://localhost:%s\n", port)
+	fmt.Printf("GenesisGPT UI running on http://localhost:%s\n", port)
 	http.ListenAndServe(":"+port, nil)
 }
