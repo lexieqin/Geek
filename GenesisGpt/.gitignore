@@ -1,0 +1,19 @@
+# Binaries
+genesisgpt
+k8sgpt
+*.exe
+
+# Go build artifacts
+*.o
+*.a
+*.so
+
+# IDE
+.vscode/
+
+# Test artifacts
+*.test
+*.out
+
+# Dependencies
+/vendor/

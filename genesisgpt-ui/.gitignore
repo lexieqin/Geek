@@ -1,0 +1,12 @@
+# Binaries
+proxy-server
+ui-server
+*.exe
+
+# Go build artifacts
+*.o
+*.a
+*.so
+
+# IDE
+.vscode/
