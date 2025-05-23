@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"path/filepath"
 
 	"github.com/pkg/errors"
@@ -29,10 +30,24 @@ func NewK8sConfig() *K8sConfig {
 	return &K8sConfig{}
 }
 
-// 初始化k8s配置
+// 初始化k8s配置 - 优先使用 in-cluster config，失败则使用 kubeconfig
 func (k *K8sConfig) InitRestConfig(optfuncs ...K8sConfigOptionFunc) *K8sConfig {
-	kuebconfig := filepath.Join(homedir.HomeDir(), ".kube", "config")
-	config, _ := clientcmd.BuildConfigFromFlags("", kuebconfig)
+	// First try in-cluster config
+	config, err := rest.InClusterConfig()
+	if err != nil {
+		// If in-cluster fails, fall back to kubeconfig
+		fmt.Println("Not running in cluster, using kubeconfig")
+		kubeconfig := filepath.Join(homedir.HomeDir(), ".kube", "config")
+		config, err = clientcmd.BuildConfigFromFlags("", kubeconfig)
+		if err != nil {
+			k.e = errors.Wrap(err, "failed to initialize k8s config (both in-cluster and kubeconfig)")
+			return k
+		}
+		fmt.Printf("Using kubeconfig from: %s\n", kubeconfig)
+	} else {
+		fmt.Println("Running in cluster, using in-cluster config")
+	}
+	
 	k.Config = config
 	for _, optfunc := range optfuncs {
 		optfunc(k)

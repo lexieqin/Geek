@@ -1,264 +1,197 @@
-# Kubernetes API Gateway
+# ginTools - Kubernetes API Gateway
 
-A lightweight API gateway built with Go and Gin framework that provides a RESTful interface to interact with Kubernetes clusters. This project is designed to support AI agents and other tools in managing Kubernetes resources.
+A lightweight HTTP API gateway for Kubernetes operations, designed to provide RESTful endpoints for AI agents and other tools to interact with Kubernetes clusters.
+
+## Overview
+
+ginTools serves as a bridge between HTTP clients and the Kubernetes API, offering both generic resource management capabilities and specialized pod operations. Built with Go and the Gin web framework, it provides a clean REST API interface for Kubernetes resource manipulation.
 
 ## Features
 
-- Generic resource management (CRUD operations)
-- Pod logs and events retrieval
-- Dynamic resource type handling
-- RESTful API design following Kubernetes conventions
+- **Generic Resource Management**: Create, read, update, and delete any Kubernetes resource type
+- **Dynamic Resource Discovery**: Automatically discovers and handles all resource types in your cluster
+- **Pod Operations**: Specialized endpoints for pod logs and events
+- **JSON Patch Support**: Apply partial updates to resources using JSON Patch
+- **Namespace Support**: All operations are namespace-aware
+- **Clean REST API**: Intuitive HTTP endpoints following REST conventions
 
 ## Prerequisites
 
-- Go 1.22 or later
+- Go 1.19 or higher
 - Access to a Kubernetes cluster
-- Valid kubeconfig file (usually at `~/.kube/config`)
+- Valid kubeconfig file at `~/.kube/config`
 
 ## Installation
 
-1. Clone the repository:
 ```bash
-git clone https://github.com/lexieqin/Geek/tree/main/ginTools
-cd ginTools
+go build -o gintools main.go
 ```
 
-2. Install dependencies:
+## Usage
+
+Start the server:
+
 ```bash
-go mod tidy
+./gintools
 ```
 
-3. Run the server:
-```bash
-go run main.go
-```
+The server will start on port 8080 by default.
 
-The server will start on port 8080.
+## API Endpoints
 
-## API Documentation
+### Generic Resource Operations
 
-### Resource Management
+- **List Resources**
+  ```
+  GET /:resource?namespace=<namespace>
+  ```
 
-#### List Resources
-```http
-GET /:resource?ns=<namespace>
-```
-Lists all resources of the specified type in the given namespace.
+- **Create Resource**
+  ```
+  POST /:resource
+  Content-Type: application/x-yaml
+  Body: <YAML content>
+  ```
 
-Example:
-```bash
-# List all deployments in kube-system namespace
-curl http://localhost:8080/deployments?ns=kube-system
-```
+- **Update Resource**
+  ```
+  PUT /:resource?name=<name>&namespace=<namespace>
+  Content-Type: application/x-yaml
+  Body: <YAML content>
+  ```
 
-#### Get Resource Details
-```http
-GET /:resource?ns=<namespace>&name=<resource-name>
-```
-Gets details of a specific resource.
+- **Patch Resource**
+  ```
+  PATCH /:resource?name=<name>&namespace=<namespace>
+  Content-Type: application/json-patch+json
+  Body: <JSON Patch array>
+  ```
 
-Example:
-```bash
-# Get details of a specific deployment
-curl http://localhost:8080/deployments?ns=default&name=my-deployment
-```
+- **Delete Resource**
+  ```
+  DELETE /:resource?name=<name>&namespace=<namespace>
+  ```
 
-#### Create Resource
-```http
-POST /:resource
-Content-Type: application/json
+- **Get Resource Status**
+  ```
+  GET /:resource/status?name=<name>&namespace=<namespace>
+  ```
 
-{
-    "yaml": "<yaml-content>"
-}
-```
-Creates a new resource from YAML.
+### Resource Discovery
 
-Example:
+- **Get GroupVersionResource Info**
+  ```
+  GET /get/gvr?resource=<resource>
+  ```
+
+- **Get All Resources of a Type**
+  ```
+  GET /get/resource?resource=<resource>&namespace=<namespace>
+  ```
+
+- **Get Filtered Resources**
+  ```
+  POST /get/resource
+  Body: { "resource": "<resource>", "namespace": "<namespace>" }
+  ```
+
+### Pod-Specific Operations
+
+- **List Pods**
+  ```
+  GET /namespaces/:namespace/pods
+  ```
+
+- **Get Pod Details**
+  ```
+  GET /namespaces/:namespace/pods/:podName
+  ```
+
+- **Get Pod Logs**
+  ```
+  GET /namespaces/:namespace/pods/:podName/logs?container=<container>&previous=<bool>&tail=<lines>
+  ```
+
+- **Get Pod Events**
+  ```
+  GET /namespaces/:namespace/pods/:podName/events
+  ```
+
+## Example Usage
+
+### Create a Deployment
+
 ```bash
 curl -X POST http://localhost:8080/deployments \
-  -H "Content-Type: application/json" \
-  -d '{
-    "yaml": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: example-deployment\nspec:\n  replicas: 3\n  selector:\n    matchLabels:\n      app: nginx\n  template:\n    metadata:\n      labels:\n        app: nginx\n    spec:\n      containers:\n      - name: nginx\n        image: nginx:latest"
-  }'
+  -H "Content-Type: application/x-yaml" \
+  -d @deployment.yaml
 ```
 
-#### Update Resource
-```http
-PUT /:resource?ns=<namespace>&name=<resource-name>
-Content-Type: application/json
+### Get Pod Logs
 
-{
-    "yaml": "<yaml-content>"
-}
-```
-Updates an existing resource.
-
-Example:
 ```bash
-curl -X PUT http://localhost:8080/deployments?ns=default&name=example-deployment \
-  -H "Content-Type: application/json" \
-  -d '{
-    "yaml": "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: example-deployment\nspec:\n  replicas: 5\n  selector:\n    matchLabels:\n      app: nginx\n  template:\n    metadata:\n      labels:\n        app: nginx\n    spec:\n      containers:\n      - name: nginx\n        image: nginx:1.19"
-  }'
+curl http://localhost:8080/namespaces/default/pods/nginx-pod/logs?tail=100
 ```
 
-#### Patch Resource
-```http
-PATCH /:resource?ns=<namespace>&name=<resource-name>
-Content-Type: application/json
+### Apply JSON Patch
 
-{
-    "patch": "<json-patch>"
-}
-```
-Partially updates a resource using JSON patch.
-
-Example:
 ```bash
-curl -X PATCH http://localhost:8080/deployments?ns=default&name=example-deployment \
-  -H "Content-Type: application/json" \
-  -d '{
-    "patch": "[{\"op\": \"replace\", \"path\": \"/spec/replicas\", \"value\": 3}]"
-  }'
+curl -X PATCH http://localhost:8080/deployments?name=nginx&namespace=default \
+  -H "Content-Type: application/json-patch+json" \
+  -d '[{"op": "replace", "path": "/spec/replicas", "value": 3}]'
 ```
 
-#### Delete Resource
-```http
-DELETE /:resource?ns=<namespace>&name=<resource-name>
+## Architecture
+
 ```
-Deletes a resource.
-
-Example:
-```bash
-curl -X DELETE http://localhost:8080/deployments?ns=default&name=example-deployment
-```
-
-### Pod Operations
-
-#### List Pods
-```http
-GET /namespaces/:namespace/pods
-```
-Lists all pods in the specified namespace.
-
-Example:
-```bash
-# List all pods in kube-system namespace
-curl http://localhost:8080/namespaces/kube-system/pods
-
-# List all pods in default namespace
-curl http://localhost:8080/namespaces/default/pods
+├── main.go                 # Application entry point and route definitions
+├── pkg/
+│   ├── config/
+│   │   └── k8sconfig.go   # Kubernetes client configuration
+│   ├── controllers/
+│   │   ├── resourceCtl.go      # Generic resource controller
+│   │   └── podLogEventCtl.go   # Pod-specific operations controller
+│   └── services/
+│       ├── resourceService.go      # Generic resource business logic
+│       └── podLogEventService.go   # Pod operations business logic
 ```
 
-#### Get Pod Details
-```http
-GET /namespaces/:namespace/pods/:podName
-```
-Gets details of a specific pod.
+## Configuration
 
-Example:
-```bash
-curl http://localhost:8080/namespaces/default/pods/my-pod
-```
+The application uses the standard Kubernetes configuration from `~/.kube/config`. It supports both in-cluster and out-of-cluster configurations.
 
-#### Get Pod Logs
-```http
-GET /namespaces/:namespace/pods/:podName/logs?container=<container-name>&tail=<number-of-lines>
-```
-Gets logs for a specific pod.
+### Environment Variables
 
-Example:
-```bash
-# Get last 100 lines of logs
-curl http://localhost:8080/namespaces/default/pods/my-pod/logs
-
-# Get last 50 lines of logs from a specific container
-curl http://localhost:8080/namespaces/default/pods/my-pod/logs?container=nginx&tail=50
-```
-
-#### Get Pod Events
-```http
-GET /namespaces/:namespace/pods/:podName/events?type=<event-type>
-```
-Gets events related to a specific pod.
-
-Example:
-```bash
-# Get all events
-curl http://localhost:8080/namespaces/default/pods/my-pod/events
-
-# Get only warning events
-curl http://localhost:8080/namespaces/default/pods/my-pod/events?type=Warning
-```
-
-### Resource Type Information
-
-#### Get GVR (GroupVersionResource)
-```http
-GET /get/gvr?resource=<resource-type>
-```
-Gets the GroupVersionResource information for a resource type.
-
-Example:
-```bash
-curl http://localhost:8080/get/gvr?resource=pods
-```
-
-#### Get Resource List
-```http
-GET /get/resource?resource=<resource-type>
-```
-Gets a list of resources of the specified type.
-
-Example:
-```bash
-curl http://localhost:8080/get/resource?resource=pods
-```
-
-#### Get Resources by Type
-```http
-POST /get/resource?resource=<resource-type>&type=<type>
-```
-Gets resources filtered by type.
-
-Example:
-```bash
-curl -X POST http://localhost:8080/get/resource?resource=pods&type=app
-```
-
-## Response Format
-
-All API responses follow a consistent format:
-
-```json
-{
-    "data": <response-data>,
-    "meta": {
-        // Additional metadata
-    }
-}
-```
-
-For errors:
-```json
-{
-    "error": "Error message"
-}
-```
+- `KUBECONFIG`: Path to kubeconfig file (default: `~/.kube/config`)
+- `PORT`: Server port (default: 8080)
 
 ## Error Handling
 
-The API uses standard HTTP status codes:
-- 200: Success
-- 400: Bad Request
-- 404: Not Found
-- 500: Internal Server Error
+All endpoints return appropriate HTTP status codes:
+- `200 OK`: Successful operation
+- `201 Created`: Resource created successfully
+- `400 Bad Request`: Invalid request parameters
+- `404 Not Found`: Resource not found
+- `500 Internal Server Error`: Server-side error
 
-## Contributing
+Error responses include detailed messages in JSON format:
+```json
+{
+  "error": "error description"
+}
+```
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+## Integration with AI Agents
+
+ginTools is designed to work seamlessly with AI agents like K8sGpt, providing a simple HTTP interface that AI models can easily understand and use for Kubernetes operations.
+
+## Security Considerations
+
+- Ensure proper RBAC permissions for the service account
+- Consider implementing authentication/authorization middleware
+- Use TLS for production deployments
+- Validate all input parameters
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details. 
+[Add your license information here]

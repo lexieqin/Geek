@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="ALL" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="747c0592-432c-4575-997f-793a38830da3" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/K8sGpt.iml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/LICENSE" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmd/ai/message.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmd/chat.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmd/promptTpl/prompt.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmd/root.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmd/tools/clustersTool.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmd/tools/createTool.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmd/tools/deleteTool.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmd/tools/humanTool.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmd/tools/listTool.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmd/tools/podTool.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmd/tools/resourceInfoTool.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmd/utils/httpUtils.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/go.mod" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/go.sum" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/k8sgpt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/inconshreveable/mousetrap/LICENSE" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/inconshreveable/mousetrap/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/inconshreveable/mousetrap/trap_others.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/inconshreveable/mousetrap/trap_windows.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/sashabaranov/go-openai/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/sashabaranov/go-openai/.golangci.yml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/sashabaranov/go-openai/CONTRIBUTING.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/sashabaranov/go-openai/LICENSE" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/sashabaranov/go-openai/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/sashabaranov/go-openai/assistant.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/sashabaranov/go-openai/audio.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/sashabaranov/go-openai/batch.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/sashabaranov/go-openai/chat.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/sashabaranov/go-openai/chat_stream.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/sashabaranov/go-openai/client.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/sashabaranov/go-openai/common.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/sashabaranov/go-openai/completion.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/sashabaranov/go-openai/config.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/sashabaranov/go-openai/edits.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/sashabaranov/go-openai/embeddings.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/sashabaranov/go-openai/engines.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/sashabaranov/go-openai/error.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/sashabaranov/go-openai/files.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/sashabaranov/go-openai/fine_tunes.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/sashabaranov/go-openai/fine_tuning_job.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/sashabaranov/go-openai/image.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/sashabaranov/go-openai/internal/error_accumulator.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/sashabaranov/go-openai/internal/form_builder.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/sashabaranov/go-openai/internal/marshaller.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/sashabaranov/go-openai/internal/request_builder.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/sashabaranov/go-openai/internal/unmarshaler.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/sashabaranov/go-openai/messages.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/sashabaranov/go-openai/models.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/sashabaranov/go-openai/moderation.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/sashabaranov/go-openai/ratelimit.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/sashabaranov/go-openai/run.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/sashabaranov/go-openai/speech.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/sashabaranov/go-openai/stream.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/sashabaranov/go-openai/stream_reader.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/sashabaranov/go-openai/thread.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/sashabaranov/go-openai/vector_store.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/spf13/cobra/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/spf13/cobra/.golangci.yml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/spf13/cobra/.mailmap" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/spf13/cobra/CONDUCT.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/spf13/cobra/CONTRIBUTING.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/spf13/cobra/LICENSE.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/spf13/cobra/MAINTAINERS" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/spf13/cobra/Makefile" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/spf13/cobra/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/spf13/cobra/active_help.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/spf13/cobra/args.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/spf13/cobra/bash_completions.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/spf13/cobra/bash_completionsV2.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/spf13/cobra/cobra.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/spf13/cobra/command.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/spf13/cobra/command_notwin.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/spf13/cobra/command_win.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/spf13/cobra/completions.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/spf13/cobra/fish_completions.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/spf13/cobra/flag_groups.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/spf13/cobra/powershell_completions.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/spf13/cobra/shell_completions.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/spf13/cobra/zsh_completions.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/spf13/pflag/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/spf13/pflag/.travis.yml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/spf13/pflag/LICENSE" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/spf13/pflag/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/spf13/pflag/bool.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/spf13/pflag/bool_slice.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/spf13/pflag/bytes.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/spf13/pflag/count.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/spf13/pflag/duration.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/spf13/pflag/duration_slice.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/spf13/pflag/flag.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/spf13/pflag/float32.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/spf13/pflag/float32_slice.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/spf13/pflag/float64.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/spf13/pflag/float64_slice.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/spf13/pflag/golangflag.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/spf13/pflag/int.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/spf13/pflag/int16.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/spf13/pflag/int32.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/spf13/pflag/int32_slice.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/spf13/pflag/int64.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/spf13/pflag/int64_slice.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/spf13/pflag/int8.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/spf13/pflag/int_slice.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/spf13/pflag/ip.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/spf13/pflag/ip_slice.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/spf13/pflag/ipmask.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/spf13/pflag/ipnet.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/spf13/pflag/string.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/spf13/pflag/string_array.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/spf13/pflag/string_slice.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/spf13/pflag/string_to_int.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/spf13/pflag/string_to_int64.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/spf13/pflag/string_to_string.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/spf13/pflag/uint.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/spf13/pflag/uint16.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/spf13/pflag/uint32.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/spf13/pflag/uint64.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/spf13/pflag/uint8.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/github.com/spf13/pflag/uint_slice.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/modules.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ginTools/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/../ginTools/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ginTools/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/../ginTools/go.mod" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ginTools/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/../ginTools/main.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ginTools/pkg/config/k8sconfig.go" beforeDir="false" afterPath="$PROJECT_DIR$/../ginTools/pkg/config/k8sconfig.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ginTools/pkg/controllers/podLogEventCtl.go" beforeDir="false" afterPath="$PROJECT_DIR$/../ginTools/pkg/controllers/podLogEventCtl.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ginTools/pkg/controllers/resourceCtl.go" beforeDir="false" afterPath="$PROJECT_DIR$/../ginTools/pkg/controllers/resourceCtl.go" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="GOROOT" url="file:///opt/homebrew/opt/go/libexec" />
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 2
+}</component>
+  <component name="ProjectId" id="2wHQ8d20jZr7DCrobasroL2BloE" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Go Build.go build github.com/xingyunyang01/K8sGpt.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.go.formatter.settings.were.checked&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.go.migrated.go.modules.settings&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.go.modules.automatic.dependencies.download&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.go.modules.go.list.on.any.changes.was.set&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;go.import.settings.migrated&quot;: &quot;true&quot;,
+    &quot;go.sdk.automatically.set&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/Users/qinqin/workspace/src/github.com/Geek/K8sGpt&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;
+  }
+}</component>
+  <component name="RunManager">
+    <configuration name="go build github.com/xingyunyang01/K8sGpt" type="GoApplicationRunConfiguration" factoryName="Go Application" temporary="true" nameIsGenerated="true">
+      <module name="K8sGpt" />
+      <working_directory value="$PROJECT_DIR$" />
+      <kind value="PACKAGE" />
+      <package value="github.com/xingyunyang01/K8sGpt" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$/main.go" />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Go Build.go build github.com/xingyunyang01/K8sGpt" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-gosdk-33c477a475b1-e0158606a674-org.jetbrains.plugins.go.sharedIndexes.bundled-GO-241.18034.61" />
+        <option value="bundled-js-predefined-1d06a55b98c1-0b3e54e931b4-JavaScript-GO-241.18034.61" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="VgoProject">
+    <settings-migrated>true</settings-migrated>
+  </component>
+</project>

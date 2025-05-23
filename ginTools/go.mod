@@ -1,4 +1,4 @@
-module github.com/xingyunyang01/ginTools
+module github.com/lexieqin/Geek/ginTools
 
 go 1.22.0
 

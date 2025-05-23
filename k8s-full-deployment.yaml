@@ -1,0 +1,116 @@
+# ServiceAccount and RBAC for ginTools
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: gintools-sa
+  namespace: default
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: gintools-role
+rules:
+- apiGroups: [""]
+  resources: ["pods", "pods/log", "events", "namespaces"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["batch"]
+  resources: ["jobs"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["*"]
+  resources: ["*"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: gintools-rolebinding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: gintools-role
+subjects:
+- kind: ServiceAccount
+  name: gintools-sa
+  namespace: default
+---
+# ginTools Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gintools
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gintools
+  template:
+    metadata:
+      labels:
+        app: gintools
+    spec:
+      serviceAccountName: gintools-sa
+      containers:
+      - name: gintools
+        image: your-registry/gintools:latest
+        ports:
+        - containerPort: 8080
+        env:
+        - name: PORT
+          value: "8080"
+---
+# ginTools Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: gintools-service
+  namespace: default
+spec:
+  selector:
+    app: gintools
+  ports:
+  - protocol: TCP
+    port: 8080
+    targetPort: 8080
+  type: ClusterIP
+---
+# K8sGpt Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: k8sgpt
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: k8sgpt
+  template:
+    metadata:
+      labels:
+        app: k8sgpt
+    spec:
+      containers:
+      - name: k8sgpt
+        image: your-registry/k8sgpt:latest
+        env:
+        - name: OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: openai-secret
+              key: api-key
+        - name: GINTOOLS_URL
+          value: "http://gintools-service:8080"
+        # Since K8sGpt is a CLI tool, we need to keep it running
+        command: ["/bin/sh"]
+        args: ["-c", "while true; do sleep 30; done"]
+---
+# Secret for OpenAI API Key
+apiVersion: v1
+kind: Secret
+metadata:
+  name: openai-secret
+  namespace: default
+type: Opaque
+stringData:
+  api-key: "your-openai-api-key-here"

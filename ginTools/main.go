@@ -1,14 +1,25 @@
 package main
 
 import (
+	"os"
+	
 	"github.com/gin-gonic/gin"
-	"github.com/xingyunyang01/ginTools/pkg/config"
-	"github.com/xingyunyang01/ginTools/pkg/controllers"
-	"github.com/xingyunyang01/ginTools/pkg/services"
+	"github.com/lexieqin/Geek/ginTools/pkg/config"
+	"github.com/lexieqin/Geek/ginTools/pkg/controllers"
+	"github.com/lexieqin/Geek/ginTools/pkg/services"
 )
 
 func main() {
-	k8sconfig := config.NewK8sConfig().InitRestConfig()
+	var k8sconfig *config.K8sConfig
+	
+	// Check environment variable
+	if os.Getenv("K8S_CONFIG_TYPE") == "in-cluster" {
+		// Force in-cluster config only
+		k8sconfig = config.NewK8sConfig().InitConfigInCluster()
+	} else {
+		// Use auto-detection (in-cluster first, then kubeconfig)
+		k8sconfig = config.NewK8sConfig().InitRestConfig()
+	}
 	restMapper := k8sconfig.InitRestMapper()
 	dynamicClient := k8sconfig.InitDynamicClient()
 	informer := k8sconfig.InitInformer()
@@ -17,6 +28,8 @@ func main() {
 
 	resourceCtl := controllers.NewResourceCtl(services.NewResourceService(&restMapper, dynamicClient, informer))
 	podLogCtl := controllers.NewPodLogEventCtl(services.NewPodLogEventService(clientSet))
+	jobDebugCtl := controllers.NewJobDebugController(services.NewJobDebugService(clientSet))
+	mockJobCtl := controllers.NewMockJobController()
 
 	r := gin.New()
 
@@ -40,5 +53,22 @@ func main() {
 	r.GET("/namespaces/:namespace/pods/logs", podLogCtl.GetLog())
 	r.GET("/namespaces/:namespace/pods/events", podLogCtl.GetEvent())
 
-	r.Run(":8080")
+	// Job debug endpoints
+	r.GET("/jobs/:namespace/:name/debug", jobDebugCtl.GetJobDebugInfo)
+	r.GET("/jobs/:namespace/:name/traces", jobDebugCtl.GetJobTraces)
+	r.GET("/jobs/:namespace/:name/errors", jobDebugCtl.GetJobErrors)
+	r.GET("/jobs/:namespace/:name/sandbox", jobDebugCtl.GetJobSandboxLogs)
+	r.GET("/jobs/:namespace/:name/pods", jobDebugCtl.GetJobPods)
+	r.GET("/jobs/uuid/:uuid", jobDebugCtl.GetJobByUUID)
+	r.GET("/sandbox/read", jobDebugCtl.ReadSandboxLog)
+
+	// Mock endpoints for testing with real job data
+	r.GET("/mock/jobs/:jobid/debug", mockJobCtl.GetMockJob)
+	r.GET("/mock/jobs/uuid/:uuid", mockJobCtl.GetMockJobByUUID)
+
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	r.Run(":" + port)
 }
