@@ -74,25 +74,25 @@ spec:
     targetPort: 8080
   type: ClusterIP
 ---
-# K8sGpt Deployment
+# GenesisGpt Deployment
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: k8sgpt
+  name: genesisgpt
   namespace: default
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: k8sgpt
+      app: genesisgpt
   template:
     metadata:
       labels:
-        app: k8sgpt
+        app: genesisgpt
     spec:
       containers:
-      - name: k8sgpt
-        image: your-registry/k8sgpt:latest
+      - name: genesisgpt
+        image: your-registry/genesisgpt:latest
         env:
         - name: OPENAI_API_KEY
           valueFrom:
@@ -101,7 +101,7 @@ spec:
               key: api-key
         - name: GINTOOLS_URL
           value: "http://gintools-service:8080"
-        # Since K8sGpt is a CLI tool, we need to keep it running
+        # Since GenesisGpt is a CLI tool, we need to keep it running
         command: ["/bin/sh"]
         args: ["-c", "while true; do sleep 30; done"]
 ---

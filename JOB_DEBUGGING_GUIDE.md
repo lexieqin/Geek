@@ -1,6 +1,6 @@
-# Job Debugging Guide for K8sGpt
+# Job Debugging Guide for GenesisGpt
 
-This guide explains how to use the enhanced K8sGpt for debugging failed Kubernetes jobs with integrated Datadog traces, error analysis, and sandbox logs.
+This guide explains how to use the enhanced GenesisGpt for debugging failed Kubernetes jobs with integrated Datadog traces, error analysis, and sandbox logs.
 
 ## Overview
 
@@ -23,7 +23,7 @@ The job debugging feature provides comprehensive troubleshooting capabilities fo
 
 2. **Services Running**:
    - ginTools API server on port 8080
-   - K8sGpt with JobDebugTool enabled
+   - GenesisGpt with JobDebugTool enabled
 
 ## Usage Examples
 
@@ -31,7 +31,7 @@ The job debugging feature provides comprehensive troubleshooting capabilities fo
 
 ```
 You: Debug the failed job with UUID abc-123-def-456
-K8sGpt: I'll help you debug the failed job with UUID abc-123-def-456...
+GenesisGpt: I'll help you debug the failed job with UUID abc-123-def-456...
 
 === Job Summary ===
 Name: default/data-processing-job-xyz

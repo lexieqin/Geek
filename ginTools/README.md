@@ -183,7 +183,7 @@ Error responses include detailed messages in JSON format:
 
 ## Integration with AI Agents
 
-ginTools is designed to work seamlessly with AI agents like K8sGpt, providing a simple HTTP interface that AI models can easily understand and use for Kubernetes operations.
+ginTools is designed to work seamlessly with AI agents like GenesisGpt, providing a simple HTTP interface that AI models can easily understand and use for Kubernetes operations.
 
 ## Security Considerations
 

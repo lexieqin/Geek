@@ -10,7 +10,7 @@ RUN go mod download
 
 COPY . .
 
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o k8sgpt main.go
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o genesisgpt main.go
 
 # Final stage
 FROM alpine:latest
@@ -19,11 +19,11 @@ RUN apk --no-cache add ca-certificates
 
 WORKDIR /root/
 
-COPY --from=builder /app/k8sgpt .
+COPY --from=builder /app/genesisgpt .
 
-# K8sGpt needs OPENAI_API_KEY
+# GenesisGpt needs OPENAI_API_KEY
 ENV OPENAI_API_KEY=""
 
 EXPOSE 8080
 
-CMD ["./k8sgpt", "chat"]
+CMD ["./genesisgpt", "chat"]

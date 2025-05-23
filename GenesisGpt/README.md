@@ -1,10 +1,10 @@
-# K8sGpt - AI-Powered Kubernetes Assistant
+# GenesisGpt - AI-Powered Kubernetes Assistant
 
 An intelligent CLI tool that enables natural language interactions with Kubernetes clusters through AI-powered conversations.
 
 ## Overview
 
-K8sGpt is a conversational AI assistant for Kubernetes that understands natural language queries and performs cluster operations. Built using the ReAct (Reasoning and Acting) pattern, it provides an intuitive interface for users to manage Kubernetes resources without memorizing complex kubectl commands.
+GenesisGpt is a conversational AI assistant for Kubernetes that understands natural language queries and performs cluster operations. Built using the ReAct (Reasoning and Acting) pattern, it provides an intuitive interface for users to manage Kubernetes resources without memorizing complex kubectl commands.
 
 ## Features
 
@@ -26,7 +26,7 @@ K8sGpt is a conversational AI assistant for Kubernetes that understands natural 
 ## Installation
 
 ```bash
-go build -o k8sgpt main.go
+go build -o genesisgpt main.go
 ```
 
 ## Configuration
@@ -48,23 +48,23 @@ cd ../ginTools && ./gintools
 Start an interactive chat session:
 
 ```bash
-./k8sgpt chat
+./genesisgpt chat
 ```
 
 ### Example Interactions
 
 ```
 You: Create a nginx deployment with 3 replicas
-K8sGpt: I'll create an nginx deployment with 3 replicas for you...
+GenesisGpt: I'll create an nginx deployment with 3 replicas for you...
 
 You: Show me all pods in the default namespace
-K8sGpt: Let me list the pods in the default namespace...
+GenesisGpt: Let me list the pods in the default namespace...
 
 You: Get logs from the nginx pod
-K8sGpt: I'll retrieve the logs from the nginx pod...
+GenesisGpt: I'll retrieve the logs from the nginx pod...
 
 You: Delete the nginx deployment
-K8sGpt: I need to confirm this action. Do you want to delete the deployment "nginx" in namespace "default"?
+GenesisGpt: I need to confirm this action. Do you want to delete the deployment "nginx" in namespace "default"?
 ```
 
 ## Available Tools
@@ -113,7 +113,7 @@ Human interaction for confirmations:
 ## Architecture
 
 ```
-K8sGpt/
+GenesisGpt/
 ├── main.go                     # Entry point
 ├── cmd/
 │   ├── root.go                # Root command setup
@@ -152,14 +152,14 @@ Thought → Action → Action Input → PAUSE → Observation → (repeat until 
 
 ## Integration with ginTools
 
-K8sGpt relies on ginTools as its backend API server for actual Kubernetes operations:
+GenesisGpt relies on ginTools as its backend API server for actual Kubernetes operations:
 
 - **HTTP Communication**: All Kubernetes operations go through ginTools REST API
 - **Resource Management**: Create, read, update, delete operations via ginTools
 - **Pod Operations**: Logs and events retrieval through specialized endpoints
 - **Error Handling**: Graceful error propagation from ginTools to user
 
-## Extending K8sGpt
+## Extending GenesisGpt
 
 ### Adding New Tools
 
