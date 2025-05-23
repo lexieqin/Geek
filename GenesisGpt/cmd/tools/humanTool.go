@@ -20,7 +20,7 @@ type HumanTool struct {
 // NewHumanTool creates a new HumanTool instance.
 func NewHumanTool() *HumanTool {
 	// Check if running in server mode
-	serverMode := os.Getenv("K8SGPT_SERVER_MODE") == "true"
+	serverMode := os.Getenv("GENESISGPT_SERVER_MODE") == "true"
 	
 	return &HumanTool{
 		Name:        "HumanTool",

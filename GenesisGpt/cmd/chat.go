@@ -10,9 +10,9 @@ import (
 	"regexp"
 
 	"github.com/spf13/cobra"
-	"github.com/lexieqin/Geek/K8sGpt/cmd/ai"
-	"github.com/lexieqin/Geek/K8sGpt/cmd/promptTpl"
-	"github.com/lexieqin/Geek/K8sGpt/cmd/tools"
+	"github.com/lexieqin/Geek/GenesisGpt/cmd/ai"
+	"github.com/lexieqin/Geek/GenesisGpt/cmd/promptTpl"
+	"github.com/lexieqin/Geek/GenesisGpt/cmd/tools"
 )
 
 // chatCmd represents the chat command

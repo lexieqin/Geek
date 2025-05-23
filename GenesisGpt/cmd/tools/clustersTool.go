@@ -1,7 +1,7 @@
 package tools
 
 import (
-	"github.com/lexieqin/Geek/K8sGpt/cmd/utils"
+	"github.com/lexieqin/Geek/GenesisGpt/cmd/utils"
 )
 
 // ClusterTool represents a tool for listing k8s cluster commands.

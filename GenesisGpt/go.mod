@@ -1,4 +1,4 @@
-module github.com/lexieqin/Geek/K8sGpt
+module github.com/lexieqin/Geek/GenesisGpt
 
 go 1.22.0
 

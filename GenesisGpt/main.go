@@ -21,7 +21,7 @@ THE SOFTWARE.
 */
 package main
 
-import "github.com/lexieqin/Geek/K8sGpt/cmd"
+import "github.com/lexieqin/Geek/GenesisGpt/cmd"
 
 func main() {
 	cmd.Execute()

@@ -5,9 +5,9 @@ import (
 	"fmt"
 
 	"github.com/sashabaranov/go-openai"
-	"github.com/lexieqin/Geek/K8sGpt/cmd/ai"
-	"github.com/lexieqin/Geek/K8sGpt/cmd/promptTpl"
-	"github.com/lexieqin/Geek/K8sGpt/cmd/utils"
+	"github.com/lexieqin/Geek/GenesisGpt/cmd/ai"
+	"github.com/lexieqin/Geek/GenesisGpt/cmd/promptTpl"
+	"github.com/lexieqin/Geek/GenesisGpt/cmd/utils"
 )
 
 type CreateToolParam struct {

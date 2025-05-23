@@ -11,8 +11,8 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/lexieqin/Geek/K8sGpt/cmd/ai"
-	"github.com/lexieqin/Geek/K8sGpt/cmd/tools"
+	"github.com/lexieqin/Geek/GenesisGpt/cmd/ai"
+	"github.com/lexieqin/Geek/GenesisGpt/cmd/tools"
 )
 
 // Session management
@@ -31,11 +31,11 @@ type Session struct {
 
 var serverCmd = &cobra.Command{
 	Use:   "server",
-	Short: "Run K8sGpt as an HTTP server",
-	Long:  `Run K8sGpt as an HTTP server that accepts queries via POST requests`,
+	Short: "Run GenesisGpt as an HTTP server",
+	Long:  `Run GenesisGpt as an HTTP server that accepts queries via POST requests`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// Set server mode
-		os.Setenv("K8SGPT_SERVER_MODE", "true")
+		os.Setenv("GENESISGPT_SERVER_MODE", "true")
 		
 		// Initialize tools
 		createTool := tools.NewCreateTool()
@@ -85,7 +85,7 @@ var serverCmd = &cobra.Command{
 			port = "8090"
 		}
 
-		fmt.Printf("K8sGpt server listening on port %s\n", port)
+		fmt.Printf("GenesisGpt server listening on port %s\n", port)
 		http.ListenAndServe(":"+port, nil)
 	},
 }

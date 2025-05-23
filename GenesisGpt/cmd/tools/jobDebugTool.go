@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/lexieqin/Geek/K8sGpt/cmd/utils"
+	"github.com/lexieqin/Geek/GenesisGpt/cmd/utils"
 )
 
 type JobDebugTool struct{}
