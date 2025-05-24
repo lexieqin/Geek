@@ -17,3 +17,17 @@ k8sgpt
 
 # Dependencies
 /vendor/
+
+# Configuration files with secrets
+config/config.yaml
+config/production.yaml
+config/*.prod.yaml
+config/*.production.yaml
+
+# Environment files
+.env
+.env.local
+.env.production
+
+# Logs
+*.log

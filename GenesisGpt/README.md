@@ -65,6 +65,9 @@ GenesisGpt: I'll retrieve the logs from the nginx pod...
 
 You: Delete the nginx deployment
 GenesisGpt: I need to confirm this action. Do you want to delete the deployment "nginx" in namespace "default"?
+
+You: Debug job with ID 81325fc3-b05e-4d9a-ada2-d2399aebe135 for tenant testenv
+GenesisGpt: I'll debug the job following the standard workflow...
 ```
 
 ## Available Tools

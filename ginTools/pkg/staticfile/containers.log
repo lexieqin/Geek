@@ -1,0 +1,270 @@
+[raptormidverification] 2025-05-22T23:26:21.019391554Z stdout F [2025/05/22 16:26:21] INFO Creating /applicationpackages/manifests/active/raptormidverification/cronus/scripts/app/temp
+[raptormidverification] 2025-05-22T23:26:21.038949264Z stdout F [2025/05/22 16:26:21] INFO LCMStep PrepareManagedStageFallbackConfig:
+[raptormidverification] 2025-05-22T23:26:21.044438703Z stdout F [2025/05/22 16:26:21] INFO Non-ManagedStage environment. No need to check for ManagedStage configurations.
+[raptormidverification] 2025-05-22T23:26:21.046180013Z stdout F [2025/05/22 16:26:21] INFO LCMStepEnd PrepareManagedStageFallbackConfig: Exit 0
+[raptormidverification] 2025-05-22T23:26:21.048375754Z stdout F [2025/05/22 16:26:21] INFO LCMStep ProcessCommonPackages:
+[raptormidverification] 2025-05-22T23:26:21.053525054Z stdout F [2025/05/22 16:26:21] INFO Ubuntu based Docker environment detected - bypassing attempt to install any common global packages.
+[raptormidverification] 2025-05-22T23:26:21.055440443Z stdout F [2025/05/22 16:26:21] INFO LCMStepEnd ProcessCommonPackages: Exit 0
+[raptormidverification] 2025-05-22T23:26:21.057307994Z stdout F [2025/05/22 16:26:21] INFO checking for BOOTSTRAP_TOKEN on the environment
+[raptormidverification] 2025-05-22T23:26:21.059625063Z stdout F [2025/05/22 16:26:21] INFO BOOTSTRAP_TOKEN found on the environment
+[raptormidverification] 2025-05-22T23:26:21.061768913Z stdout F [2025/05/22 16:26:21] INFO Not installing protected.
+[raptormidverification] 2025-05-22T23:26:21.064062473Z stdout F [2025/05/22 16:26:21] INFO LCMStep ResolveConnections:
+[raptormidverification] 2025-05-22T23:26:21.065963673Z stdout F [2025/05/22 16:26:21] INFO Application Name: raptormidverification
+[raptormidverification] 2025-05-22T23:26:21.068058263Z stderr F grep: service-manifest.yaml: No such file or directory
+[raptormidverification] 2025-05-22T23:26:21.074247083Z stdout F [2025/05/22 16:26:21] INFO PARTNER_STAGE: te-raptorframework-9057.qa.company.com
+[raptormidverification] 2025-05-22T23:26:21.127628282Z stderr F [2025/05/22 16:26:21] ERROR LCM1109: Unable to properly resolve the host for managed stage: te-raptorframework-9057.qa.company.com, a fully qualified name is required
+[raptormidverification] 2025-05-22T23:26:21.129718472Z stdout F [2025/05/22 16:26:21] INFO LCMStepEnd ResolveConnections: Exit 1109
+[raptormidverification] 2025-05-22T23:26:21.130595952Z stdout F Unable to successfully complete the activate phase for the application raptormidverification. Please check application and deploy logs for more details. RC=85
+[raptormidverification] 2025-05-22T23:26:21.141809302Z stdout F export STACK_ID=raptorspringboot
+[raptormidverification] 2025-05-22T23:26:21.147641122Z stdout F [2025/05/22 16:26:21] INFO LCMPhase Deactivate:
+[raptormidverification] 2025-05-22T23:26:21.154765701Z stdout F [2025/05/22 16:26:21] INFO LCMStep CheckEnvironmentPrerequisites:
+[raptormidverification] 2025-05-22T23:26:21.156704671Z stdout F [2025/05/22 16:26:21] INFO LCMStepEnd CheckEnvironmentPrerequisites: Exit 0
+[raptormidverification] 2025-05-22T23:26:21.158463231Z stdout F [2025/05/22 16:26:21] INFO LCMStep SetEnvironmentVariables:
+[raptormidverification] 2025-05-22T23:26:21.167899541Z stdout F [2025/05/22 16:26:21] INFO /etc/.haproxy.json file found - proceeding to load PARTNER_STAGE value from key proxyHost
+[raptormidverification] 2025-05-22T23:26:21.172440291Z stdout F [2025/05/22 16:26:21] INFO Successfully set the property PARTNER_STAGE to te-raptorframework-9057.qa.company.com
+[raptormidverification] 2025-05-22T23:26:21.177345731Z stdout F [2025/05/22 16:26:21] INFO Successfully set the property genesis_az to lvs03
+[raptormidverification] 2025-05-22T23:26:21.183043781Z stdout F [2025/05/22 16:26:21] INFO Successfully set the property genesis_region to LVS
+[raptormidverification] 2025-05-22T23:26:21.191196991Z stdout F [2025/05/22 16:26:21] INFO Value of pp_geo from env = MSMASTER
+[raptormidverification] 2025-05-22T23:26:21.193237411Z stdout F [2025/05/22 16:26:21] INFO Value of pp_datacenter from env = gcp_MSMASTER
+[raptormidverification] 2025-05-22T23:26:21.195007501Z stdout F [2025/05/22 16:26:21] INFO Value of pp_az from env = gcp_MSMASTER
+[raptormidverification] 2025-05-22T23:26:21.196809401Z stdout F [2025/05/22 16:26:21] INFO Value of pp_region from env = none
+[raptormidverification] 2025-05-22T23:26:21.198491781Z stdout F [2025/05/22 16:26:21] INFO Found env entries for pp_geo, pp_datacenter, pp_az
+[raptormidverification] 2025-05-22T23:26:21.205096391Z stdout F [2025/05/22 16:26:21] INFO Setting RAPTOR_BATCH=false
+[raptormidverification] 2025-05-22T23:26:21.217440381Z stdout F [2025/05/22 16:26:21] INFO Setting RAPTOR_KAFKA=false
+[raptormidverification] 2025-05-22T23:26:21.219364941Z stdout F [2025/05/22 16:26:21] INFO APP_NAME : raptormidverification
+[raptormidverification] 2025-05-22T23:26:21.221196471Z stdout F [2025/05/22 16:26:21] INFO RAPTOR_CLASS_OF_SERVICE : QA
+[raptormidverification] 2025-05-22T23:26:21.26536341Z stdout F [2025/05/22 16:26:21] INFO LCMStep UndoAutomatedMonitoringConfig:
+[raptormidverification] 2025-05-22T23:26:21.267126199Z stdout F [2025/05/22 16:26:21] INFO Begin automated monitoring configuration cleanup
+[raptormidverification] 2025-05-22T23:26:21.27276092Z stdout F [2025/05/22 16:26:21] INFO No Big Brother monitoring was configured for stage environment
+[raptormidverification] 2025-05-22T23:26:21.27468342Z stdout F [2025/05/22 16:26:21] INFO LCMStepEnd UndoAutomatedMonitoringConfig: Exit 0
+[raptormidverification] 2025-05-22T23:26:21.27508195Z stderr F raptorspringboot/clean_env.sh: line 63: removeDynaTraceConfigBackup: command not found
+[raptormidverification] 2025-05-22T23:26:21.27693135Z stdout F [2025/05/22 16:26:21] WARNING Error in the execution of raptorspringboot/clean_env.sh step - environment might not be fully cleaned.
+[raptormidverification] 2025-05-22T23:26:21.27859633Z stdout F [2025/05/22 16:26:21] WARNING Completed application uninstall process with Errors or Warnings - see previous log messages.
+[raptormidverification] 2025-05-22T23:26:21.462046026Z stderr F Name "Launcher::common::App::FH" used only once: possible typo at /applicationpackages/manifests/active/raptormidverification/cronus/scripts/lib/Launcher/common/App.pm line 506.
+[raptormidverification] 2025-05-22T23:26:21.462095816Z stderr F Name "Launcher::common::App::data" used only once: possible typo at /applicationpackages/manifests/active/raptormidverification/cronus/scripts/lib/Launcher/common/App.pm line 486.
+[raptormidverification] 2025-05-22T23:26:21.463792536Z stdout F 2195::2025-05-22 16:26:21 INFO NA.NA() : ===============================================================================
+[raptormidverification] 2025-05-22T23:26:21.463817327Z stdout F 2195::2025-05-22 16:26:21 INFO NA.NA() : deploy_master.pl script beginning
+[raptormidverification] 2025-05-22T23:26:21.463826656Z stdout F 2195::2025-05-22 16:26:21 INFO NA.NA() : ===============================================================================
+[raptormidverification] 2025-05-22T23:26:34.703035395Z stdout F [2025/05/22 16:26:34] INFO BOOTSTRAP_TOKEN found on the environment
+[raptormidverification] 2025-05-22T23:26:34.704800695Z stdout F [2025/05/22 16:26:34] INFO Not installing protected.
+[raptormidverification] 2025-05-22T23:26:34.706559124Z stdout F [2025/05/22 16:26:34] INFO LCMStep ResolveConnections:
+[raptormidverification] 2025-05-22T23:26:34.708564004Z stdout F [2025/05/22 16:26:34] INFO Application Name: raptormidverification
+[raptormidverification] 2025-05-22T23:26:34.710470574Z stderr F grep: service-manifest.yaml: No such file or directory
+[raptormidverification] 2025-05-22T23:26:34.720066694Z stdout F [2025/05/22 16:26:34] INFO PARTNER_STAGE: te-raptorframework-9057.qa.company.com
+[raptormidverification] 2025-05-22T23:26:34.772624673Z stderr F [2025/05/22 16:26:34] ERROR LCM1109: Unable to properly resolve the host for managed stage: te-raptorframework-9057.qa.company.com, a fully qualified name is required
+[raptormidverification] 2025-05-22T23:26:34.774551123Z stdout F [2025/05/22 16:26:34] INFO LCMStepEnd ResolveConnections: Exit 1109
+[raptormidverification] 2025-05-22T23:26:34.775343154Z stdout F Unable to successfully complete the activate phase for the application raptormidverification. Please check application and deploy logs for more details. RC=85
+[raptormidverification] 2025-05-22T23:26:34.786848573Z stdout F export STACK_ID=raptorspringboot
+[raptormidverification] 2025-05-22T23:26:34.792940223Z stdout F [2025/05/22 16:26:34] INFO LCMPhase Deactivate:
+[raptormidverification] 2025-05-22T23:26:34.879942871Z stdout F [2025/05/22 16:26:34] INFO LCMStep UninstallProtectedPackages:
+[raptormidverification] 2025-05-22T23:26:34.881758181Z stdout F [2025/05/22 16:26:34] INFO LCMStepEnd UninstallProtectedPackages: Exit 0
+[raptormidverification] 2025-05-22T23:26:34.883545721Z stdout F [2025/05/22 16:26:34] INFO LCMStep CleanupFiles:
+[raptormidverification] 2025-05-22T23:26:34.885185221Z stdout F [2025/05/22 16:26:34] INFO checking for for manifest_json_file_template_backup /applicationpackages/manifests/active/raptormidverification/cronus/scripts/app/cdbs/manifest.json.template.bkup
+[raptormidverification] 2025-05-22T23:26:34.886706981Z stdout F [2025/05/22 16:26:34] INFO LCMStep RemoveFile:
+[raptormidverification] 2025-05-22T23:26:34.888439112Z stdout F [2025/05/22 16:26:34] INFO LCMStepEnd RemoveFile: Exit 0
+[raptormidverification] 2025-05-22T23:26:34.891769611Z stdout F [2025/05/22 16:26:34] INFO LCMStepEnd CleanupFiles: Exit 0
+[raptormidverification] 2025-05-22T23:26:34.893530731Z stdout F [2025/05/22 16:26:34] INFO LCMStep RemoveFile:
+[raptormidverification] 2025-05-22T23:26:34.896876511Z stdout F [2025/05/22 16:26:34] INFO Removed /applicationpackages/manifests/active/raptormidverification/cronus/scripts/wrapper.javaAdditionalParams
+[raptormidverification] 2025-05-22T23:26:34.898583471Z stdout F [2025/05/22 16:26:34] INFO LCMStepEnd RemoveFile: Exit 0
+[raptormidverification] 2025-05-22T23:26:34.900537871Z stdout F [2025/05/22 16:26:34] INFO LCMStep UndoAutomatedMonitoringConfig:
+[raptormidverification] 2025-05-22T23:26:34.902066591Z stdout F [2025/05/22 16:26:34] INFO Begin automated monitoring configuration cleanup
+[raptormidverification] 2025-05-22T23:26:34.907199221Z stdout F [2025/05/22 16:26:34] INFO No Big Brother monitoring was configured for stage environment
+[raptormidverification] 2025-05-22T23:26:34.909068621Z stdout F [2025/05/22 16:26:34] INFO LCMStepEnd UndoAutomatedMonitoringConfig: Exit 0
+[raptormidverification] 2025-05-22T23:26:34.909444741Z stderr F raptorspringboot/clean_env.sh: line 63: removeDynaTraceConfigBackup: command not found
+[raptormidverification] 2025-05-22T23:26:34.911249071Z stdout F [2025/05/22 16:26:34] WARNING Error in the execution of raptorspringboot/clean_env.sh step - environment might not be fully cleaned.
+[raptormidverification] 2025-05-22T23:26:34.915183771Z stdout F [2025/05/22 16:26:34] WARNING Completed application uninstall process with Errors or Warnings - see previous log messages.
+[raptormidverification] 2025-05-22T23:26:35.088737388Z stderr F Name "Launcher::common::App::FH" used only once: possible typo at /applicationpackages/manifests/active/raptormidverification/cronus/scripts/lib/Launcher/common/App.pm line 506.
+[raptormidverification] 2025-05-22T23:26:35.088795938Z stderr F Name "Launcher::common::App::data" used only once: possible typo at /applicationpackages/manifests/active/raptormidverification/cronus/scripts/lib/Launcher/common/App.pm line 486.
+[raptormidverification] 2025-05-22T23:26:35.090249718Z stdout F 2193::2025-05-22 16:26:35 INFO NA.NA() : ===============================================================================
+[raptormidverification] 2025-05-22T23:26:35.090288058Z stdout F 2193::2025-05-22 16:26:35 INFO NA.NA() : deploy_master.pl script beginning
+[raptormidverification] 2025-05-22T23:26:35.090299668Z stdout F 2193::2025-05-22 16:26:35 INFO NA.NA() : ===============================================================================
+[raptormidverification] 2025-05-22T23:27:10.205968393Z stdout F 1971::2025-05-22 16:27:10 INFO /lib/Launcher/raptorspringboot/RaptorSpringBoot.pm.Launcher::common::App::writeToR2DeploymentsFile() : opening r2 deploymentfile /applicationpackages/.appdata/r2_deployment.properties
+[raptormidverification] 2025-05-22T23:27:10.205977603Z stdout F Done writing to /applicationpackages/.appdata/r2_deployment.properties
+[raptormidverification] 2025-05-22T23:27:10.205989863Z stdout F 1971::2025-05-22 16:27:10 INFO /deploy_master.pl.(eval)() : ===============================================================================
+[raptormidverification] 2025-05-22T23:27:10.205998533Z stdout F 1971::2025-05-22 16:27:10 INFO /deploy_master.pl.(eval)() : Completed command : activate with status : 0
+[raptormidverification] 2025-05-22T23:27:10.206009463Z stdout F 1971::2025-05-22 16:27:10 INFO /deploy_master.pl.(eval)() : ===============================================================================
+[raptormidverification] 2025-05-22T23:27:10.221394382Z stdout F [2025/05/22 16:27:10] INFO LCMStep CheckEnvironmentPrerequisites:
+[raptormidverification] 2025-05-22T23:27:10.223149013Z stdout F [2025/05/22 16:27:10] INFO LCMStepEnd CheckEnvironmentPrerequisites: Exit 0
+[raptormidverification] 2025-05-22T23:27:10.225472313Z stdout F [2025/05/22 16:27:10] INFO LCMStep SetEnvironmentVariables:
+[raptormidverification] 2025-05-22T23:27:10.232834533Z stdout F [2025/05/22 16:27:10] INFO /etc/.haproxy.json file found - proceeding to load PARTNER_STAGE value from key proxyHost
+[raptormidverification] 2025-05-22T23:27:10.237283562Z stdout F [2025/05/22 16:27:10] INFO Successfully set the property PARTNER_STAGE to te-raptorframework-9057.qa.company.com
+[raptormidverification] 2025-05-22T23:27:10.242276172Z stdout F [2025/05/22 16:27:10] INFO Successfully set the property genesis_az to lvs03
+[raptormidverification] 2025-05-22T23:27:10.247560762Z stdout F [2025/05/22 16:27:10] INFO Successfully set the property genesis_region to LVS
+[raptormidverification] 2025-05-22T23:27:10.255253433Z stdout F [2025/05/22 16:27:10] INFO Value of pp_geo from env = MSMASTER
+[raptormidverification] 2025-05-22T23:27:10.256982472Z stdout F [2025/05/22 16:27:10] INFO Value of pp_datacenter from env = gcp_MSMASTER
+[raptormidverification] 2025-05-22T23:27:10.258714512Z stdout F [2025/05/22 16:27:10] INFO Value of pp_az from env = gcp_MSMASTER
+[raptormidverification] 2025-05-22T23:27:10.260604482Z stdout F [2025/05/22 16:27:10] INFO Value of pp_region from env = none
+[raptormidverification] 2025-05-22T23:27:10.262264202Z stdout F [2025/05/22 16:27:10] INFO Found env entries for pp_geo, pp_datacenter, pp_az
+[raptormidverification] 2025-05-22T23:27:10.267863812Z stdout F [2025/05/22 16:27:10] INFO Setting RAPTOR_BATCH=false
+[raptormidverification] 2025-05-22T23:27:10.276815522Z stdout F [2025/05/22 16:27:10] INFO Setting RAPTOR_KAFKA=false
+[raptormidverification] 2025-05-22T23:27:10.278709192Z stdout F [2025/05/22 16:27:10] INFO APP_NAME : raptormidverification
+[raptormidverification] 2025-05-22T23:27:10.280909402Z stdout F [2025/05/22 16:27:10] INFO RAPTOR_CLASS_OF_SERVICE : QA
+[raptormidverification] 2025-05-22T23:27:10.282753232Z stdout F [2025/05/22 16:27:10] INFO PROTECTED_DIR : /applicationpackages/manifests/active/raptormidverification/cronus/scripts/protected
+[raptormidverification] 2025-05-22T23:27:10.284529652Z stdout F [2025/05/22 16:27:10] INFO PARTNER_STAGE : te-raptorframework-9057.qa.company.com
+[raptormidverification] 2025-05-22T23:27:10.286243122Z stdout F [2025/05/22 16:27:10] INFO GLOBAL_PACKAGE_HOME : /applicationpackages/manifests/active
+[raptormidverification] 2025-05-22T23:27:10.288106652Z stdout F [2025/05/22 16:27:10] INFO APPLICATION_TXT_FILE : /applicationpackages/manifests/active/raptormidverification/cronus/scripts/app/cdbs/application.txt
+[raptormidverification] 2025-05-22T23:27:10.289871592Z stdout F [2025/05/22 16:27:10] INFO SERVER_XML_FILE : /conf/server.xml
+[raptormidverification] 2025-05-22T23:27:10.292026302Z stdout F [2025/05/22 16:27:10] INFO WRAPPER_CONFIG_FILE : /applicationpackages/manifests/active/JSW/cronus/scripts/JSW/conf/wrapper.conf
+[raptormidverification] 2025-05-22T23:27:10.293814321Z stdout F [2025/05/22 16:27:10] INFO LCMStepEnd SetEnvironmentVariables: Exit 0
+[raptormidverification] 2025-05-22T23:27:10.295588101Z stdout F [2025/05/22 16:27:10] INFO Verifying script: prepare_env.sh
+[raptormidverification] 2025-05-22T23:27:10.297515961Z stdout F [2025/05/22 16:27:10] INFO Verifying script: prepare_app.sh
+[raptormidverification] 2025-05-22T23:27:10.299447931Z stdout F [2025/05/22 16:27:10] INFO Verifying script: install_app.sh
+[raptormidverification] 2025-05-22T23:27:10.301382161Z stdout F [2025/05/22 16:27:10] INFO Verifying script: postinstall_app.sh
+[raptormidverification] 2025-05-22T23:27:10.312663751Z stdout F [2025/05/22 16:27:10] INFO Creating /applicationpackages/manifests/active/raptormidverification/cronus/scripts/app/temp
+[raptormidverification] 2025-05-22T23:27:10.33358532Z stdout F [2025/05/22 16:27:10] INFO LCMStep PrepareManagedStageFallbackConfig:
+[raptormidverification] 2025-05-22T23:27:10.339093271Z stdout F [2025/05/22 16:27:10] INFO Non-ManagedStage environment. No need to check for ManagedStage configurations.
+[raptormidverification] 2025-05-22T23:27:10.340810561Z stdout F [2025/05/22 16:27:10] INFO LCMStepEnd PrepareManagedStageFallbackConfig: Exit 0
+[raptormidverification] 2025-05-22T23:27:10.342502741Z stdout F [2025/05/22 16:27:10] INFO LCMStep ProcessCommonPackages:
+[raptormidverification] 2025-05-22T23:27:10.347914251Z stdout F [2025/05/22 16:27:10] INFO Ubuntu based Docker environment detected - bypassing attempt to install any common global packages.
+[raptormidverification] 2025-05-22T23:27:10.34966118Z stdout F [2025/05/22 16:27:10] INFO LCMStepEnd ProcessCommonPackages: Exit 0
+[raptormidverification] 2025-05-22T23:27:10.351558871Z stdout F [2025/05/22 16:27:10] INFO checking for BOOTSTRAP_TOKEN on the environment
+[raptormidverification] 2025-05-22T23:27:10.353369471Z stdout F [2025/05/22 16:27:10] INFO BOOTSTRAP_TOKEN found on the environment
+[raptormidverification] 2025-05-22T23:27:10.35498775Z stdout F [2025/05/22 16:27:10] INFO Not installing protected.
+[raptormidverification] 2025-05-22T23:27:10.35684997Z stdout F [2025/05/22 16:27:10] INFO LCMStep ResolveConnections:
+[raptormidverification] 2025-05-22T23:27:10.35857805Z stdout F [2025/05/22 16:27:10] INFO Application Name: raptormidverification
+[raptormidverification] 2025-05-22T23:27:10.36067549Z stderr F grep: service-manifest.yaml: No such file or directory
+[raptormidverification] 2025-05-22T23:27:10.3671497Z stdout F [2025/05/22 16:27:10] INFO PARTNER_STAGE: te-raptorframework-9057.qa.company.com
+[raptormidverification] 2025-05-22T23:27:10.432178849Z stdout F [2025/05/22 16:27:10] INFO partner hostname or partner_ip: te-raptorframework-9057.dev52.cbf.dev.companyinc.com
+[raptormidverification] 2025-05-22T23:27:10.434216139Z stdout F [2025/05/22 16:27:10] INFO executing /x/opt/pp/bin/configurator -a raptormidverification -i te-raptorframework-9057.dev52.cbf.dev.companyinc.com --legacy --sid-format
+[raptormidverification] 2025-05-22T23:27:10.817651272Z stderr F /var/tmp/78402/configurator/install/configurator-v8.7.1-py2.7.egg.095ed9c66e9c72d41864275a7b97f1e036528522/configurator-v8.7.1-py2.7.egg/configurator/generator.py:131: YAMLLoadWarning: calling yaml.load() without Loader=... is deprecated, as the default Loader is unsafe. Please read https://msg.pyyaml.org/load for full details.
+[raptormidverification] 2025-05-22T23:27:10.817709082Z stderr F return yaml.load(f.read())
+[raptormidverification] 2025-05-22T23:27:10.823154432Z stderr F /var/tmp/78402/configurator/install/configurator-v8.7.1-py2.7.egg.095ed9c66e9c72d41864275a7b97f1e036528522/configurator-v8.7.1-py2.7.egg/configurator/util.py:114: YAMLLoadWarning: calling yaml.load() without Loader=... is deprecated, as the default Loader is unsafe. Please read https://msg.pyyaml.org/load for full details.
+[raptormidverification] 2025-05-22T23:27:10.823194552Z stderr F hierarchy = yaml.load(f)
+[raptormidverification] 2025-05-22T23:27:15.983265542Z stdout F Resolving connections from toporeadserv snap id 45662 stream next time 2025-05-22T11:05:14.505 release 999
+[raptormidverification] 2025-05-22T23:27:16.008154552Z stdout F /applicationpackages/manifests/active/raptormidverification/cronus/scripts/company
+[raptormidverification] 2025-05-22T23:27:16.015258051Z stdout F [2025/05/22 16:27:16] INFO ProxyHost value from .haproxy.json te-raptorframework-9057.qa.company.com successfully added to stage_domain in application.txt
+[raptormidverification] 2025-05-22T23:27:16.021805811Z stdout F [2025/05/22 16:27:16] INFO USE_NETWORKING_PROXY not enabled
+[raptormidverification] 2025-05-22T23:27:16.023680591Z stdout F [2025/05/22 16:27:16] INFO
+[raptormidverification] 2025-05-22T23:27:16.025726901Z stdout F [2025/05/22 16:27:16] INFO ############################################################
+[raptormidverification] 2025-05-22T23:27:16.027789321Z stdout F [2025/05/22 16:27:16] INFO # connection config file in layout format
+[raptormidverification] 2025-05-22T23:27:16.029489151Z stdout F [2025/05/22 16:27:16] INFO # generated from service-manifest.yaml for raptormidverification
+[raptormidverification] 2025-05-22T23:27:16.031167181Z stdout F [2025/05/22 16:27:16] INFO # DO NOT edit
+[raptormidverification] 2025-05-22T23:27:16.032979601Z stdout F [2025/05/22 16:27:16] INFO ############################################################
+[raptormidverification] 2025-05-22T23:27:16.034713611Z stdout F [2025/05/22 16:27:16] INFO ffxserv_ca_port=11118
+[raptormidverification] 2025-05-22T23:27:16.036646681Z stdout F [2025/05/22 16:27:16] INFO walletfiserv_port=12300
+[raptormidverification] 2025-05-22T23:27:16.038436491Z stdout F [2025/05/22 16:27:16] INFO sherlock_frontier_host=sherlock-ftrproxy-vip.qa.company.com
+[raptormidverification] 2025-05-22T23:27:16.040223701Z stdout F [2025/05/22 16:27:16] INFO wrapper_nanny_port=32000
+[raptormidverification] 2025-05-22T23:27:16.041865781Z stdout F [2025/05/22 16:27:16] INFO zookeeper-generic_host=10.110.253.178^10.86.75.105^10.243.236.52
+[raptormidverification] 2025-05-22T23:27:16.043626081Z stdout F [2025/05/22 16:27:16] INFO epsilon-api-url_host=https://api.harmony.epsilon.com
+[raptormidverification] 2025-05-22T23:27:16.045294991Z stdout F [2025/05/22 16:27:16] INFO pingpongraptorserv_host=te-raptorframework-9057.dev52.cbf.dev.companyinc.com
+[raptormidverification] 2025-05-22T23:27:16.047005961Z stdout F [2025/05/22 16:27:16] INFO kafkarecoveryserv_port=22643
+[raptormidverification] 2025-05-22T23:27:16.048729101Z stdout F [2025/05/22 16:27:16] INFO eng_occ_host=1:te-raptorframework-9057.dev52.cbf.dev.companyinc.com:10489^1:te-raptorframework-9057.dev52.cbf.dev.companyinc.com:10490
+[raptormidverification] 2025-05-22T23:27:16.050295761Z stdout F [2025/05/22 16:27:16] INFO application_non_ssl_port=8080
+[raptormidverification] 2025-05-22T23:27:16.05228726Z stdout F [2025/05/22 16:27:16] INFO gfd_occ_host=1:te-raptorframework-9057.dev52.cbf.dev.companyinc.com:10126
+[raptormidverification] 2025-05-22T23:27:16.054367091Z stdout F [2025/05/22 16:27:16] INFO company_http_proxy_non_payment_host=proxy3003.qa.company.com
+[raptormidverification] 2025-05-22T23:27:16.05632102Z stdout F [2025/05/22 16:27:16] INFO searchserv_host=te-raptorframework-9057.dev52.cbf.dev.companyinc.com
+[raptormidverification] 2025-05-22T23:27:16.058007821Z stdout F [2025/05/22 16:27:16] INFO bankreferenceserv_host=te-raptorframework-9057.dev52.cbf.dev.companyinc.com
+[raptormidverification] 2025-05-22T23:27:16.059987841Z stdout F [2025/05/22 16:27:16] INFO occ-id_host=1:te-raptorframework-9057.dev52.cbf.dev.companyinc.com:11997
+[raptormidverification] 2025-05-22T23:27:16.062228141Z stdout F [2025/05/22 16:27:16] INFO bind_port=14856
+[raptormidverification] 2025-05-22T23:27:16.064806271Z stdout F [2025/05/22 16:27:16] INFO sid_eng_occ_host=occ-eng1:te-raptorframework-9057.dev52.cbf.dev.companyinc.com:10489^occ-eng2:te-raptorframework-9057.dev52.cbf.dev.companyinc.com:10490
+[raptormidverification] 2025-05-22T23:27:26.474302238Z stdout F Thu May 22 16:27:26 PDT 2025 Running (init) config-agent in pre-deploy mode ... done! [rc=0]
+[raptormidverification] 2025-05-22T23:27:26.478149508Z stdout F Thu May 22 16:27:26 PDT 2025 Customizing 'cronusapp' shell...
+[raptormidverification] 2025-05-22T23:27:26.485687748Z stderr F cp: -r not specified; omitting directory '/lcmhooks/prestart/assets/cronusapp/.'
+[raptormidverification] 2025-05-22T23:27:26.485710488Z stderr F cp: -r not specified; omitting directory '/lcmhooks/prestart/assets/cronusapp/..'
+[raptormidverification] 2025-05-22T23:27:26.486100488Z stdout F '/lcmhooks/prestart/assets/cronusapp/.bashrc' -> '/home/cronusapp/.bashrc'
+[raptormidverification] 2025-05-22T23:27:26.486148028Z stdout F '/lcmhooks/prestart/assets/cronusapp/.exrc' -> '/home/cronusapp/.exrc'
+[raptormidverification] 2025-05-22T23:27:26.489025158Z stdout F Thu May 22 16:27:26 PDT 2025 Customizing 'cronusapp' shell... done!
+[raptormidverification] 2025-05-22T23:27:26.492520178Z stdout F [/lcmhooks/prestart/90_ms_postinstall.sh] Entering validateEnvVariables()
+[raptormidverification] 2025-05-22T23:27:26.493068128Z stdout F [/lcmhooks/prestart/90_ms_postinstall.sh] PASS: env variable: APPNAME="raptormidverification"
+[raptormidverification] 2025-05-22T23:27:26.493659188Z stdout F [/lcmhooks/prestart/90_ms_postinstall.sh] WARN: env variable TESTENV_ENV is not set, this script does not qualify to be executed.
+[raptormidverification] 2025-05-22T23:27:26.494125458Z stdout F Called execScripts
+[raptormidverification] 2025-05-22T23:27:26.494148738Z stdout F Calling startup
+[raptormidverification] 2025-05-22T23:27:26.504853517Z stdout F [2025/05/22 16:27:26] INFO LCMPhase Startup:
+[raptormidverification] 2025-05-22T23:27:26.520194057Z stdout F [2025/05/22 16:27:26] INFO enableApplication:
+[raptormidverification] 2025-05-22T23:27:26.527929457Z stdout F export STACK_ID=raptorspringboot
+[raptormidverification] 2025-05-22T23:27:26.536396397Z stdout F [2025/05/22 16:27:26] INFO LCMStep CheckEnvironmentPrerequisites:
+[raptormidverification] 2025-05-22T23:27:26.539861987Z stdout F [2025/05/22 16:27:26] INFO LCMStepEnd CheckEnvironmentPrerequisites: Exit 0
+[raptormidverification] 2025-05-22T23:27:26.543794147Z stdout F [2025/05/22 16:27:26] INFO LCMStep SetEnvironmentVariables:
+[raptormidverification] 2025-05-22T23:27:26.552390237Z stdout F [2025/05/22 16:27:26] INFO /etc/.haproxy.json file found - proceeding to load PARTNER_STAGE value from key proxyHost
+[raptormidverification] 2025-05-22T23:27:26.557683577Z stdout F [2025/05/22 16:27:26] INFO Successfully set the property PARTNER_STAGE to te-raptorframework-9057.qa.company.com
+[raptormidverification] 2025-05-22T23:27:26.564432016Z stdout F [2025/05/22 16:27:26] INFO Successfully set the property genesis_az to lvs03
+[raptormidverification] 2025-05-22T23:27:26.570563977Z stdout F [2025/05/22 16:27:26] INFO Successfully set the property genesis_region to LVS
+[raptormidverification] 2025-05-22T23:27:26.579246827Z stdout F [2025/05/22 16:27:26] INFO Value of pp_geo from env = MSMASTER
+[raptormidverification] 2025-05-22T23:27:26.582696566Z stdout F [2025/05/22 16:27:26] INFO Value of pp_datacenter from env = gcp_MSMASTER
+[raptormidverification] 2025-05-22T23:27:26.586030426Z stdout F [2025/05/22 16:27:26] INFO Value of pp_az from env = gcp_MSMASTER
+[raptormidverification] 2025-05-22T23:27:26.589580316Z stdout F [2025/05/22 16:27:26] INFO Value of pp_region from env = none
+[raptormidverification] 2025-05-22T23:27:26.593100876Z stdout F [2025/05/22 16:27:26] INFO Found env entries for pp_geo, pp_datacenter, pp_az
+[raptormidverification] 2025-05-22T23:27:26.601503076Z stdout F [2025/05/22 16:27:26] INFO Setting RAPTOR_BATCH=false
+[raptormidverification] 2025-05-22T23:27:26.613481856Z stdout F [2025/05/22 16:27:26] INFO Setting RAPTOR_KAFKA=false
+[raptormidverification] 2025-05-22T23:27:26.617593886Z stdout F [2025/05/22 16:27:26] INFO APP_NAME : raptormidverification
+[raptormidverification] 2025-05-22T23:27:26.621679246Z stdout F [2025/05/22 16:27:26] INFO RAPTOR_CLASS_OF_SERVICE : QA
+[raptormidverification] 2025-05-22T23:27:26.625606756Z stdout F [2025/05/22 16:27:26] INFO PROTECTED_DIR : /applicationpackages/manifests/active/raptormidverification/cronus/scripts/protected
+[raptormidverification] 2025-05-22T23:27:26.629102326Z stdout F [2025/05/22 16:27:26] INFO PARTNER_STAGE : te-raptorframework-9057.qa.company.com
+[raptormidverification] 2025-05-22T23:27:26.632745795Z stdout F [2025/05/22 16:27:26] INFO GLOBAL_PACKAGE_HOME : /applicationpackages/manifests/active
+[raptormidverification] 2025-05-22T23:27:26.636298425Z stdout F [2025/05/22 16:27:26] INFO APPLICATION_TXT_FILE : /applicationpackages/manifests/active/raptormidverification/cronus/scripts/app/cdbs/application.txt
+[raptormidverification] 2025-05-22T23:27:26.639853935Z stdout F [2025/05/22 16:27:26] INFO SERVER_XML_FILE : /conf/server.xml
+[raptormidverification] 2025-05-22T23:27:26.643143325Z stdout F [2025/05/22 16:27:26] INFO WRAPPER_CONFIG_FILE : /applicationpackages/manifests/active/JSW/cronus/scripts/JSW/conf/wrapper.conf
+[raptormidverification] 2025-05-22T23:27:26.646865495Z stdout F [2025/05/22 16:27:26] INFO LCMStepEnd SetEnvironmentVariables: Exit 0
+[raptormidverification] 2025-05-22T23:27:26.650823205Z stdout F [2025/05/22 16:27:26] INFO LCMStep PreStartApplicationCheck:
+[raptormidverification] 2025-05-22T23:27:26.654803985Z stdout F [2025/05/22 16:27:26] INFO Checking that application ports are open
+[raptormidverification] 2025-05-22T23:27:26.667794045Z stdout F [2025/05/22 16:27:26] INFO Detected custom port value in /applicationpackages/manifests/active/raptormidverification/cronus/scripts/app/cdbs/application.txt: application_ssl_port=14856
+[raptormidverification] 2025-05-22T23:27:26.692153764Z stdout F [2025/05/22 16:27:26] INFO No process detected on application_non_ssl_port:8080
+[raptormidverification] 2025-05-22T23:27:26.716740764Z stdout F [2025/05/22 16:27:26] INFO No process detected on bind_port:14856
+[raptormidverification] 2025-05-22T23:27:26.741872314Z stdout F [2025/05/22 16:27:26] INFO No process detected on admin_port:8083
+[raptormidverification] 2025-05-22T23:27:26.765179193Z stdout F [2025/05/22 16:27:26] INFO No process detected on wrapper_nanny_port:32000
+[raptormidverification] 2025-05-22T23:27:26.788378743Z stdout F [2025/05/22 16:27:26] INFO No process detected on container_shutdown_port:8005
+[raptormidverification] 2025-05-22T23:27:26.813100782Z stdout F [2025/05/22 16:27:26] INFO No process detected on application_ssl_port:14856
+[raptormidverification] 2025-05-22T23:27:26.837539802Z stdout F [2025/05/22 16:27:26] INFO No process detected on jmx_remote_port:8445
+[raptormidverification] 2025-05-22T23:27:26.860515061Z stdout F [2025/05/22 16:27:26] INFO No process detected on remote_logon_port:8444
+[raptormidverification] 2025-05-22T23:27:26.864046481Z stdout F [2025/05/22 16:27:26] INFO LCMStepEnd PreStartApplicationCheck: Exit 0
+[raptormidverification] 2025-05-22T23:27:26.867767941Z stdout F [2025/05/22 16:27:26] INFO LCMStep CheckUlimits:
+[raptormidverification] 2025-05-22T23:27:26.873057822Z stdout F [2025/05/22 16:27:26] INFO ulimit checks:
+[raptormidverification] 2025-05-22T23:27:26.880573761Z stdout F [2025/05/22 16:27:26] INFO file descriptor hard limit : 1048576
+[raptormidverification] 2025-05-22T23:27:26.884312961Z stdout F [2025/05/22 16:27:26] INFO file descriptor soft limit : 1048576
+[raptormidverification] 2025-05-22T23:27:26.887846461Z stdout F [2025/05/22 16:27:26] INFO LCMStepEnd CheckUlimits: Exit 0
+[raptormidverification] 2025-05-22T23:27:26.891209491Z stdout F [2025/05/22 16:27:26] INFO LCMStep SetAuthCode:
+[raptormidverification] 2025-05-22T23:27:26.898326751Z stdout F [2025/05/22 16:27:26] INFO stage environment detected and AUTHCODE is not set
+[raptormidverification] 2025-05-22T23:27:26.901842611Z stdout F [2025/05/22 16:27:26] INFO export SHARE_PASSWORD_AUTO_SET=true
+[raptormidverification] 2025-05-22T23:27:26.905789561Z stdout F [2025/05/22 16:27:26] INFO LCMStepEnd SetAuthCode: Exit 0
+[raptormidverification] 2025-05-22T23:27:26.909321161Z stdout F [2025/05/22 16:27:26] INFO LCMStep StartApplicationServer:
+[raptormidverification] 2025-05-22T23:27:26.91371817Z stdout F [2025/05/22 16:27:26] INFO Found Docker Flag. Doing CHMOD on CRONUSAPP_HOME, /applicationpackages
+[raptormidverification] 2025-05-22T23:27:26.914559701Z stdout F Found Docker Flag. Doing CHMOD on CRONUSAPP_HOME, /applicationpackages
+[raptormidverification] 2025-05-22T23:27:27.016102419Z stdout F Exit code from sudo: 0
+[raptormidverification] 2025-05-22T23:27:27.021249549Z stdout F [2025/05/22 16:27:27] INFO Exit code from sudo: 0?
+[raptormidverification] 2025-05-22T23:27:27.192438456Z stderr F Name "Launcher::common::App::FH" used only once: possible typo at /applicationpackages/manifests/active/raptormidverification/cronus/scripts/lib/Launcher/common/App.pm line 506.
+[raptormidverification] 2025-05-22T23:27:27.192487225Z stderr F Name "Launcher::common::App::data" used only once: possible typo at /applicationpackages/manifests/active/raptormidverification/cronus/scripts/lib/Launcher/common/App.pm line 486.
+[raptormidverification] 2025-05-22T23:27:27.193821396Z stdout F 4034::2025-05-22 16:27:27 INFO NA.NA() : ===============================================================================
+[raptormidverification] 2025-05-22T23:27:27.193862085Z stdout F 4034::2025-05-22 16:27:27 INFO NA.NA() : deploy_master.pl script beginning
+[raptormidverification] 2025-05-22T23:27:27.193872245Z stdout F 4034::2025-05-22 16:27:27 INFO NA.NA() : ===============================================================================
+[raptormidverification] 2025-05-22T23:27:27.193881185Z stdout F 4034::2025-05-22 16:27:27 INFO /lib/Launcher/DeploymentConfiguration.pm.Launcher::DeploymentConfiguration::_initializeAgentMetaData() : ENV CRONUSAPP_HOME:/applicationpackages
+[raptormidverification] 2025-05-22T23:27:27.193889225Z stdout F 4034::2025-05-22 16:27:27 INFO /lib/Launcher/DeploymentConfiguration.pm.Launcher::DeploymentConfiguration::_initializeAgentMetaData() : Reading /applicationpackages/.metadata
+[raptormidverification] 2025-05-22T23:27:27.193898005Z stdout F 4034::2025-05-22 16:27:27 INFO /lib/Launcher/DeploymentConfiguration.pm.Launcher::Util::classOfServiceMapping() : classOfServiceMapping: attempting to map QA
+[raptormidverification] 2025-05-22T23:27:27.193908556Z stdout F 4034::2025-05-22 16:27:27 INFO /lib/Launcher/DeploymentConfiguration.pm.Launcher::Util::classOfServiceMapping() : classOfServiceMapping: QA mapped to QA
+[raptormidverification] 2025-05-22T23:27:27.193918565Z stdout F 4034::2025-05-22 16:27:27 INFO /deploy_master.pl.main::initialize() : Starting with RunMode = startup, Abspath = /applicationpackages/manifests/active/raptormidverification/cronus/scripts/startup, force = , run_env = qa, useroverride = 0
+[raptormidverification] 2025-05-22T23:27:27.193930156Z stdout F 4034::2025-05-22 16:27:27 INFO /deploy_master.pl.main::validateLoggedUser() : Logged User: cronusapp
+[raptormidverification] 2025-05-22T23:27:27.193938336Z stdout F 4034::2025-05-22 16:27:27 INFO /lib/Launcher/raptorspringboot/RaptorSpringBoot.pm.Launcher::common::App::new() : CLASS_OF_SERVICE : qa
+[raptormidverification] 2025-05-22T23:27:27.193948236Z stdout F 4034::2025-05-22 16:27:27 INFO /lib/Launcher/raptorspringboot/RaptorSpringBoot.pm.Launcher::common::App::new() : EnvironmentHome : /applicationpackages
+[raptormidverification] 2025-05-22T23:27:27.193956125Z stdout F 4034::2025-05-22 16:27:27 INFO /lib/Launcher/raptorspringboot/RaptorSpringBoot.pm.Launcher::common::App::new() : ManifestHome : /applicationpackages/manifests/active
+[raptormidverification] 2025-05-22T23:27:27.193965665Z stdout F 4034::2025-05-22 16:27:27 INFO /lib/Launcher/Dispatcher.pm.Launcher::raptorspringboot::RaptorSpringBoot::new() : CLASS_OF_SERVICE : qa
+[raptormidverification] 2025-05-22T23:27:27.193975616Z stdout F 4034::2025-05-22 16:27:27 INFO /lib/Launcher/Dispatcher.pm.Launcher::raptorspringboot::RaptorSpringBoot::new() : EnvironmentHome : /applicationpackages
+[raptormidverification] 2025-05-22T23:27:27.193984976Z stdout F 4034::2025-05-22 16:27:27 INFO /lib/Launcher/Dispatcher.pm.Launcher::raptorspringboot::RaptorSpringBoot::new() : ManifestHome : /applicationpackages/manifests/active
+[raptormidverification] 2025-05-22T23:27:27.193994545Z stdout F 4034::2025-05-22 16:27:27 INFO /lib/Launcher/raptorspringboot/RaptorSpringBoot.pm.Launcher::common::App::_getJavaHome() : JAVA_HOME : /evergreen/jvm-infra/java
+[raptormidverification] 2025-05-22T23:27:27.194004616Z stdout F 4034::2025-05-22 16:27:27 INFO /lib/Launcher/raptorspringboot/RaptorSpringBoot.pm.Launcher::common::App::_getJavaHome() : PATH : /evergreen/jvm-infra/java/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+[raptormidverification] 2025-05-22T23:27:27.235895775Z stdout F 4034::2025-05-22 16:27:27 INFO /deploy_master.pl.(eval)() : ===============================================================================
+[raptormidverification] 2025-05-22T23:27:27.235940405Z stdout F 4034::2025-05-22 16:27:27 INFO /deploy_master.pl.(eval)() : beginning command : startup
+[raptormidverification] 2025-05-22T23:27:27.235953385Z stdout F 4034::2025-05-22 16:27:27 INFO /deploy_master.pl.(eval)() : ===============================================================================
+[raptormidverification] 2025-05-22T23:27:27.235966785Z stdout F 4034::2025-05-22 16:27:27 INFO /lib/Launcher/Dispatcher.pm.Launcher::raptorspringboot::RaptorSpringBoot::startup() : App is not a batch app
+[raptormidverification] 2025-05-22T23:27:27.235977935Z stdout F 4034::2025-05-22 16:27:27 INFO /lib/Launcher/raptorspringboot/RaptorSpringBoot.pm.Launcher::raptorspringboot::RaptorSpringBoot::isDaemonDisabled() : App is not a batch app
+[raptormidverification] 2025-05-22T23:27:27.236006675Z stdout F 4034::2025-05-22 16:27:27 INFO /lib/Launcher/common/App.pm.Launcher::common::App::_read_r2_deployment() : opening file : /applicationpackages/.appdata/r2_deployment.properties
+[raptormidverification] 2025-05-22T23:27:27.236022695Z stdout F 4034::2025-05-22 16:27:27 INFO /lib/Launcher/common/App.pm.(eval)() : Setting svc.nugget to raptormidverification in ENV
+[raptormidverification] 2025-05-22T23:27:33.885297859Z stdout F 4034::2025-05-22 16:27:33 INFO /lib/Launcher/raptorspringboot/RaptorSpringBoot.pm.Launcher::common::App::get_readiness_iteration_count() : server_readiness_iteration_count:150
+[raptormidverification] 2025-05-22T23:27:33.885340059Z stdout F 4034::2025-05-22 16:27:33 INFO /lib/Launcher/raptorspringboot/RaptorSpringBoot.pm.Launcher::raptorspringboot::RaptorSpringBoot::isDaemonDisabled() : App is not a batch app
+[raptormidverification] 2025-05-22T23:27:33.885351069Z stdout F 4034::2025-05-22 16:27:33 INFO /deploy_master.pl.(eval)() : ===============================================================================
+[raptormidverification] 2025-05-22T23:27:33.885362199Z stdout F 4034::2025-05-22 16:27:33 INFO /deploy_master.pl.(eval)() : Completed command : startup with status : 0
+[raptormidverification] 2025-05-22T23:27:33.885370989Z stdout F 4034::2025-05-22 16:27:33 INFO /deploy_master.pl.(eval)() : ===============================================================================
+[raptormidverification] 2025-05-22T23:27:33.895892048Z stdout F [2025/05/22 16:27:33] INFO LCMStepEnd StartApplicationServer: Exit 0
+[raptormidverification] 2025-05-22T23:27:33.900373648Z stdout F [2025/05/22 16:27:33] INFO LCMStep PostApplicationStartup:
+[raptormidverification] 2025-05-22T23:27:33.904322498Z stdout F [2025/05/22 16:27:33] INFO LCMStepEnd PostApplicationStartup: Exit 0
+[raptormidverification] 2025-05-22T23:27:33.908163358Z stdout F [2025/05/22 16:27:33] INFO LCMPhaseEnd Startup: Exit 0
+[raptormidverification] 2025-05-22T23:27:33.909017438Z stdout F Called startup
+[raptormidverification] 2025-05-22T23:27:33.913295248Z stdout F Called startupApp
+[raptormidverification] 2025-05-22T23:27:33.913340738Z stdout F Successfully started the application raptormidverification. Moving to wait state ...
+[podbase] 2025-05-22T23:28:12.862106926Z stderr F 2025/05/22 23:28:12 Recieved Signal: user defined signal 2
+[podbase] 2025-05-22T23:28:12.862146036Z stderr F 2025/05/22 23:28:12 ECV In
+[podbase] 2025-05-23T00:37:36.403158508Z stderr F 2025/05/23 00:37:36 Recieved Signal: terminated
+[podbase] 2025-05-23T00:37:36.403382708Z stderr F 2025/05/23 00:37:36 Proxy Shutdown.
+[podbase] 2025-05-23T00:37:36.403556948Z stderr F 2025/05/23 00:37:36 Shutdown ECV for port :22222
+[podbase] 2025-05-23T00:37:36.403600218Z stderr F 2025/05/23 00:37:36 error <nil>
+[podbase] 2025-05-23T00:37:36.403614848Z stderr F 2025/05/23 00:37:36 Shutdown ECV for port :22222
+[configagent] 2025-05-23T00:37:36.432746928Z stdout F [2025/05/22 17:37:36] INFO Deleting configagent_started.txt file.
+[configagent] 2025-05-23T00:37:36.436505537Z stdout F [2025/05/22 17:37:36] INFO Exiting configagent container.

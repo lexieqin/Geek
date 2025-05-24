@@ -1,0 +1,702 @@
+{
+  "requestUuid": "81325fc3-b05e-4d9a-ada2-d2399aebe135",
+  "namespace": "te-raptorframework-9057",
+  "volume": "",
+  "pool": "raptormidverification",
+  "submittedBy": "_te_admin",
+  "contextData": {
+    "Genesis-DZ": "dev51",
+    "Genesis-DzList": "dev52",
+    "Genesis-IP": "000.000.000.000",
+    "Genesis-TraceID": "https://company-qa.datadoghq.com/apm/trace/81325fc3b05e4d9aada2d2399aebe135",
+    "isAdmin": "true"
+  },
+  "created": "2025-05-22T23:24:19.168Z",
+  "updated": "2025-05-22T23:31:08.113Z",
+  "completed": "2025-05-22T23:27:50.24Z",
+  "percentComplete": 15,
+  "status": "JOB_STATUS_FAILED",
+  "requestType": "DEPLOY",
+  "requestPayload": "{\"tenant\":\"testenv\",\"deploySpec\":{\"resource\":[\"https://manifestserv.dev.companyinc.com/v2/manifests/raptormidverification-5.0.0_SNAPSHOT_20250522161420307/containerspecs/yaml\"],\"deployStrategy\":{\"type\":\"DEPLOY_STRATEGY_ROLLING_UPDATE\",\"capacityOptions\":{}},\"deployStrategyType\":\"DEPLOY_STRATEGY_ROLLING_UPDATE\",\"envVars\":{\"APPNAME\":\"raptormidverification\",\"CTM_HOST\":\"controlmem-ss-dev.qa.company.com\",\"CTM_SERVER\":\"CTRLM-DEV\",\"ENV_NAMESPACE\":\"m2mE6MK\",\"ENV_YAM_NAMESPACE\":\"m2mE6MK\",\"HAPROXY_JSON\":\"{\\\"isProxyNode\\\":false,\\\"proxyHost\\\":\\\"te-raptorframework-9057.qa.company.com\\\"}\",\"METADATA_ENV_FILE\":\"additionalConfigs={\\\"applicationStackConfig1\\\": \\\"-javaagent:/x/web/jacoco/jacocoagent.jar=destfile=/x/web/LIVE/raptormidverification/logs/jacoco.exec,output=tcpserver,address=000.000.000.000,append=true\\\",\\\"applicationStackConfig2\\\": \\\"-Dkeymaker.read_timeout=60000\\\",\\\"applicationStackConfig3\\\": \\\"-Dkeymaker.connect_timeout=60000\\\"}\\napplicationProfilingTools=\\nclassOfService=QA\\ncronusType=applicationService\\ninstance.az=lvs03\\ninstance.azLabel=\\ninstance.datacenter=lvs03\\ninstance.fqdn=te-raptorframework-9057.qa.company.com\\ninstance.region=LVS\\ninstance.topoId=unknown\\ninstance.vpc=DEV\\nlabel=raptormidverification\\nnewManifestId=raptormidverification-5.0.0_SNAPSHOT_20250522161420307\\nodbMoName=te-raptorframework-9057\\norganizationCode=ZPC40000\\norganizationName=company\\npaasRealm=QA\\nserviceName=raptormidverification-app:CLDte-raptorframework-9057\\nservicePath=/\\nstackId=raptor-docker.service\\nsvc.archTier=app\\nsvc.architecture=r1\\nsvc.nugget=raptormidverification\\nsvc.userData=\",\"METADATA_JSON_FILE\":\"{\\n\\\"additionalConfigs\\\": {\\n\\\"applicationStackConfig1\\\": \\\"-javaagent:/x/web/jacoco/jacocoagent.jar=destfile=/x/web/LIVE/raptormidverification/logs/jacoco.exec,output=tcpserver,address=000.000.000.000,append=true\\\",\\n\\\"applicationStackConfig2\\\": \\\"-Dkeymaker.read_timeout=60000\\\",\\n\\\"applicationStackConfig3\\\": \\\"-Dkeymaker.connect_timeout=60000\\\"\\n},\\n\\\"applicationProfilingTools\\\": \\\"\\\",\\n\\\"classOfService\\\": \\\"QA\\\",\\n\\\"cronusType\\\": \\\"applicationService\\\",\\n\\\"instance.az\\\": \\\"lvs03\\\",\\n\\\"instance.azLabel\\\": \\\"\\\",\\n\\\"instance.datacenter\\\": \\\"lvs03\\\",\\n\\\"instance.fqdn\\\": \\\"te-raptorframework-9057.qa.company.com\\\",\\n\\\"instance.region\\\": \\\"LVS\\\",\\n\\\"instance.topoId\\\": \\\"unknown\\\",\\n\\\"instance.vpc\\\": \\\"DEV\\\",\\n\\\"label\\\": \\\"raptormidverification\\\",\\n\\\"newManifestId\\\": \\\"raptormidverification-5.0.0_SNAPSHOT_20250522161420307\\\",\\n\\\"odbMoName\\\": \\\"te-raptorframework-9057\\\",\\n\\\"organizationCode\\\": \\\"ZPC40000\\\",\\n\\\"organizationName\\\": \\\"company\\\",\\n\\\"paasRealm\\\": \\\"QA\\\",\\n\\\"serviceName\\\": \\\"raptormidverification-app:CLDte-raptorframework-9057\\\",\\n\\\"servicePath\\\": \\\"/\\\",\\n\\\"stackId\\\": \\\"raptor-docker.service\\\",\\n\\\"svc.archTier\\\": \\\"app\\\",\\n\\\"svc.architecture\\\": \\\"r1\\\",\\n\\\"svc.nugget\\\": \\\"raptormidverification\\\",\\n\\\"svc.userData\\\": \\\"\\\"\\n}\",\"SKIP_CTM_AGENT_INSTALL\":\"true\",\"USERSTAGE_NAME\":\"m2mE6MK\",\"amq_namespace\":\"m2mE6MK\",\"pp_az\":\"gcp_MSMASTER\",\"pp_datacenter\":\"gcp_MSMASTER\",\"pp_geo\":\"MSMASTER\",\"pp_region\":\"none\",\"testenv_fqdn\":\"te-raptorframework-9057.qa.company.com\"},\"labels\":{\"fileName\":\"docker-compose-base.yml,docker-compose-qa.yml,docker-compose-healthcheck.yml\"},\"version\":\"raptormidverification-5.0.0_SNAPSHOT_20250522161420307\",\"autoRollback\":false,\"maxSurge\":100,\"holdOverDuration\":\"\",\"executionOrder\":[{\"groupSuccessCount\":1,\"groupActivationStrategy\":\"100\",\"dzGroup\":[{\"dzName\":\"dev52\",\"envVars\":{\"observability.az\":\"dev52\"},\"labels\":{\"com.genesis.syshiera.dc\":\"dev52\",\"com.genesis.syshiera.env\":\"qa\",\"com.genesis.syshiera.pp_az\":\"dev52\",\"com.genesis.syshiera.stage\":\"stage2\",\"observability.az\":\"dev52\"},\"CanaryData\":{},\"loadTestData\":{\"startTime\":\"0001-01-01T00:00:00Z\",\"loadPolicy\":{}}}]}],\"jobType\":\"DEPLOY\",\"canaryPolicy\":{},\"loadPolicy\":{}}}",
+  "version": "raptormidverification-5.0.0_SNAPSHOT_20250522161420307",
+  "jobError": {
+    "errMessage": [
+      {
+        "error": {
+          "category": "System-Error",
+          "component": "ppregistrator app.unspecified",
+          "sub-category": "Environment-Error",
+          "message": "PPREGISTRATOR Error with the environment properties. LCM Error: 1109  Unable to properly resolve the host for managed stage: te-raptorframework-9057.qa.company.com, a fully qualified name is required Error: LFSM fail to monitor job: replica set raptormidverification-a-81325fc3-b05e-4d9a-ada2-d2399aebe135 failed"
+        },
+        "dz": "dev52",
+        "traceParserCategorization": true,
+        "updated": "2025-05-22T23:31:08.112959395Z",
+        "failedDz": true
+      }
+    ]
+  },
+  "requestProgress": [
+    {
+      "msg": "Starting Deployment Orchestrator",
+      "timeStamp": "2025-05-22T23:24:32.001579733Z",
+      "dzList": "dev52"
+    },
+    {
+      "msg": "Launching Deploy on [dev52]",
+      "timeStamp": "2025-05-22T23:24:32.404631978Z",
+      "dzList": "dev52"
+    },
+    {
+      "msg": "Launch Step Successful on [dev52]",
+      "timeStamp": "2025-05-22T23:24:43.112887865Z",
+      "dzList": "dev52"
+    },
+    {
+      "msg": "[dev52] Deploy 100 In Progress",
+      "timeStamp": "2025-05-22T23:24:48.271919466Z",
+      "dzList": "dev52"
+    },
+    {
+      "msg": "dev52 Deploy 100 Failed",
+      "timeStamp": "2025-05-22T23:27:44.314173859Z",
+      "dzList": "dev52"
+    },
+    {
+      "msg": "Job Failed - dev52 Deploy 100 Failed",
+      "timeStamp": "2025-05-22T23:27:44.390294257Z",
+      "dzList": "dev52"
+    },
+    {
+      "msg": "Job Failed, no autorollback",
+      "timeStamp": "2025-05-22T23:27:49.868241613Z",
+      "dzList": "dev52"
+    }
+  ],
+  "dzStatus": {
+    "GFSM": {
+      "name": "GFSM",
+      "status": "STATUS_FAILED",
+      "frozen": false,
+      "statusUpdate": [
+        {
+          "status": "STATUS_PENDING",
+          "frozen": false,
+          "timeStamp": "2025-05-22T23:24:31.996185313Z",
+          "stepId": 0,
+          "stepType": "",
+          "stepStatus": ""
+        },
+        {
+          "status": "STATUS_IN_PROGRESS",
+          "frozen": false,
+          "timeStamp": "2025-05-22T23:24:32.177480361Z",
+          "stepId": 0,
+          "stepType": "",
+          "stepStatus": ""
+        },
+        {
+          "status": "STATUS_FAILED",
+          "frozen": false,
+          "timeStamp": "2025-05-22T23:27:44.390290168Z",
+          "stepId": 0,
+          "stepType": "",
+          "stepStatus": ""
+        }
+      ],
+      "dzProgress": [
+        {
+          "stepType": "STEP_PERI_JOB_HOOKS",
+          "stepId": "0",
+          "status": "STATUS_SUCCESS",
+          "startTime": "2025-05-22T23:24:32.041224653Z",
+          "endTime": "2025-05-22T23:24:32.070501032Z",
+          "msg": [
+            {
+              "message": "Updating Status to STATUS_IN_PROGRESS",
+              "timeStamp": "2025-05-22T23:24:32.041257993Z"
+            },
+            {
+              "message": "Updating Status to STATUS_SUCCESS",
+              "timeStamp": "2025-05-22T23:24:32.070510982Z"
+            }
+          ]
+        },
+        {
+          "stepType": "STEP_LAUNCH",
+          "stepId": "1",
+          "status": "STATUS_SUCCESS",
+          "startTime": "2025-05-22T23:24:32.177482071Z",
+          "endTime": "2025-05-22T23:24:43.112835015Z",
+          "msg": [
+            {
+              "message": "Updating Status to STATUS_IN_PROGRESS",
+              "timeStamp": "2025-05-22T23:24:32.177497061Z"
+            },
+            {
+              "message": "Launching Deploy on [dev52]",
+              "timeStamp": "2025-05-22T23:24:32.404524328Z"
+            },
+            {
+              "message": "Launch Step Successful on [dev52]",
+              "timeStamp": "2025-05-22T23:24:43.112722495Z"
+            },
+            {
+              "message": "Updating Status to STATUS_SUCCESS",
+              "timeStamp": "2025-05-22T23:24:43.112840985Z"
+            }
+          ]
+        },
+        {
+          "stepType": "STEP_MONITOR",
+          "stepId": "2",
+          "status": "STATUS_FAILED",
+          "startTime": "2025-05-22T23:24:43.175238664Z",
+          "endTime": "2025-05-22T23:27:44.390289577Z",
+          "msg": [
+            {
+              "message": "Updating Status to STATUS_IN_PROGRESS",
+              "timeStamp": "2025-05-22T23:24:43.175260864Z"
+            },
+            {
+              "message": "Deploy Monitor Steps: 2",
+              "timeStamp": "2025-05-22T23:24:43.181683824Z"
+            },
+            {
+              "message": "dev52 Deploy 100 Failed",
+              "timeStamp": "2025-05-22T23:27:44.314164679Z"
+            },
+            {
+              "message": "Step Failed with error dev52 Deploy 100 Failed",
+              "timeStamp": "2025-05-22T23:27:44.390109648Z",
+              "level": "error",
+              "file": "fsm/globalfsm/gfsmexecutor/deployexecutor.go",
+              "func": "Monitor",
+              "line": 673,
+              "fields": {
+                "dzList": "dev52",
+                "error": "dev52 Deploy 100 Failed",
+                "stack": "dev52 Deploy 100 Failed\ngithub.company.com/PaaS-R/genesis-prod/fsm/globalfsm/gfsmexecutor.(*DeployExecutor).printStepStatus\n\t/go/src/github.company.com/PaaS-R/genesis-prod/fsm/globalfsm/gfsmexecutor/deployexecutor.go:2725\ngithub.company.com/PaaS-R/genesis-prod/fsm/globalfsm/gfsmexecutor.(*DeployExecutor).checkDzCurrentStep\n\t/go/src/github.company.com/PaaS-R/genesis-prod/fsm/globalfsm/gfsmexecutor/deployexecutor.go:2677\ngithub.company.com/PaaS-R/genesis-prod/fsm/globalfsm/gfsmexecutor.(*DeployExecutor).Monitor\n\t/go/src/github.company.com/PaaS-R/genesis-prod/fsm/globalfsm/gfsmexecutor/deployexecutor.go:669\ngithub.company.com/PaaS-R/genesis-prod/fsm/globalfsm/gfsmexecutor/monitor.(*InstrumentedGFSMExecutor).Monitor\n\t/go/src/github.company.com/PaaS-R/genesis-prod/fsm/globalfsm/gfsmexecutor/monitor/MonitoredGFSMExecutor.go:153\ngithub.company.com/PaaS-R/genesis-prod/fsm/globalfsm.(*GlobalFsm).monitor\n\t/go/src/github.company.com/PaaS-R/genesis-prod/fsm/globalfsm/globalfsm.go:500\ngithub.company.com/PaaS-R/genesis-prod/fsm/globalfsm.(*GlobalFsm).CreateFsm.func3\n\t/go/src/github.company.com/PaaS-R/genesis-prod/fsm/globalfsm/globalfsm.go:83\ngithub.com/looplab/fsm.(*FSM).beforeEventCallbacks\n\t/go/src/github.company.com/PaaS-R/genesis-prod/vendor/github.com/looplab/fsm/fsm.go:363\ngithub.com/looplab/fsm.(*FSM).Event\n\t/go/src/github.company.com/PaaS-R/genesis-prod/vendor/github.com/looplab/fsm/fsm.go:292\ngithub.company.com/PaaS-R/genesis-prod/fsm/globalfsm.(*GlobalFsm).Execute\n\t/go/src/github.company.com/PaaS-R/genesis-prod/fsm/globalfsm/globalfsm.go:323\ngithub.company.com/PaaS-R/genesis-prod/fsm/monitor.(*InstrumentedFSM).Execute\n\t/go/src/github.company.com/PaaS-R/genesis-prod/fsm/monitor/fsm.go:52\nmain.run\n\t/go/src/github.company.com/PaaS-R/genesis-prod/fsm/main.go:377\nmain.newRootCmd.runCmd.func1\n\t/go/src/github.company.com/PaaS-R/genesis-prod/fsm/main.go:204\ngithub.com/spf13/cobra.(*Command).execute\n\t/go/src/github.company.com/PaaS-R/genesis-prod/vendor/github.com/spf13/cobra/command.go:940\ngithub.com/spf13/cobra.(*Command).ExecuteC\n\t/go/src/github.company.com/PaaS-R/genesis-prod/vendor/github.com/spf13/cobra/command.go:1068\ngithub.com/spf13/cobra.(*Command).Execute\n\t/go/src/github.company.com/PaaS-R/genesis-prod/vendor/github.com/spf13/cobra/command.go:992\nmain.main\n\t/go/src/github.company.com/PaaS-R/genesis-prod/fsm/main.go:88\nruntime.main\n\t/usr/local/go/src/runtime/proc.go:267\nruntime.goexit\n\t/usr/local/go/src/runtime/asm_amd64.s:1650"
+              }
+            }
+          ]
+        },
+        {
+          "stepType": "STEP_SUCCESS",
+          "stepId": "3",
+          "status": "STATUS_PENDING",
+          "startTime": "0001-01-01T00:00:00Z",
+          "endTime": "0001-01-01T00:00:00Z"
+        },
+        {
+          "stepType": "STEP_CANCEL",
+          "stepId": "4",
+          "status": "STATUS_SUCCESS",
+          "startTime": "2025-05-22T23:27:44.605875934Z",
+          "endTime": "2025-05-22T23:27:49.739389115Z",
+          "msg": [
+            {
+              "message": "Updating Status to STATUS_IN_PROGRESS",
+              "timeStamp": "2025-05-22T23:27:44.605892534Z"
+            },
+            {
+              "message": "Cancel Step: Cancel In Progress [dev52]",
+              "timeStamp": "2025-05-22T23:27:44.641791544Z"
+            },
+            {
+              "message": "Updating Status to STATUS_SUCCESS",
+              "timeStamp": "2025-05-22T23:27:49.739412955Z"
+            },
+            {
+              "message": " Pool ActiveManifestCount 0, ActiveManifestVersion [] Updated",
+              "timeStamp": "2025-05-22T23:27:49.868228893Z"
+            }
+          ]
+        }
+      ],
+      "dzSummary": {
+        "CompletedSteps": {
+          "value": "1",
+          "lastUpdated": "2025-05-22T23:24:43.112800635Z"
+        },
+        "TotalSteps": {
+          "value": "4",
+          "lastUpdated": "2025-05-22T23:24:43.112818965Z"
+        }
+      },
+      "monitorProgress": [
+        {
+          "execOrder": 0,
+          "actVal": 100,
+          "type": "STEP_DEPLOY",
+          "status": "STATUS_PENDING",
+          "dzStepIds": {
+            "dev52": 0
+          },
+          "messages": [
+            {
+              "message": "created monitor step for 0-g0-val100-STEP_DEPLOY",
+              "timeStamp": "2025-05-22T23:24:43.181656994Z"
+            }
+          ],
+          "startTime": "2025-05-22T23:24:43.181656994Z",
+          "updatedTime": "2025-05-22T23:24:43.181656994Z",
+          "endTime": "0001-01-01T00:00:00Z"
+        },
+        {
+          "execOrder": 1,
+          "actVal": 100,
+          "type": "STEP_ACTIVATE",
+          "status": "STATUS_PENDING",
+          "dzStepIds": {
+            "dev52": 2
+          },
+          "messages": [
+            {
+              "message": "created monitor step for 1-g0-val100-STEP_ACTIVATE",
+              "timeStamp": "2025-05-22T23:24:43.181656994Z"
+            }
+          ],
+          "startTime": "2025-05-22T23:24:43.181656994Z",
+          "updatedTime": "2025-05-22T23:24:43.181656994Z",
+          "endTime": "0001-01-01T00:00:00Z"
+        }
+      ]
+    },
+    "dev52": {
+      "name": "dev52",
+      "status": "STATUS_FAILED",
+      "frozen": false,
+      "statusUpdate": [
+        {
+          "status": "STATUS_PENDING",
+          "frozen": false,
+          "timeStamp": "2025-05-22T23:24:33.138910587Z",
+          "stepId": 0,
+          "stepType": "",
+          "stepStatus": ""
+        },
+        {
+          "status": "STATUS_IN_PROGRESS",
+          "frozen": false,
+          "timeStamp": "2025-05-22T23:24:40.839470531Z",
+          "stepId": 0,
+          "stepType": "STEP_DEPLOY",
+          "stepStatus": ""
+        },
+        {
+          "status": "STATUS_FAILED",
+          "frozen": false,
+          "timeStamp": "2025-05-22T23:27:48.961837078Z",
+          "stepId": 0,
+          "stepType": "",
+          "stepStatus": ""
+        }
+      ],
+      "dzProgress": [
+        {
+          "stepType": "STEP_DEPLOY",
+          "stepId": "0",
+          "stepVal": {
+            "NEWPOOL_RAMPUP_PERCENTVALUE": 100,
+            "POOL_TYPE": "POOLA",
+            "batchSize": 1
+          },
+          "status": "STATUS_FAILED",
+          "statusUpdate": [
+            {
+              "status": "STATUS_IN_PROGRESS",
+              "timeStamp": "2025-05-22T23:24:41.153727697Z"
+            },
+            {
+              "status": "STATUS_FAILED",
+              "timeStamp": "2025-05-22T23:27:42.641658195Z"
+            }
+          ],
+          "startTime": "2025-05-22T23:24:41.153727957Z",
+          "endTime": "2025-05-22T23:27:42.641658645Z",
+          "msg": [
+            {
+              "msgType": "DEPLOY_CHECK_JOB_EXIST",
+              "timeStamp": "2025-05-22T23:24:41.402873062Z",
+              "level": "info",
+              "fields": {
+                "EXIST": false
+              }
+            },
+            {
+              "msgType": "DEPLOY_CREATE_JOB",
+              "timeStamp": "2025-05-22T23:24:42.056720412Z",
+              "level": "info",
+              "fields": {
+                "MAXSURGE": 1,
+                "MINAVAILABLE": 1,
+                "REPLICA_SET_NAME": "raptormidverification-a-81325fc3-b05e-4d9a-ada2-d2399aebe135",
+                "REPLICA_SET_UID": "b270bdde-3992-498a-88a4-685ddd2527af"
+              }
+            },
+            {
+              "message": "replica set status: {\"replicas\":1,\"fullyLabeledReplicas\":1,\"observedGeneration\":2}",
+              "timeStamp": "2025-05-22T16:27:42.320644689-07:00",
+              "level": "info"
+            },
+            {
+              "msgType": "DEPLOY_SB_SAMPLE_LINK",
+              "message": "sample log links 0 success, 0 fail, 0 in progress",
+              "timeStamp": "2025-05-22T23:27:42.390096209Z",
+              "level": "debug",
+              "fields": {
+                "STARTING": [
+                  "http://genesis.dev.companyinc.com:9101/sandboxlogs/#/katbox/browse?path=/csi-data-dir/7d1f4a89-b6ec-44e4-b047-d34d6d3f9704&hostip=000.000.000.000"
+                ]
+              }
+            },
+            {
+              "msgType": "DEPLOY_INSTANCE_SUMMARY",
+              "timeStamp": "2025-05-22T23:27:42.390107469Z",
+              "level": "debug",
+              "fields": {
+                "STARTING": [
+                  "{\"id\":\"0\",\"ts\":\"2025-05-22T16:26:58-07:00\"}"
+                ]
+              }
+            },
+            {
+              "msgType": "STEP_EXECUTION_COMPLETE",
+              "message": "fail to monitor job: replica set raptormidverification-a-81325fc3-b05e-4d9a-ada2-d2399aebe135 failed",
+              "timeStamp": "2025-05-22T23:27:42.53314556Z",
+              "result": "FAIL",
+              "level": "error"
+            }
+          ],
+          "summary": {
+            "activatePercentage": {
+              "value": "0",
+              "lastUpdated": "0001-01-01T00:00:00Z"
+            },
+            "slbCount": {
+              "value": "0",
+              "lastUpdated": "0001-01-01T00:00:00Z"
+            },
+            "startingTaskCount": {
+              "value": "1",
+              "lastUpdated": "2025-05-22T23:27:42.46189341Z"
+            },
+            "timeSummary": {
+              "val": {
+                "systemTime": "3m1.487930358s",
+                "totalTime": "3m1.487930358s"
+              },
+              "lastUpdated": "2025-05-22T23:27:42.727404143Z"
+            },
+            "version": {
+              "lastUpdated": "0001-01-01T00:00:00Z"
+            }
+          }
+        },
+        {
+          "stepType": "STEP_WAIT",
+          "stepId": "1",
+          "stepVal": {
+            "AUTOPROCEED": true,
+            "PAUSE_TYPE": "CHECKPOINT_PAUSE"
+          },
+          "startTime": "0001-01-01T00:00:00Z",
+          "endTime": "0001-01-01T00:00:00Z",
+          "summary": {
+            "activatePercentage": {
+              "value": "0",
+              "lastUpdated": "0001-01-01T00:00:00Z"
+            },
+            "slbCount": {
+              "value": "0",
+              "lastUpdated": "0001-01-01T00:00:00Z"
+            },
+            "startingTaskCount": {
+              "value": "1",
+              "lastUpdated": "2025-05-22T23:27:42.46189341Z"
+            },
+            "timeSummary": {
+              "lastUpdated": "0001-01-01T00:00:00Z"
+            },
+            "version": {
+              "lastUpdated": "0001-01-01T00:00:00Z"
+            }
+          }
+        },
+        {
+          "stepType": "STEP_ACTIVATE",
+          "stepId": "2",
+          "stepVal": {
+            "CURRENTPOOLACTIVATION_VALUE": 0,
+            "NEWPOOLACTIVATION_VALUE": 100,
+            "POOL_TYPE": "POOLA",
+            "SUCCESS_THRESHOLD_COUNT": 1
+          },
+          "startTime": "0001-01-01T00:00:00Z",
+          "endTime": "0001-01-01T00:00:00Z",
+          "summary": {
+            "activatePercentage": {
+              "value": "0",
+              "lastUpdated": "0001-01-01T00:00:00Z"
+            },
+            "slbCount": {
+              "value": "0",
+              "lastUpdated": "0001-01-01T00:00:00Z"
+            },
+            "startingTaskCount": {
+              "value": "1",
+              "lastUpdated": "2025-05-22T23:27:42.46189341Z"
+            },
+            "timeSummary": {
+              "lastUpdated": "0001-01-01T00:00:00Z"
+            },
+            "version": {
+              "lastUpdated": "0001-01-01T00:00:00Z"
+            }
+          }
+        },
+        {
+          "stepType": "STEP_WAIT",
+          "stepId": "3",
+          "stepVal": {
+            "AUTOPROCEED": false,
+            "PAUSE_TYPE": "PAUSE_CLOSE"
+          },
+          "startTime": "0001-01-01T00:00:00Z",
+          "endTime": "0001-01-01T00:00:00Z",
+          "summary": {
+            "activatePercentage": {
+              "value": "0",
+              "lastUpdated": "0001-01-01T00:00:00Z"
+            },
+            "slbCount": {
+              "value": "0",
+              "lastUpdated": "0001-01-01T00:00:00Z"
+            },
+            "startingTaskCount": {
+              "value": "1",
+              "lastUpdated": "2025-05-22T23:27:42.46189341Z"
+            },
+            "timeSummary": {
+              "lastUpdated": "0001-01-01T00:00:00Z"
+            },
+            "version": {
+              "lastUpdated": "0001-01-01T00:00:00Z"
+            }
+          }
+        },
+        {
+          "stepType": "STEP_CLOSE",
+          "stepId": "4",
+          "startTime": "0001-01-01T00:00:00Z",
+          "endTime": "0001-01-01T00:00:00Z",
+          "summary": {
+            "activatePercentage": {
+              "value": "0",
+              "lastUpdated": "0001-01-01T00:00:00Z"
+            },
+            "slbCount": {
+              "value": "0",
+              "lastUpdated": "0001-01-01T00:00:00Z"
+            },
+            "startingTaskCount": {
+              "value": "1",
+              "lastUpdated": "2025-05-22T23:27:42.46189341Z"
+            },
+            "timeSummary": {
+              "lastUpdated": "0001-01-01T00:00:00Z"
+            },
+            "version": {
+              "lastUpdated": "0001-01-01T00:00:00Z"
+            }
+          }
+        },
+        {
+          "stepType": "STEP_FAIL",
+          "stepId": "5",
+          "status": "STATUS_SUCCESS",
+          "statusUpdate": [
+            {
+              "status": "STATUS_IN_PROGRESS",
+              "timeStamp": "2025-05-22T23:27:43.055532017Z"
+            },
+            {
+              "status": "STATUS_SUCCESS",
+              "timeStamp": "2025-05-22T23:27:48.179386257Z"
+            }
+          ],
+          "startTime": "2025-05-22T23:27:42.813431371Z",
+          "endTime": "2025-05-22T23:27:48.179386607Z",
+          "summary": {
+            "activatePercentage": {
+              "value": "0",
+              "lastUpdated": "0001-01-01T00:00:00Z"
+            },
+            "slbCount": {
+              "value": "0",
+              "lastUpdated": "0001-01-01T00:00:00Z"
+            },
+            "timeSummary": {
+              "val": {
+                "systemTime": "5.365954306s",
+                "totalTime": "5.365954306s"
+              },
+              "lastUpdated": "2025-05-22T23:27:48.282011812Z"
+            },
+            "version": {
+              "lastUpdated": "0001-01-01T00:00:00Z"
+            }
+          }
+        },
+        {
+          "stepType": "STEP_CANCEL",
+          "stepId": "6",
+          "status": "STATUS_SUCCESS",
+          "statusUpdate": [
+            {
+              "status": "STATUS_IN_PROGRESS",
+              "timeStamp": "2025-05-22T23:27:48.406140415Z"
+            },
+            {
+              "status": "STATUS_SUCCESS",
+              "timeStamp": "2025-05-22T23:27:48.704509594Z"
+            }
+          ],
+          "startTime": "2025-05-22T23:27:42.917840096Z",
+          "endTime": "2025-05-22T23:27:48.704509874Z",
+          "msg": [
+            {
+              "msgType": "CANCEL_START",
+              "timeStamp": "2025-05-22T23:27:48.491183934Z",
+              "level": "info",
+              "fields": {
+                "AUTO_ROLLBACK": false
+              }
+            },
+            {
+              "msgType": "POOL_DEPLOY_META_INFO",
+              "timeStamp": "2025-05-22T23:27:48.573037802Z",
+              "level": "info",
+              "fields": {
+                "DEPLOY_META_INFO": {
+                  "dzName": "dev52",
+                  "lastUpdated": "2025-05-22T23:24:41.27169832Z",
+                  "onGoingPool": "POOLA",
+                  "poolAInfo": {
+                    "deploy": "kubernetes",
+                    "multiDriverDeploy": true,
+                    "poolDeployStrategy": "DEPLOY_STRATEGY_ROLLING_UPDATE",
+                    "poolName": "raptormidverification-a",
+                    "poolVersion": "raptormidverification-5.0.0_SNAPSHOT_20250522161420307",
+                    "registry": "db",
+                    "reqUUID": "81325fc3-b05e-4d9a-ada2-d2399aebe135"
+                  },
+                  "poolBInfo": {
+                    "poolName": "raptormidverification-b"
+                  }
+                }
+              }
+            }
+          ],
+          "summary": {
+            "activatePercentage": {
+              "value": "0",
+              "lastUpdated": "0001-01-01T00:00:00Z"
+            },
+            "slbCount": {
+              "value": "0",
+              "lastUpdated": "0001-01-01T00:00:00Z"
+            },
+            "timeSummary": {
+              "val": {
+                "systemTime": "5.786669098s",
+                "totalTime": "5.786669098s"
+              },
+              "lastUpdated": "2025-05-22T23:27:48.823402357Z"
+            },
+            "version": {
+              "lastUpdated": "0001-01-01T00:00:00Z"
+            }
+          }
+        }
+      ],
+      "dzSummary": {
+        "timeSummary": {
+          "val": {
+            "systemTime": "3m12.640553762s",
+            "totalTime": "3m12.640553762s"
+          },
+          "lastUpdated": "2025-05-22T23:27:48.915568885Z"
+        }
+      }
+    }
+  },
+  "jobLogLinks": {
+    "GFSM": [
+      {
+        "seq": 1,
+        "logLink": "http://genesis.dev.companyinc.com:9101/sandboxlogs/#/katbox/browse?path=/csi-data-dir/9e95f766-1904-4509-a224-6a94983597ae&hostip=000.000.000.000",
+        "startTime": "2025-05-22T23:24:31.764466296Z"
+      }
+    ],
+    "dev52": [
+      {
+        "seq": 1,
+        "logLink": "http://genesis.dev.companyinc.com:9101/sandboxlogs/#/katbox/browse?path=/csi-data-dir/2add8072-e53a-4331-811f-543e9f4f0ff9&hostip=000.000.000.000",
+        "startTime": "2025-05-22T23:24:40.62779641Z"
+      }
+    ]
+  },
+  "jobStatusTransitions": [
+    {
+      "status": "JOB_STATUS_QUEUED",
+      "transitionTime": "2025-05-22T23:24:19.168199438Z"
+    },
+    {
+      "status": "JOB_STATUS_IN_PROGRESS",
+      "transitionTime": "2025-05-22T23:24:31.910341364Z"
+    },
+    {
+      "status": "JOB_STATUS_CANCEL_IN_PROGRESS",
+      "transitionTime": "2025-05-22T23:27:44.610148605Z"
+    },
+    {
+      "status": "JOB_STATUS_FAILED",
+      "transitionTime": "2025-05-22T23:27:50.240077508Z"
+    }
+  ],
+  "tenant": "testenv",
+  "strategyPauseEnd": false,
+  "systemPauseEnd": false,
+  "userCancel": false,
+  "userPauseBegin": false,
+  "userPauseEnd": false,
+  "timeMetricSummary": {
+    "jobTimeSummary": {
+      "dzList": [
+        "dev52"
+      ],
+      "totalTime": "3m31.43s",
+      "systemTime": "3m31.43s"
+    },
+    "groupTimeSummary": [
+      {
+        "dzList": [
+          "dev52"
+        ],
+        "totalTime": "3m22.67s",
+        "systemTime": "3m22.67s"
+      }
+    ],
+    "dzTimeSummary": {
+      "dev52": {
+        "dzList": [
+          "dev52"
+        ],
+        "totalTime": "3m12.64s",
+        "systemTime": "3m12.64s"
+      }
+    }
+  },
+  "responseSummary": {}
+}

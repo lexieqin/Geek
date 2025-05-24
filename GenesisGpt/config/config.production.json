@@ -1,0 +1,64 @@
+{
+  "environment": "production",
+  "apis": {
+    "job_service": {
+      "base_url": "https://api.genesis.company.com",
+      "endpoints": {
+        "job_details": "/v1/tenants/{tenant}/jobs/{jobId}",
+        "job_list": "/v1/tenants/{tenant}/jobs",
+        "job_create": "/v1/tenants/{tenant}/jobs",
+        "job_update": "/v1/tenants/{tenant}/jobs/{jobId}",
+        "job_delete": "/v1/tenants/{tenant}/jobs/{jobId}"
+      },
+      "timeout_seconds": 60
+    },
+    "datadog_service": {
+      "base_url": "https://api.datadoghq.com",
+      "api_url": "https://api.datadoghq.com",
+      "endpoints": {
+        "trace_mock": "/api/datadog/trace/{traceID}",
+        "trace_real": "/api/v2/traces/{traceID}",
+        "spans": "/api/v2/spans/events/search",
+        "logs": "/api/v2/logs/events/search"
+      },
+      "site": "datadoghq.com"
+    },
+    "sandbox_service": {
+      "base_url": "https://sandbox.genesis.company.com",
+      "endpoints": {
+        "logs": "/api/v1/logs",
+        "smart_logs": "/api/v1/logs/analyze",
+        "list_files": "/api/v1/files",
+        "download": "/api/v1/files/download"
+      }
+    },
+    "gintools_url": "https://tools.genesis.company.com"
+  },
+  "auth": {
+    "job_service": {
+      "type": "bearer",
+      "credentials": {
+        "token": "${JOB_SERVICE_TOKEN}"
+      }
+    },
+    "datadog": {
+      "type": "api_key",
+      "credentials": {
+        "api_key": "${DD_API_KEY}",
+        "app_key": "${DD_APP_KEY}"
+      }
+    },
+    "sandbox": {
+      "type": "bearer",
+      "credentials": {
+        "token": "${SANDBOX_TOKEN}"
+      }
+    }
+  },
+  "features": {
+    "use_mock_data": false,
+    "enable_tracing": true,
+    "enable_smart_logs": true,
+    "verbose_logging": false
+  }
+}

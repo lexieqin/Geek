@@ -1,0 +1,57 @@
+{
+  "environment": "development",
+  "apis": {
+    "job_service": {
+      "base_url": "http://localhost:8080",
+      "endpoints": {
+        "job_details": "/tenant/{tenant}/jobs",
+        "job_list": "/tenant/{tenant}/jobs/list",
+        "job_create": "/tenant/{tenant}/jobs/create",
+        "job_update": "/tenant/{tenant}/jobs/{jobId}",
+        "job_delete": "/tenant/{tenant}/jobs/{jobId}"
+      },
+      "timeout_seconds": 30
+    },
+    "datadog_service": {
+      "base_url": "http://localhost:8080",
+      "api_url": "https://api.datadoghq.com",
+      "endpoints": {
+        "trace_mock": "/api/datadog/trace/{traceID}",
+        "trace_real": "/api/v2/traces/{traceID}",
+        "spans": "/api/v2/spans/events/search",
+        "logs": "/api/v2/logs/events/search"
+      },
+      "site": "datadoghq.com"
+    },
+    "sandbox_service": {
+      "base_url": "http://localhost:8080",
+      "endpoints": {
+        "logs": "/api/sandbox/logs",
+        "smart_logs": "/api/sandbox/logs/smart",
+        "list_files": "/api/sandbox/files",
+        "download": "/api/sandbox/download"
+      }
+    },
+    "gintools_url": "http://localhost:8080"
+  },
+  "auth": {
+    "job_service": {
+      "type": "none",
+      "credentials": {}
+    },
+    "datadog": {
+      "type": "none",
+      "credentials": {}
+    },
+    "sandbox": {
+      "type": "none",
+      "credentials": {}
+    }
+  },
+  "features": {
+    "use_mock_data": true,
+    "enable_tracing": true,
+    "enable_smart_logs": true,
+    "verbose_logging": true
+  }
+}

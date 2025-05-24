@@ -1,0 +1,590 @@
+{
+  "data": {
+    "id": "12511793859642777909",
+    "type": "trace",
+    "attributes": {
+      "is_truncated": false,
+      "spans": [
+        {
+          "service": "lfsm",
+          "name": "app.unspecified",
+          "resource": "DEPLOY.Execute",
+          "error": 1,
+          "meta": {
+            "az": "dev52",
+            "cluster": "qa-prod",
+            "env": "qa",
+            "environment": "qa",
+            "err.msg": "fail to monitor job: replica set raptormidverification-a-81325fc3-b05e-4d9a-ada2-d2399aebe135 failed",
+            "err.sub_category": "Deploy-Driver-Error",
+            "err.type": "System-Error",
+            "error.message": "fail to monitor job: replica set raptormidverification-a-81325fc3-b05e-4d9a-ada2-d2399aebe135 failed",
+            "events": "[{\"time_unix_nano\":1747956462532979000,\"name\":\"exception\",\"attributes\":{\"event\":\"exception\",\"exception.message\":\"fail to monitor job: replica set raptormidverification-a-81325fc3-b05e-4d9a-ada2-d2399aebe135 failed\",\"exception.type\":\"*traces.TraceError\"}}]",
+            "otel.library.name": "81325fc3-b05e-4d9a-ada2-d2399aebe135",
+            "otel.status_code": "Error",
+            "otel.trace_id": "81325fc3b05e4d9aada2d2399aebe135",
+            "service.version": "not-set",
+            "span.kind": "unspecified",
+            "step.name": "DEPLOY.Execute",
+            "step.summary": "{\"activatePercentage\":{\"value\":\"0\",\"lastUpdated\":\"0001-01-01T00:00:00Z\"},\"slbCount\":{\"value\":\"0\",\"lastUpdated\":\"0001-01-01T00:00:00Z\"},\"startingTaskCount\":{\"value\":\"1\",\"lastUpdated\":\"2025-05-22T23:27:42.46189341Z\"},\"timeSummary\":{\"lastUpdated\":\"0001-01-01T00:00:00Z\"},\"version\":{\"lastUpdated\":\"0001-01-01T00:00:00Z\"}}",
+            "version": "not-set"
+          }
+        },
+        {
+          "service": "lfsm",
+          "name": "app.unspecified",
+          "resource": "deployDriver.kubernetes.Deploy",
+          "error": 1,
+          "meta": {
+            "az": "dev52",
+            "cluster": "qa-prod",
+            "env": "qa",
+            "environment": "qa",
+            "err.msg": "fail to monitor job: replica set raptormidverification-a-81325fc3-b05e-4d9a-ada2-d2399aebe135 failed",
+            "err.sub_category": "Deploy-Driver-Error",
+            "err.type": "System-Error",
+            "error.message": "fail to monitor job: replica set raptormidverification-a-81325fc3-b05e-4d9a-ada2-d2399aebe135 failed",
+            "events": "[{\"time_unix_nano\":1747956462320661000,\"name\":\"exception\",\"attributes\":{\"message\":\"replica set status: {\"replicas\":1,\"fullyLabeledReplicas\":1,\"observedGeneration\":2}\",\"step.id\":\"0\",\"timestamp\":\"2025-05-22 16:27:42.320644689 -0700 PDT m=+186.913644756\"}},{\"time_unix_nano\":1747956462390106000,\"name\":\"exception\",\"attributes\":{\"event\":\"DEPLOY_SB_SAMPLE_LINK\",\"message\":\"sample log links 0 success, 0 fail, 0 in progress\",\"timestamp\":\"2025-05-22 23:27:42.390096209 +0000 UTC\"}},{\"time_unix_nano\":1747956462390111000,\"name\":\"exception\",\"attributes\":{\"step.id\":\"0\",\"timestamp\":\"2025-05-22 23:27:42.390107469 +0000 UTC\",\"event\":\"DEPLOY_INSTANCE_SUMMARY\"}},{\"time_unix_nano\":1747956462450745000,\"name\":\"exception\",\"attributes\":{\"event\":\"exception\",\"exception.message\":\"fail to monitor job: replica set raptormidverification-a-81325fc3-b05e-4d9a-ada2-d2399aebe135 failed\",\"exception.type\":\"*traces.TraceError\"}}]",
+            "otel.library.name": "81325fc3-b05e-4d9a-ada2-d2399aebe135",
+            "otel.status_code": "Error",
+            "otel.trace_id": "81325fc3b05e4d9aada2d2399aebe135",
+            "service.version": "not-set",
+            "span.kind": "unspecified",
+            "version": "not-set"
+          }
+        },
+        {
+          "service": "lfsm",
+          "name": "app.unspecified",
+          "resource": "k8s.strategyExecutor.RollingUpdateStrategyExecutor.Monitor",
+          "error": 1,
+          "meta": {
+            "az": "dev52",
+            "cluster": "qa-prod",
+            "env": "qa",
+            "environment": "qa",
+            "err.msg": "replica set raptormidverification-a-81325fc3-b05e-4d9a-ada2-d2399aebe135 failed",
+            "err.sub_category": "k8s.strategyExecutor.RollingUpdateStrategyExecutor",
+            "err.type": "System-Error",
+            "error.message": "replica set raptormidverification-a-81325fc3-b05e-4d9a-ada2-d2399aebe135 failed",
+            "events": "[{\"time_unix_nano\":1747956462383673000,\"name\":\"exception\",\"attributes\":{\"event\":\"exception\",\"exception.message\":\"replica set raptormidverification-a-81325fc3-b05e-4d9a-ada2-d2399aebe135 failed\",\"exception.type\":\"*traces.TraceError\"}}]",
+            "namespace": "te-raptorframework-9057",
+            "otel.library.name": "81325fc3-b05e-4d9a-ada2-d2399aebe135",
+            "otel.status_code": "Error",
+            "otel.trace_id": "81325fc3b05e4d9aada2d2399aebe135",
+            "pool": "raptormidverification",
+            "service.version": "not-set",
+            "span.kind": "unspecified",
+            "tenant": "testenv",
+            "version": "not-set"
+          }
+        },
+        {
+          "service": "lfsm",
+          "name": "app.unspecified",
+          "resource": "deployLocalFSM.Execute",
+          "error": 1,
+          "meta": {
+            "az": "dev52",
+            "cluster": "qa-prod",
+            "dev52 log_link": "http://genesis.dev.companyinc.com:9101/sandboxlogs/#/katbox/browse?path=/csi-data-dir/2add8072-e53a-4331-811f-543e9f4f0ff9&hostip=10.183.128.94",
+            "env": "qa",
+            "environment": "qa",
+            "err.msg": "fail to monitor job: replica set raptormidverification-a-81325fc3-b05e-4d9a-ada2-d2399aebe135 failed",
+            "err.sub_category": "Deploy-Driver-Error",
+            "err.type": "System-Error",
+            "error.message": "fail to monitor job: replica set raptormidverification-a-81325fc3-b05e-4d9a-ada2-d2399aebe135 failed",
+            "events": "[{\"time_unix_nano\":1747956281121007000,\"name\":\"exception\",\"attributes\":{\"step.status\":\"STATUS_IN_PROGRESS\",\"event\":\"step.update\",\"step.id\":\"0\"}},{\"time_unix_nano\":1747956462533154000,\"name\":\"exception\",\"attributes\":{\"event\":\"STEP_EXECUTION_COMPLETE\",\"message\":\"fail to monitor job: replica set raptormidverification-a-81325fc3-b05e-4d9a-ada2-d2399aebe135 failed\",\"step.id\":\"0\",\"step.result\":\"FAIL\",\"timestamp\":\"2025-05-22 23:27:42.53314556 +0000 UTC\"}},{\"time_unix_nano\":1747956462533409000,\"name\":\"exception\",\"attributes\":{\"timestamp\":\"2025-05-22 23:27:42.53338166 +0000 UTC\",\"az.list\":\"dev52\",\"event\":\"local.az.message\",\"message\":\"eventsPoller in step 0 - step execution completed, stop events poller\"}},{\"time_unix_nano\":1747956462533427000,\"name\":\"exception\",\"attributes\":{\"message\":\"eventsPoller in step 0 - step execution completed, stop events poller\",\"timestamp\":\"2025-05-22 23:27:42.53338166 +0000 UTC\",\"az.list\":\"dev52\",\"event\":\"local.az.message\"}},{\"time_unix_nano\":1747956462540905000,\"name\":\"exception\",\"attributes\":{\"az.list\":\"dev52\",\"event\":\"local.az.message\",\"message\":\"eventsPoller in step 0 - step execution completed, stop events poller\",\"timestamp\":\"2025-05-22 23:27:42.53338166 +0000 UTC\"}},{\"time_unix_nano\":1747956462613621000,\"name\":\"exception\",\"attributes\":{\"event\":\"step.update\",\"step.id\":\"0\",\"step.status\":\"STATUS_FAILED\"}},{\"time_unix_nano\":1747956463029098000,\"name\":\"exception\",\"attributes\":{\"event\":\"step.update\",\"step.id\":\"5\",\"step.status\":\"STATUS_IN_PROGRESS\"}},{\"time_unix_nano\":1747956468152374000,\"name\":\"exception\",\"attributes\":{\"step.id\":\"5\",\"step.status\":\"STATUS_SUCCESS\",\"event\":\"step.update\"}},{\"time_unix_nano\":1747956468382360000,\"name\":\"exception\",\"attributes\":{\"event\":\"step.update\",\"step.id\":\"6\",\"step.status\":\"STATUS_IN_PROGRESS\"}},{\"time_unix_nano\":1747956468491190000,\"name\":\"exception\",\"attributes\":{\"timestamp\":\"2025-05-22 23:27:48.491183934 +0000 UTC\",\"event\":\"CANCEL_START\",\"step.id\":\"6\"}},{\"time_unix_nano\":1747956468573046000,\"name\":\"exception\",\"attributes\":{\"event\":\"POOL_DEPLOY_META_INFO\",\"step.id\":\"6\",\"timestamp\":\"2025-05-22 23:27:48.573037802 +0000 UTC\"}},{\"time_unix_nano\":1747956468675632000,\"name\":\"exception\",\"attributes\":{\"event\":\"step.update\",\"step.id\":\"6\",\"step.status\":\"STATUS_SUCCESS\"}},{\"time_unix_nano\":1747956469047825000,\"name\":\"exception\",\"attributes\":{\"event\":\"exception\",\"exception.message\":\"fail to monitor job: replica set raptormidverification-a-81325fc3-b05e-4d9a-ada2-d2399aebe135 failed\",\"exception.type\":\"*traces.TraceError\"}}]",
+            "otel.library.name": "81325fc3-b05e-4d9a-ada2-d2399aebe135",
+            "otel.status_code": "Error",
+            "otel.trace_id": "81325fc3b05e4d9aada2d2399aebe135",
+            "service.version": "not-set",
+            "span.kind": "unspecified",
+            "step.summary": "{\"activatePercentage\":{\"value\":\"0\",\"lastUpdated\":\"0001-01-01T00:00:00Z\"},\"slbCount\":{\"value\":\"0\",\"lastUpdated\":\"0001-01-01T00:00:00Z\"},\"timeSummary\":{\"val\":{\"totalTime\":\"5.786669098s\",\"systemTime\":\"5.786669098s\"},\"lastUpdated\":\"2025-05-22T23:27:48.823402357Z\"},\"version\":{\"lastUpdated\":\"0001-01-01T00:00:00Z\"}}",
+            "version": "not-set"
+          }
+        },
+        {
+          "service": "ppregistrator",
+          "name": "app.unspecified",
+          "resource": "k8sPodMetricDriver.Process",
+          "error": 1,
+          "meta": {
+            "SpanPolicy": "OnError",
+            "az": "dev52",
+            "cluster": "qa-prod",
+            "env": "qa",
+            "environment": "qa",
+            "err.msg": "Error with the environment properties. LCM Error: 1109  Unable to properly resolve the host for managed stage: te-raptorframework-9057.qa.company.com, a fully qualified name is required",
+            "err.sub_category": "Environment-Error",
+            "err.type": "System-Error",
+            "error.message": "Error with the environment properties. LCM Error: 1109  Unable to properly resolve the host for managed stage: te-raptorframework-9057.qa.company.com, a fully qualified name is required",
+            "events": "[{\"time_unix_nano\":1747956417852756000,\"name\":\"exception\",\"attributes\":{\"event\":\"exception\",\"exception.message\":\"Error with the environment properties. LCM Error: 1109  Unable to properly resolve the host for managed stage: te-raptorframework-9057.qa.company.com, a fully qualified name is required\",\"exception.type\":\"*traces.TraceError\"}}]",
+            "namespace": "testenv-te-raptorframework-9057",
+            "otel.library.name": "81325fc3-b05e-4d9a-ada2-d2399aebe135",
+            "otel.status_code": "Error",
+            "otel.trace_id": "81325fc3b05e4d9aada2d2399aebe135",
+            "podFailureReason": "Throttled",
+            "pool": "raptormidverification",
+            "requuid": "81325fc3-b05e-4d9a-ada2-d2399aebe135",
+            "service.version": "not-set",
+            "span.kind": "unspecified",
+            "tenant": "testenv",
+            "version": "not-set"
+          }
+        },
+        {
+          "service": "gfsm",
+          "name": "app.unspecified",
+          "resource": "DeployExecutor.Monitor.STEP_MONITOR",
+          "error": 1,
+          "meta": {
+            "az": "dev51",
+            "cluster": "qa-prod",
+            "env": "qa",
+            "environment": "qa",
+            "err.msg": "dev52 Deploy 100 Failed",
+            "err.sub_category": "Fsm-Error",
+            "err.type": "System-Error",
+            "error.message": "dev52 Deploy 100 Failed",
+            "events": "[{\"time_unix_nano\":1747956288271928000,\"name\":\"exception\",\"attributes\":{\"message\":\"[dev52] Deploy 100 In Progress\",\"timestamp\":\"2025-05-22 23:24:48.271919466 +0000 UTC\",\"az.list\":\"dev52\",\"event\":\"request.message\"}},{\"time_unix_nano\":1747956464416014000,\"name\":\"exception\",\"attributes\":{\"event\":\"exception\",\"exception.message\":\"dev52 Deploy 100 Failed\",\"exception.type\":\"*traces.TraceError\"}}]",
+            "host.name": "gke-dev51-tools-mgt-caas-admin-job-p5-e7155686-z8bh.us-central1-b.c.dev51-tools-mgt-caas-cp.internal",
+            "otel.library.name": "81325fc3-b05e-4d9a-ada2-d2399aebe135",
+            "otel.status_code": "Error",
+            "otel.trace_id": "81325fc3b05e4d9aada2d2399aebe135",
+            "service.version": "not-set",
+            "span.kind": "unspecified",
+            "time.summary": "{\"jobTimeSummary\":{\"dzList\":[\"dev52\"]},\"groupTimeSummary\":[{\"dzList\":[\"dev52\"],\"timeStamp\":{\"Start\":\"2025-05-22T23:24:43.238555973Z\",\"End\":\"0001-01-01T00:00:00Z\"}}],\"dzTimeSummary\":{\"dev52\":{\"dzList\":[\"dev52\"]}}}",
+            "version": "not-set"
+          }
+        },
+        {
+          "service": "ppregistrator",
+          "name": "app.unspecified",
+          "resource": "k8sPodMetricDriver.Process",
+          "error": 1,
+          "meta": {
+            "SpanPolicy": "OnError",
+            "az": "dev52",
+            "cluster": "qa-prod",
+            "env": "qa",
+            "environment": "qa",
+            "err.msg": "Error with the environment properties. LCM Error: 1109  Unable to properly resolve the host for managed stage: te-raptorframework-9057.qa.company.com, a fully qualified name is required",
+            "err.sub_category": "Environment-Error",
+            "err.type": "System-Error",
+            "error.message": "Error with the environment properties. LCM Error: 1109  Unable to properly resolve the host for managed stage: te-raptorframework-9057.qa.company.com, a fully qualified name is required",
+            "events": "[{\"time_unix_nano\":1747960737706505000,\"name\":\"exception\",\"attributes\":{\"exception.type\":\"*traces.TraceError\",\"event\":\"exception\",\"exception.message\":\"Error with the environment properties. LCM Error: 1109  Unable to properly resolve the host for managed stage: te-raptorframework-9057.qa.company.com, a fully qualified name is required\"}}]",
+            "namespace": "testenv-te-raptorframework-9057",
+            "otel.library.name": "81325fc3-b05e-4d9a-ada2-d2399aebe135",
+            "otel.status_code": "Error",
+            "otel.trace_id": "81325fc3b05e4d9aada2d2399aebe135",
+            "podFailureReason": "Terminating",
+            "pool": "raptormidverification",
+            "requuid": "81325fc3-b05e-4d9a-ada2-d2399aebe135",
+            "service.version": "not-set",
+            "span.kind": "unspecified",
+            "tenant": "testenv",
+            "version": "not-set"
+          }
+        },
+        {
+          "service": "gfsm",
+          "name": "app.unspecified",
+          "resource": "plugin.db.cache.Init",
+          "meta": {
+            "az": "dev51",
+            "cluster": "qa-prod",
+            "env": "qa",
+            "environment": "qa",
+            "host.name": "gke-dev51-tools-mgt-caas-admin-job-p5-e7155686-z8bh.us-central1-b.c.dev51-tools-mgt-caas-cp.internal",
+            "otel.library.name": "81325fc3-b05e-4d9a-ada2-d2399aebe135",
+            "otel.status_code": "Unset",
+            "otel.trace_id": "81325fc3b05e4d9aada2d2399aebe135",
+            "service.version": "not-set",
+            "span.kind": "unspecified",
+            "version": "not-set"
+          }
+        },
+        {
+          "service": "apirouter",
+          "name": "app.unspecified",
+          "resource": "pingid.GetRbacSessionForUser",
+          "meta": {
+            "az": "dev51",
+            "cluster": "qa-prod",
+            "component": "apirouter",
+            "env": "qa",
+            "environment": "qa",
+            "host.name": "gke-dev51-tools-mgt-caas-admin-job-p5-e7155686-4878.us-central1-b.c.dev51-tools-mgt-caas-cp.internal",
+            "otel.library.name": "81325fc3-b05e-4d9a-ada2-d2399aebe135",
+            "otel.status_code": "Unset",
+            "otel.trace_id": "81325fc3b05e4d9aada2d2399aebe135",
+            "requuid": "81325fc3-b05e-4d9a-ada2-d2399aebe135",
+            "service.version": "not-set",
+            "span.kind": "unspecified",
+            "version": "not-set"
+          }
+        },
+        {
+          "service": "apirouter",
+          "name": "app.unspecified",
+          "resource": "k8s.editorPlugin.genesis.Edit",
+          "meta": {
+            "az": "dev52",
+            "cluster": "qa-prod",
+            "component": "internalapirouter",
+            "env": "qa",
+            "environment": "qa",
+            "namespace": "te-raptorframework-9057",
+            "otel.library.name": "81325fc3b05e4d9aada2d2399aebe135",
+            "otel.status_code": "Unset",
+            "otel.trace_id": "81325fc3b05e4d9aada2d2399aebe135",
+            "pool": "raptormidverification",
+            "service.version": "not-set",
+            "span.kind": "unspecified",
+            "tenant": "testenv",
+            "version": "not-set"
+          }
+        },
+        {
+          "service": "lfsm",
+          "name": "app.unspecified",
+          "resource": "plugin.dualwrite.db.Init",
+          "meta": {
+            "az": "dev52",
+            "cluster": "qa-prod",
+            "env": "qa",
+            "environment": "qa",
+            "otel.library.name": "81325fc3-b05e-4d9a-ada2-d2399aebe135",
+            "otel.status_code": "Unset",
+            "otel.trace_id": "81325fc3b05e4d9aada2d2399aebe135",
+            "service.version": "not-set",
+            "span.kind": "unspecified",
+            "version": "not-set"
+          }
+        },
+        {
+          "service": "lfsm",
+          "name": "app.unspecified",
+          "resource": "CONTROLMHOOK.PreJob",
+          "meta": {
+            "az": "dev52",
+            "cluster": "qa-prod",
+            "env": "qa",
+            "environment": "qa",
+            "otel.library.name": "81325fc3-b05e-4d9a-ada2-d2399aebe135",
+            "otel.status_code": "Unset",
+            "otel.trace_id": "81325fc3b05e4d9aada2d2399aebe135",
+            "service.version": "not-set",
+            "span.kind": "unspecified",
+            "version": "not-set"
+          }
+        },
+        {
+          "service": "genesiscontroller",
+          "name": "app.unspecified",
+          "resource": "sandboxController.itemHandler.gfsm-dev51-{guid}-ttwx5",
+          "meta": {
+            "SpanExpiresOn": "2025-05-22T16:46:49-07:00",
+            "cluster": "qa-prod",
+            "component_ip": "10.203.3.49",
+            "dz": "dev51",
+            "env": "qa",
+            "environment": "qa",
+            "namespace": "te-raptorframework-9057",
+            "otel.library.name": "81325fc3-b05e-4d9a-ada2-d2399aebe135",
+            "otel.status_code": "Unset",
+            "otel.trace_id": "81325fc3b05e4d9aada2d2399aebe135",
+            "pool": "raptormidverification",
+            "service.version": "not-set",
+            "span.kind": "unspecified",
+            "tenant": "testenv",
+            "version": "not-set"
+          }
+        },
+        {
+          "service": "apirouter",
+          "name": "app.unspecified",
+          "resource": "k8s.editorPlugin.company.Edit",
+          "meta": {
+            "az": "dev52",
+            "cluster": "qa-prod",
+            "component": "internalapirouter",
+            "env": "qa",
+            "environment": "qa",
+            "namespace": "te-raptorframework-9057",
+            "otel.library.name": "81325fc3b05e4d9aada2d2399aebe135",
+            "otel.status_code": "Unset",
+            "otel.trace_id": "81325fc3b05e4d9aada2d2399aebe135",
+            "pool": "raptormidverification",
+            "service.version": "not-set",
+            "span.kind": "unspecified",
+            "tenant": "testenv",
+            "version": "not-set"
+          }
+        },
+        {
+          "service": "gfsm",
+          "name": "app.unspecified",
+          "resource": "cassandra.LookupService",
+          "meta": {
+            "az": "dev51",
+            "cluster": "qa-prod",
+            "env": "qa",
+            "environment": "qa",
+            "host.name": "gke-dev51-tools-mgt-caas-admin-job-p5-e7155686-z8bh.us-central1-b.c.dev51-tools-mgt-caas-cp.internal",
+            "otel.library.name": "81325fc3-b05e-4d9a-ada2-d2399aebe135",
+            "otel.status_code": "Unset",
+            "otel.trace_id": "81325fc3b05e4d9aada2d2399aebe135",
+            "service.version": "not-set",
+            "span.kind": "unspecified",
+            "version": "not-set"
+          }
+        },
+        {
+          "service": "apirouter",
+          "name": "app.unspecified",
+          "resource": "k8s.editorPlugin.default.Edit",
+          "meta": {
+            "az": "dev52",
+            "cluster": "qa-prod",
+            "component": "internalapirouter",
+            "env": "qa",
+            "environment": "qa",
+            "namespace": "te-raptorframework-9057",
+            "otel.library.name": "81325fc3b05e4d9aada2d2399aebe135",
+            "otel.status_code": "Unset",
+            "otel.trace_id": "81325fc3b05e4d9aada2d2399aebe135",
+            "pool": "raptormidverification",
+            "service.version": "not-set",
+            "span.kind": "unspecified",
+            "tenant": "testenv",
+            "version": "not-set"
+          }
+        },
+        {
+          "service": "lfsm",
+          "name": "http.request.client",
+          "resource": "GET",
+          "meta": {
+            "az": "dev52",
+            "cluster": "qa-prod",
+            "env": "qa",
+            "environment": "qa",
+            "http.host": "companycorp.secretservercloud.com",
+            "http.method": "GET",
+            "http.path_group": "/api/V1/secrets/lookup",
+            "http.status_code": "200",
+            "http.url": "https://companycorp.secretservercloud.com/api/V1/secrets/lookup?filter.folderId=1552&filter.searchText=*&skip=0",
+            "http.url_details.host": "companycorp.secretservercloud.com",
+            "http.url_details.path": "/api/V1/secrets/lookup",
+            "http.url_details.queryString.filter.folderId": "1552",
+            "http.url_details.queryString.filter.searchText": "*",
+            "http.url_details.queryString.skip": "0",
+            "http.url_details.scheme": "https",
+            "otel.library.name": "secretserver_GET_SECRETID",
+            "otel.status_code": "Unset",
+            "otel.trace_id": "81325fc3b05e4d9aada2d2399aebe135",
+            "peer.hostname": "companycorp.secretservercloud.com",
+            "service.version": "not-set",
+            "span.kind": "client",
+            "version": "not-set"
+          }
+        },
+        {
+          "service": "lfsm",
+          "name": "app.unspecified",
+          "resource": "deployDriver.kubernetes.GetPoolTasks",
+          "meta": {
+            "az": "dev52",
+            "cluster": "qa-prod",
+            "env": "qa",
+            "environment": "qa",
+            "otel.library.name": "81325fc3-b05e-4d9a-ada2-d2399aebe135",
+            "otel.status_code": "Unset",
+            "otel.trace_id": "81325fc3b05e4d9aada2d2399aebe135",
+            "service.version": "not-set",
+            "span.kind": "unspecified",
+            "version": "not-set"
+          }
+        },
+        {
+          "service": "lfsm",
+          "name": "app.unspecified",
+          "resource": "deployDriver.kubernetes.AbortLastJobUpdate",
+          "meta": {
+            "az": "dev52",
+            "cluster": "qa-prod",
+            "env": "qa",
+            "environment": "qa",
+            "otel.library.name": "81325fc3-b05e-4d9a-ada2-d2399aebe135",
+            "otel.status_code": "Unset",
+            "otel.trace_id": "81325fc3b05e4d9aada2d2399aebe135",
+            "service.version": "not-set",
+            "span.kind": "unspecified",
+            "version": "not-set"
+          }
+        },
+        {
+          "service": "lfsm",
+          "name": "http.request.client",
+          "resource": "GET",
+          "meta": {
+            "az": "dev52",
+            "cluster": "qa-prod",
+            "env": "qa",
+            "environment": "qa",
+            "http.host": "companycorp.secretservercloud.com",
+            "http.method": "GET",
+            "http.path_group": "/api/V1/secrets/?",
+            "http.status_code": "200",
+            "http.url": "https://companycorp.secretservercloud.com/api/V1/secrets/20213",
+            "http.url_details.host": "companycorp.secretservercloud.com",
+            "http.url_details.path": "/api/V1/secrets/20213",
+            "http.url_details.scheme": "https",
+            "otel.library.name": "secretserver_GET_SECRETS",
+            "otel.status_code": "Unset",
+            "otel.trace_id": "81325fc3b05e4d9aada2d2399aebe135",
+            "peer.hostname": "companycorp.secretservercloud.com",
+            "service.version": "not-set",
+            "span.kind": "client",
+            "version": "not-set"
+          }
+        },
+        {
+          "service": "gfsm",
+          "name": "app.unspecified",
+          "resource": "plugin.dualwrite.db.Init",
+          "meta": {
+            "az": "dev51",
+            "cluster": "qa-prod",
+            "env": "qa",
+            "environment": "qa",
+            "host.name": "gke-dev51-tools-mgt-caas-admin-job-p5-e7155686-z8bh.us-central1-b.c.dev51-tools-mgt-caas-cp.internal",
+            "otel.library.name": "81325fc3-b05e-4d9a-ada2-d2399aebe135",
+            "otel.status_code": "Unset",
+            "otel.trace_id": "81325fc3b05e4d9aada2d2399aebe135",
+            "service.version": "not-set",
+            "span.kind": "unspecified",
+            "version": "not-set"
+          }
+        },
+        {
+          "service": "gfsm",
+          "name": "app.unspecified",
+          "resource": "plugin.kubernetes.deploydriver.Init",
+          "meta": {
+            "az": "dev51",
+            "cluster": "qa-prod",
+            "env": "qa",
+            "environment": "qa",
+            "host.name": "gke-dev51-tools-mgt-caas-admin-job-p5-e7155686-z8bh.us-central1-b.c.dev51-tools-mgt-caas-cp.internal",
+            "otel.library.name": "81325fc3-b05e-4d9a-ada2-d2399aebe135",
+            "otel.status_code": "Unset",
+            "otel.trace_id": "81325fc3b05e4d9aada2d2399aebe135",
+            "service.version": "not-set",
+            "span.kind": "unspecified",
+            "version": "not-set"
+          }
+        },
+        {
+          "service": "gfsm",
+          "name": "app.unspecified",
+          "resource": "DeployExecutor.Cancel.STEP_CANCEL",
+          "meta": {
+            "GFSM Step 4 - state": "{\"DzAPIStatus\":{\"dev52\":{\"StatusCode\":202,\"Body\":\"\"}}}",
+            "az": "dev51",
+            "cluster": "qa-prod",
+            "env": "qa",
+            "environment": "qa",
+            "host.name": "gke-dev51-tools-mgt-caas-admin-job-p5-e7155686-z8bh.us-central1-b.c.dev51-tools-mgt-caas-cp.internal",
+            "otel.library.name": "81325fc3-b05e-4d9a-ada2-d2399aebe135",
+            "otel.status_code": "Unset",
+            "otel.trace_id": "81325fc3b05e4d9aada2d2399aebe135",
+            "service.version": "not-set",
+            "span.kind": "unspecified",
+            "time.summary": "{\"jobTimeSummary\":{\"dzList\":[\"dev52\"],\"totalTime\":\"3m30.55s\",\"systemTime\":\"3m30.55s\"},\"groupTimeSummary\":[{\"dzList\":[\"dev52\"],\"totalTime\":\"3m17.54s\",\"systemTime\":\"3m17.54s\",\"timeStamp\":{\"Start\":\"2025-05-22T23:24:43.238555973Z\",\"End\":\"2025-05-22T23:27:49.721442955Z\"}}],\"dzTimeSummary\":{\"dev52\":{\"dzList\":[\"dev52\"],\"totalTime\":\"3m12.64s\",\"systemTime\":\"3m12.64s\"}}}",
+            "version": "not-set"
+          }
+        },
+        {
+          "service": "genesiscontroller",
+          "name": "app.unspecified",
+          "resource": "sandboxController.itemHandler.gfsm-dev51-{guid}-ttwx5",
+          "meta": {
+            "SpanExpiresOn": "2025-05-22T16:46:49-07:00",
+            "cluster": "qa-prod",
+            "component_ip": "10.203.6.47",
+            "dz": "dev51",
+            "env": "qa",
+            "environment": "qa",
+            "namespace": "te-raptorframework-9057",
+            "otel.library.name": "81325fc3-b05e-4d9a-ada2-d2399aebe135",
+            "otel.status_code": "Unset",
+            "otel.trace_id": "81325fc3b05e4d9aada2d2399aebe135",
+            "pool": "raptormidverification",
+            "service.version": "not-set",
+            "span.kind": "unspecified",
+            "tenant": "testenv",
+            "version": "not-set"
+          }
+        },
+        {
+          "service": "gfsm",
+          "name": "app.unspecified",
+          "resource": "kafka.Publish",
+          "meta": {
+            "az": "dev51",
+            "cluster": "qa-prod",
+            "env": "qa",
+            "environment": "qa",
+            "host.name": "gke-dev51-tools-mgt-caas-admin-job-p5-e7155686-z8bh.us-central1-b.c.dev51-tools-mgt-caas-cp.internal",
+            "otel.library.name": "81325fc3-b05e-4d9a-ada2-d2399aebe135",
+            "otel.status_code": "Unset",
+            "otel.trace_id": "81325fc3b05e4d9aada2d2399aebe135",
+            "service.version": "not-set",
+            "span.kind": "unspecified",
+            "version": "not-set"
+          }
+        },
+        {
+          "service": "apirouter",
+          "name": "app.unspecified",
+          "resource": "keymaker.GetPoolContainerLabels",
+          "meta": {
+            "az": "dev52",
+            "cluster": "qa-prod",
+            "component": "internalapirouter",
+            "env": "qa",
+            "environment": "qa",
+            "otel.library.name": "81325fc3b05e4d9aada2d2399aebe135",
+            "otel.status_code": "Unset",
+            "otel.trace_id": "81325fc3b05e4d9aada2d2399aebe135",
+            "service.version": "not-set",
+            "span.kind": "unspecified",
+            "version": "not-set"
+          }
+        },
+        {
+          "service": "apirouter",
+          "name": "app.unspecified",
+          "resource": "WAIT.Populate",
+          "meta": {
+            "az": "dev52",
+            "cluster": "qa-prod",
+            "component": "internalapirouter",
+            "env": "qa",
+            "environment": "qa",
+            "otel.library.name": "81325fc3b05e4d9aada2d2399aebe135",
+            "otel.status_code": "Unset",
+            "otel.trace_id": "81325fc3b05e4d9aada2d2399aebe135",
+            "service.version": "not-set",
+            "span.kind": "unspecified",
+            "step.name": "WAIT.Populate",
+            "version": "not-set"
+          }
+        }
+      ]
+    }
+  }
+}

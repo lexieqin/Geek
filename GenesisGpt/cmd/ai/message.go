@@ -3,6 +3,7 @@ package ai
 import (
 	"context"
 	"log"
+	"os"
 
 	openai "github.com/sashabaranov/go-openai"
 )
@@ -15,8 +16,16 @@ func init() {
 }
 
 func NewOpenAiClient() *openai.Client {
-	token := "sk-07d4040e83824cea8df0da757f10844f"
-	dashscope_url := "https://dashscope.aliyuncs.com/compatible-mode/v1"
+	// Get API token from environment variable
+	token := os.Getenv("OPENAI_API_KEY")
+	if token == "" {
+		log.Fatal("OPENAI_API_KEY environment variable is required")
+	}
+	
+	dashscope_url := os.Getenv("OPENAI_BASE_URL")
+	if dashscope_url == "" {
+		dashscope_url = "https://dashscope.aliyuncs.com/compatible-mode/v1"
+	}
 
 	config := openai.DefaultConfig(token)
 	config.BaseURL = dashscope_url
