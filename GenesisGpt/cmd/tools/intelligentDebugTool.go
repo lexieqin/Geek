@@ -5,14 +5,20 @@ import (
 	"fmt"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/lexieqin/Geek/GenesisGpt/cmd/utils"
+	"github.com/lexieqin/Geek/GenesisGpt/config"
 )
 
-type IntelligentDebugTool struct{}
+type IntelligentDebugTool struct{
+	apiEndpoints *config.APIEndpoints
+}
 
 func NewIntelligentDebugTool() *IntelligentDebugTool {
-	return &IntelligentDebugTool{}
+	return &IntelligentDebugTool{
+		apiEndpoints: config.GetAPIEndpoints(),
+	}
 }
 
 func (t *IntelligentDebugTool) Name() string {
@@ -20,7 +26,7 @@ func (t *IntelligentDebugTool) Name() string {
 }
 
 func (t *IntelligentDebugTool) Description() string {
-	return "Debug failed deployment platform jobs (NOT Kubernetes Jobs) by analyzing job details, errors, Datadog traces, and sandbox logs. Use this for debugging jobs identified by UUID in your deployment platform. Always use this tool when asked to 'debug job' with a UUID."
+	return "Debug failed deployment platform jobs (NOT Kubernetes Jobs) by analyzing job details, errors, Datadog traces, and sandbox logs. IMPORTANT: This tool returns a structured report that MUST be preserved exactly as formatted. Do not summarize or reorganize the output before presenting it. The tool will return actual data with specific timestamps, error messages, and trace IDs - never generate these yourself."
 }
 
 func (t *IntelligentDebugTool) ArgsSchema() string {
@@ -211,14 +217,16 @@ func (t *IntelligentDebugTool) Run(input string) (string, error) {
 	// Format the complete debug report
 	debugReport := result.String()
 	
-	// Return with clear structure
-	return fmt.Sprintf("Debug Report for Job %s:\n\n%s", args.JobID, debugReport), nil
+	// Return with clear structure and unique markers to prevent hallucination
+	timestamp := time.Now().Unix()
+	return fmt.Sprintf("=== ACTUAL TOOL OUTPUT START [TS:%d] ===\nDebug Report for Job %s:\n\n%s\n=== ACTUAL TOOL OUTPUT END [TS:%d] ===", 
+		timestamp, args.JobID, debugReport, timestamp), nil
 }
 
 func (t *IntelligentDebugTool) getJobDetails(tenant, namespace, jobID string) (map[string]interface{}, error) {
 	// Use the correct job API endpoint: /tenant/{tenant}/job/{jobid}?trace=true
 	// This calls your deployment platform's job API, not Kubernetes Job resources
-	url := fmt.Sprintf("http://localhost:8080/tenant/%s/job/%s?trace=true", tenant, jobID)
+	url := fmt.Sprintf("%s/tenant/%s/job/%s?trace=true", t.apiEndpoints.JobAPI, tenant, jobID)
 	resp, err := utils.GetHTTP(url)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get job details from deployment platform: %v", err)
@@ -299,8 +307,8 @@ func (t *IntelligentDebugTool) extractSandboxPath(jobDetails map[string]interfac
 }
 
 func (t *IntelligentDebugTool) fetchDatadogTraces(traceID string) string {
-	// Call our static datadog trace endpoint
-	url := fmt.Sprintf("http://localhost:8080/api/datadog/trace/%s", traceID)
+	// Call datadog trace endpoint
+	url := fmt.Sprintf("%s/trace/%s", t.apiEndpoints.TraceAPI, traceID)
 	resp, err := utils.GetHTTP(url)
 	if err != nil {
 		return fmt.Sprintf("Failed to fetch traces: %v", err)
@@ -437,7 +445,7 @@ func (t *IntelligentDebugTool) fetchDatadogTraces(traceID string) string {
 
 func (t *IntelligentDebugTool) checkSandboxLogsAvailable(sandboxPath string) (bool, []string) {
 	// Try to list files in sandbox directory first
-	url := fmt.Sprintf("http://localhost:8080/api/sandbox/logs/list?path=%s", sandboxPath)
+	url := fmt.Sprintf("%s/logs/list?path=%s", t.apiEndpoints.SandboxAPI, sandboxPath)
 	resp, err := utils.GetHTTP(url)
 	if err != nil {
 		// If listing fails, sandbox might not exist or be accessible
@@ -471,7 +479,7 @@ func (t *IntelligentDebugTool) containsFile(files []string, targetFile string) b
 
 func (t *IntelligentDebugTool) analyzeLogFile(sandboxPath, logFile string) string {
 	// Use the sandbox log endpoint to get file contents
-	url := fmt.Sprintf("http://localhost:8080/api/sandbox/logs?path=%s&file=%s", sandboxPath, logFile)
+	url := fmt.Sprintf("%s/logs?path=%s&file=%s", t.apiEndpoints.SandboxAPI, sandboxPath, logFile)
 	resp, err := utils.GetHTTP(url)
 	if err != nil {
 		return fmt.Sprintf("Failed to read %s: %v", logFile, err)
@@ -501,7 +509,7 @@ func (t *IntelligentDebugTool) analyzeLogFile(sandboxPath, logFile string) strin
 
 func (t *IntelligentDebugTool) getSmartLogAnalysis(sandboxPath string) string {
 	// Use the smart log endpoint for comprehensive analysis
-	url := fmt.Sprintf("http://localhost:8080/api/sandbox/logs/smart?path=%s", sandboxPath)
+	url := fmt.Sprintf("%s/logs/smart?path=%s", t.apiEndpoints.SandboxAPI, sandboxPath)
 	resp, err := utils.GetHTTP(url)
 	if err != nil {
 		return ""
@@ -564,7 +572,7 @@ func (t *IntelligentDebugTool) analyzeSpecificLogFile(sandboxPath, logFile strin
 	var result strings.Builder
 	
 	// Try to get the log content
-	url := fmt.Sprintf("http://localhost:8080/api/sandbox/logs?path=%s&file=%s", sandboxPath, logFile)
+	url := fmt.Sprintf("%s/logs?path=%s&file=%s", t.apiEndpoints.SandboxAPI, sandboxPath, logFile)
 	resp, err := utils.GetHTTP(url)
 	if err != nil {
 		result.WriteString(fmt.Sprintf("  ⚠️  Failed to read: %v\n", err))
@@ -665,7 +673,7 @@ func (t *IntelligentDebugTool) determineRootCauseFromLogs(logFiles []string, san
 	
 	// Check each log file for specific patterns
 	for _, file := range logFiles {
-		url := fmt.Sprintf("http://localhost:8080/api/sandbox/logs?path=%s&file=%s", sandboxPath, file)
+		url := fmt.Sprintf("%s/logs?path=%s&file=%s", t.apiEndpoints.SandboxAPI, sandboxPath, file)
 		resp, err := utils.GetHTTP(url)
 		if err != nil {
 			continue

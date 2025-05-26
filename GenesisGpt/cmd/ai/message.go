@@ -33,11 +33,32 @@ func NewOpenAiClient() *openai.Client {
 	return openai.NewClientWithConfig(config)
 }
 
+// GetModelName returns the AI model to use from environment or default
+func GetModelName() string {
+	model := os.Getenv("AI_MODEL")
+	if model == "" {
+		model = "qwen-max" // Default model
+	}
+	return model
+}
+
 // NormalChat handles the chat conversation
 func NormalChat(message []openai.ChatCompletionMessage) openai.ChatCompletionMessage {
 	c := NewOpenAiClient()
+	model := GetModelName()
+	
+	// Add model-specific system message for Claude to prevent hallucination
+	if model == "claude-3-5-sonnet-20241022" || model == "claude-3-7-sonnet-20250219" {
+		// Prepend a strong system message for Claude
+		systemMsg := openai.ChatCompletionMessage{
+			Role: openai.ChatMessageRoleSystem,
+			Content: "CRITICAL: When using tools, you MUST wait for actual responses. Never generate fake tool outputs or observations. Tool outputs will contain specific timestamps and data that you cannot predict.",
+		}
+		message = append([]openai.ChatCompletionMessage{systemMsg}, message...)
+	}
+	
 	rsp, err := c.CreateChatCompletion(context.TODO(), openai.ChatCompletionRequest{
-		Model:    "qwen-max",
+		Model:    model,
 		Messages: message,
 	})
 	if err != nil {
