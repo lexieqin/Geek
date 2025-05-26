@@ -28,8 +28,8 @@ func main() {
 
 	resourceCtl := controllers.NewResourceCtl(services.NewResourceService(&restMapper, dynamicClient, informer))
 	podLogCtl := controllers.NewPodLogEventCtl(services.NewPodLogEventService(clientSet))
-	jobDebugCtl := controllers.NewJobDebugController(services.NewJobDebugService(clientSet))
-	mockJobCtl := controllers.NewMockJobController()
+	// jobDebugCtl := controllers.NewJobDebugController(services.NewJobDebugService(clientSet)) // Removed - K8s Jobs not used
+	mockDataCtl := controllers.NewMockDataController()
 
 	r := gin.New()
 
@@ -53,18 +53,22 @@ func main() {
 	r.GET("/namespaces/:namespace/pods/logs", podLogCtl.GetLog())
 	r.GET("/namespaces/:namespace/pods/events", podLogCtl.GetEvent())
 
-	// Job debug endpoints
-	r.GET("/jobs/:namespace/:name/debug", jobDebugCtl.GetJobDebugInfo)
-	r.GET("/jobs/:namespace/:name/traces", jobDebugCtl.GetJobTraces)
-	r.GET("/jobs/:namespace/:name/errors", jobDebugCtl.GetJobErrors)
-	r.GET("/jobs/:namespace/:name/sandbox", jobDebugCtl.GetJobSandboxLogs)
-	r.GET("/jobs/:namespace/:name/pods", jobDebugCtl.GetJobPods)
-	r.GET("/jobs/uuid/:uuid", jobDebugCtl.GetJobByUUID)
-	r.GET("/sandbox/read", jobDebugCtl.ReadSandboxLog)
+	// Job debug endpoints - REMOVED (K8s Jobs not used in this project)
+	// r.GET("/jobs/:namespace/:name/debug", jobDebugCtl.GetJobDebugInfo)
+	// r.GET("/jobs/:namespace/:name/traces", jobDebugCtl.GetJobTraces)
+	// r.GET("/jobs/:namespace/:name/errors", jobDebugCtl.GetJobErrors)
+	// r.GET("/jobs/:namespace/:name/sandbox", jobDebugCtl.GetJobSandboxLogs)
+	// r.GET("/jobs/:namespace/:name/pods", jobDebugCtl.GetJobPods)
+	// r.GET("/jobs/uuid/:uuid", jobDebugCtl.GetJobByUUID)
+	// r.GET("/sandbox/read", jobDebugCtl.ReadSandboxLog)
 
-	// Mock endpoints for testing with real job data
-	r.GET("/mock/jobs/:jobid/debug", mockJobCtl.GetMockJob)
-	r.GET("/mock/jobs/uuid/:uuid", mockJobCtl.GetMockJobByUUID)
+	// Static file endpoints for job debugging demo
+	r.GET("/tenant/:tenant/job/:jobid", mockDataCtl.GetJobByTenantAndJobID)
+	r.GET("/api/datadog/trace", mockDataCtl.GetDatadogTrace)
+	r.GET("/api/datadog/trace/:trace_id", mockDataCtl.GetDatadogTrace)
+	r.GET("/api/sandbox/logs", mockDataCtl.GetSandboxLog)
+	r.GET("/api/sandbox/logs/list", mockDataCtl.GetSandboxLogList)
+	r.GET("/api/sandbox/logs/smart", mockDataCtl.GetSandboxLogSmart)
 
 	port := os.Getenv("PORT")
 	if port == "" {

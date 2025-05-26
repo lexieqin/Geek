@@ -67,7 +67,7 @@ Then run:
 ## API Endpoints Reference
 
 ### Job Service API
-- Mock: `http://localhost:8080/tenant/{tenant}/jobs?requuid={jobid}&trace=true`
+- Mock: `http://localhost:8080/tenant/{tenant}/job/{jobid}?trace=true`
 - Production: Update in config.yaml with your actual endpoint
 
 ### Datadog API

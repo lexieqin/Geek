@@ -33,7 +33,7 @@ to quickly create a Cobra application.`,
 		clustersTool := tools.NewClusterTool()
 		podTool := tools.NewPodTool()
 		resourceInfoTool := tools.NewResourceInfoTool()
-		jobDebugTool := tools.NewJobDebugTool()
+		// jobDebugTool := tools.NewJobDebugTool() // Disabled - for K8s Jobs only
 		sandboxLogTool := tools.NewSandboxLogTool()
 		intelligentDebugTool := tools.NewIntelligentDebugTool()
 
@@ -50,7 +50,7 @@ to quickly create a Cobra application.`,
 				return
 			}
 
-			prompt := buildPrompt(createTool, listTool, deleteTool, humanTool, clustersTool, podTool, resourceInfoTool, jobDebugTool, sandboxLogTool, intelligentDebugTool, input)
+			prompt := buildPrompt(createTool, listTool, deleteTool, humanTool, clustersTool, podTool, resourceInfoTool, sandboxLogTool, intelligentDebugTool, input)
 			ai.MessageStore.AddForUser(prompt)
 			i := 1
 			for {
@@ -128,13 +128,13 @@ to quickly create a Cobra application.`,
 						} else {
 							Observation = fmt.Sprintf(Observation, output)
 						}
-					} else if action[1] == jobDebugTool.Name() {
-						output, err := jobDebugTool.Run(actionInput[1])
-						if err != nil {
-							Observation = fmt.Sprintf(Observation, "Error: "+err.Error())
-						} else {
-							Observation = fmt.Sprintf(Observation, output)
-						}
+					// } else if action[1] == jobDebugTool.Name() {
+					// 	output, err := jobDebugTool.Run(actionInput[1])
+					// 	if err != nil {
+					// 		Observation = fmt.Sprintf(Observation, "Error: "+err.Error())
+					// 	} else {
+					// 		Observation = fmt.Sprintf(Observation, output)
+					// 	}
 					} else if action[1] == sandboxLogTool.Name() {
 						output, err := sandboxLogTool.Run(actionInput[1])
 						if err != nil {
@@ -161,7 +161,7 @@ to quickly create a Cobra application.`,
 	},
 }
 
-func buildPrompt(createTool *tools.CreateTool, listTool *tools.ListTool, deleteTool *tools.DeleteTool, humanTool *tools.HumanTool, clustersTool *tools.ClusterTool, podTool *tools.PodTool, resourceInfoTool *tools.ResourceInfoTool, jobDebugTool *tools.JobDebugTool, sandboxLogTool *tools.SandboxLogTool, intelligentDebugTool *tools.IntelligentDebugTool, query string) string {
+func buildPrompt(createTool *tools.CreateTool, listTool *tools.ListTool, deleteTool *tools.DeleteTool, humanTool *tools.HumanTool, clustersTool *tools.ClusterTool, podTool *tools.PodTool, resourceInfoTool *tools.ResourceInfoTool, sandboxLogTool *tools.SandboxLogTool, intelligentDebugTool *tools.IntelligentDebugTool, query string) string {
 	createToolDef := "Name: " + createTool.Name + "\nDescription: " + createTool.Description + "\nArgsSchema: " + createTool.ArgsSchema + "\n"
 	listToolDef := "Name: " + listTool.Name + "\nDescription: " + listTool.Description + "\nArgsSchema: " + listTool.ArgsSchema + "\n"
 	deleteToolDef := "Name: " + deleteTool.Name + "\nDescription: " + deleteTool.Description + "\nArgsSchema: " + deleteTool.ArgsSchema + "\n"
@@ -169,15 +169,15 @@ func buildPrompt(createTool *tools.CreateTool, listTool *tools.ListTool, deleteT
 	clusterToolDef := "Name: " + clustersTool.Name + "\nDescription: " + clustersTool.Description + "\n"
 	podToolDef := "Name: " + podTool.Name + "\nDescription: " + podTool.Description + "\nArgsSchema: " + podTool.ArgsSchema + "\n"
 	resourceInfoToolDef := "Name: " + resourceInfoTool.Name + "\nDescription: " + resourceInfoTool.Description + "\nArgsSchema: " + resourceInfoTool.ArgsSchema + "\n"
-	jobDebugToolDef := "Name: " + jobDebugTool.Name() + "\nDescription: " + jobDebugTool.Description() + "\nArgsSchema: " + jobDebugTool.ArgsSchema() + "\n"
+	// jobDebugToolDef := "Name: " + jobDebugTool.Name() + "\nDescription: " + jobDebugTool.Description() + "\nArgsSchema: " + jobDebugTool.ArgsSchema() + "\n"
 	sandboxLogToolDef := "Name: " + sandboxLogTool.Name() + "\nDescription: " + sandboxLogTool.Description() + "\nArgsSchema: " + sandboxLogTool.ArgsSchema() + "\n"
 	intelligentDebugToolDef := "Name: " + intelligentDebugTool.Name() + "\nDescription: " + intelligentDebugTool.Description() + "\nArgsSchema: " + intelligentDebugTool.ArgsSchema() + "\n"
 
 	toolsList := make([]string, 0)
-	toolsList = append(toolsList, createToolDef, listToolDef, deleteToolDef, humanToolDef, clusterToolDef, podToolDef, resourceInfoToolDef, jobDebugToolDef, sandboxLogToolDef, intelligentDebugToolDef)
+	toolsList = append(toolsList, createToolDef, listToolDef, deleteToolDef, humanToolDef, clusterToolDef, podToolDef, resourceInfoToolDef, sandboxLogToolDef, intelligentDebugToolDef)
 
 	tool_names := make([]string, 0)
-	tool_names = append(tool_names, createTool.Name, listTool.Name, deleteTool.Name, humanTool.Name, clustersTool.Name, podTool.Name, resourceInfoTool.Name, jobDebugTool.Name(), sandboxLogTool.Name(), intelligentDebugTool.Name())
+	tool_names = append(tool_names, createTool.Name, listTool.Name, deleteTool.Name, humanTool.Name, clustersTool.Name, podTool.Name, resourceInfoTool.Name, sandboxLogTool.Name(), intelligentDebugTool.Name())
 
 	prompt := fmt.Sprintf(promptTpl.Template, toolsList, tool_names, "", query)
 

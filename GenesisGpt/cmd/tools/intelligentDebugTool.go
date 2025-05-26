@@ -3,6 +3,7 @@ package tools
 import (
 	"encoding/json"
 	"fmt"
+	"path/filepath"
 	"strings"
 
 	"github.com/lexieqin/Geek/GenesisGpt/cmd/utils"
@@ -19,7 +20,7 @@ func (t *IntelligentDebugTool) Name() string {
 }
 
 func (t *IntelligentDebugTool) Description() string {
-	return "Intelligently debug failed jobs following the standard debugging workflow: 1) Get job details and JobError, 2) Fetch Datadog traces if needed, 3) Analyze sandbox logs if needed. Returns comprehensive debug summary."
+	return "Debug failed deployment platform jobs (NOT Kubernetes Jobs) by analyzing job details, errors, Datadog traces, and sandbox logs. Use this for debugging jobs identified by UUID in your deployment platform. Always use this tool when asked to 'debug job' with a UUID."
 }
 
 func (t *IntelligentDebugTool) ArgsSchema() string {
@@ -130,41 +131,75 @@ func (t *IntelligentDebugTool) Run(input string) (string, error) {
 		sandboxPath := t.extractSandboxPath(jobDetails)
 		if sandboxPath != "" {
 			result.WriteString("=== Sandbox Log Analysis ===\n")
-			result.WriteString(fmt.Sprintf("Sandbox Path: %s\n", sandboxPath))
-			result.WriteString("Note: In real scenario, would navigate to csi-35b32b03db27ff2bad14579ebc29e3f67602aa1b7171eb061d66967c46c7cc16\n\n")
+			result.WriteString(fmt.Sprintf("Sandbox Path: %s\n\n", sandboxPath))
 
-			// For demo, we know containers.log is available
-			// In production, this would list files in the sandbox directory
-			result.WriteString("Available log files:\n")
-			result.WriteString("- containers.log\n\n")
-
-			// Analyze containers.log
-			errors := t.analyzeLogFile(sandboxPath, "containers.log")
-			if errors != "" {
-				result.WriteString("Critical errors found (showing first 3):\n")
-				errorLines := strings.Split(errors, "\n")
-				for i, line := range errorLines {
-					if i >= 3 {
-						result.WriteString("... (more errors in file)\n")
-						break
-					}
-					result.WriteString(fmt.Sprintf("- %s\n", line))
-				}
-				result.WriteString("\n")
+			// Check if sandbox logs are available
+			logAvailable, logFiles := t.checkSandboxLogsAvailable(sandboxPath)
+			if !logAvailable {
+				result.WriteString("❌ Sandbox logs not available\n")
+				result.WriteString("This usually indicates the deployment failed at an early stage before application logs were generated.\n")
+				result.WriteString("Check the Job Error section above for deployment-level issues.\n\n")
 			} else {
-				result.WriteString("No critical errors found in containers.log\n")
-			}
+				result.WriteString("📁 Discovered log files:\n")
+				if len(logFiles) > 0 {
+					for _, file := range logFiles {
+						result.WriteString(fmt.Sprintf("  • %s\n", file))
+					}
+					result.WriteString("\n")
 
-			// Use smart analysis for deeper insights
-			smartAnalysis := t.getSmartLogAnalysis(sandboxPath)
-			if smartAnalysis != "" {
-				result.WriteString("\nSmart Log Analysis Summary:\n")
-				result.WriteString(smartAnalysis)
-				result.WriteString("\n")
+					// Analyze each discovered log file layer by layer
+					result.WriteString("📋 Layer-by-Layer Log Analysis:\n\n")
+					
+					// Priority order for log analysis
+					priorityFiles := []string{"containers.log", "std.err", "std.out", "deploy.log"}
+					analyzedFiles := make(map[string]bool)
+					
+					// First analyze priority files in order
+					for _, priorityFile := range priorityFiles {
+						if t.containsFile(logFiles, priorityFile) {
+							result.WriteString(fmt.Sprintf("▶ Analyzing %s:\n", priorityFile))
+							analysis := t.analyzeSpecificLogFile(sandboxPath, priorityFile)
+							result.WriteString(analysis)
+							result.WriteString("\n")
+							analyzedFiles[priorityFile] = true
+						}
+					}
+					
+					// Then analyze any other discovered files
+					for _, file := range logFiles {
+						if !analyzedFiles[file] {
+							result.WriteString(fmt.Sprintf("▶ Analyzing %s:\n", file))
+							analysis := t.analyzeSpecificLogFile(sandboxPath, file)
+							result.WriteString(analysis)
+							result.WriteString("\n")
+						}
+					}
+
+					// Provide comprehensive smart analysis across all logs
+					smartAnalysis := t.getSmartLogAnalysis(sandboxPath)
+					if smartAnalysis != "" {
+						result.WriteString("📊 Aggregated Analysis Across All Logs:\n")
+						result.WriteString(smartAnalysis)
+						result.WriteString("\n")
+					}
+					
+					// Root cause analysis based on all findings
+					rootCause := t.determineRootCauseFromLogs(logFiles, sandboxPath)
+					if rootCause != "" {
+						result.WriteString("🎯 Root Cause Analysis:\n")
+						result.WriteString(rootCause)
+						result.WriteString("\n")
+					}
+				} else {
+					result.WriteString("  ❌ No log files discovered in sandbox\n")
+					result.WriteString("  This indicates the application never started or sandbox was not properly initialized.\n\n")
+				}
 			}
 		} else {
 			result.WriteString("=== Sandbox Logs ===\n")
-			result.WriteString("No sandbox path found in job details.\n\n")
+			result.WriteString("❌ No sandbox path found in job details\n")
+			result.WriteString("This indicates the job failed before sandbox initialization.\n")
+			result.WriteString("Check the Job Error section for early-stage deployment issues.\n\n")
 		}
 	}
 
@@ -181,17 +216,17 @@ func (t *IntelligentDebugTool) Run(input string) (string, error) {
 }
 
 func (t *IntelligentDebugTool) getJobDetails(tenant, namespace, jobID string) (map[string]interface{}, error) {
-	// Use the new static data endpoint for demo/test purposes
-	// The trace=true flag provides additional debugging information
-	url := fmt.Sprintf("http://localhost:8080/tenant/%s/jobs?requuid=%s&trace=true", tenant, jobID)
+	// Use the correct job API endpoint: /tenant/{tenant}/job/{jobid}?trace=true
+	// This calls your deployment platform's job API, not Kubernetes Job resources
+	url := fmt.Sprintf("http://localhost:8080/tenant/%s/job/%s?trace=true", tenant, jobID)
 	resp, err := utils.GetHTTP(url)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get job details: %v", err)
+		return nil, fmt.Errorf("failed to get job details from deployment platform: %v", err)
 	}
 
 	var jobDetails map[string]interface{}
 	if err := json.Unmarshal([]byte(resp), &jobDetails); err != nil {
-		return nil, fmt.Errorf("failed to parse job details: %v", err)
+		return nil, fmt.Errorf("failed to parse job details response: %v", err)
 	}
 
 	return jobDetails, nil
@@ -400,24 +435,63 @@ func (t *IntelligentDebugTool) fetchDatadogTraces(traceID string) string {
 	return "No error spans found in Datadog traces (all spans have OK status)"
 }
 
+func (t *IntelligentDebugTool) checkSandboxLogsAvailable(sandboxPath string) (bool, []string) {
+	// Try to list files in sandbox directory first
+	url := fmt.Sprintf("http://localhost:8080/api/sandbox/logs/list?path=%s", sandboxPath)
+	resp, err := utils.GetHTTP(url)
+	if err != nil {
+		// If listing fails, sandbox might not exist or be accessible
+		return false, nil
+	}
+
+	// Try to parse the response as JSON array of filenames
+	var files []string
+	if err := json.Unmarshal([]byte(resp), &files); err != nil {
+		// If JSON parsing fails, try to parse as plain text list
+		lines := strings.Split(strings.TrimSpace(resp), "\n")
+		for _, line := range lines {
+			line = strings.TrimSpace(line)
+			if line != "" && !strings.Contains(line, "error") && !strings.Contains(line, "not found") {
+				files = append(files, line)
+			}
+		}
+	}
+
+	return len(files) > 0, files
+}
+
+func (t *IntelligentDebugTool) containsFile(files []string, targetFile string) bool {
+	for _, file := range files {
+		if file == targetFile {
+			return true
+		}
+	}
+	return false
+}
+
 func (t *IntelligentDebugTool) analyzeLogFile(sandboxPath, logFile string) string {
-	// For the demo, directly use the sandbox log endpoint
+	// Use the sandbox log endpoint to get file contents
 	url := fmt.Sprintf("http://localhost:8080/api/sandbox/logs?path=%s&file=%s", sandboxPath, logFile)
 	resp, err := utils.GetHTTP(url)
 	if err != nil {
-		return ""
+		return fmt.Sprintf("Failed to read %s: %v", logFile, err)
 	}
 	
-	// Simple error extraction
+	// Simple error extraction (ignore warnings)
 	var errors []string
 	lines := strings.Split(resp, "\n")
 	for _, line := range lines {
 		lowerLine := strings.ToLower(line)
+		
+		// Skip warnings - they're just noise
+		if strings.Contains(lowerLine, "warning") || strings.Contains(lowerLine, "warn") {
+			continue
+		}
+		
 		if strings.Contains(lowerLine, "error") || strings.Contains(lowerLine, "exception") ||
 			strings.Contains(lowerLine, "failed") || strings.Contains(lowerLine, "fatal") {
 			errors = append(errors, strings.TrimSpace(line))
 			if len(errors) >= 5 {
-				errors = append(errors, "... (more errors in file)")
 				break
 			}
 		}
@@ -440,17 +514,13 @@ func (t *IntelligentDebugTool) getSmartLogAnalysis(sandboxPath string) string {
 
 	var summary strings.Builder
 	
-	// Extract summary information
+	// Extract summary information (focus on errors only, ignore warnings)
 	if summaryData, ok := logAnalysis["summary"].(map[string]interface{}); ok {
 		if counts, ok := summaryData["counts"].(map[string]interface{}); ok {
-			if totalCritical, ok := counts["total_critical"].(float64); ok {
-				summary.WriteString(fmt.Sprintf("Total critical issues: %d\n", int(totalCritical)))
-			}
-			if errors, ok := counts["errors"].(float64); ok {
-				summary.WriteString(fmt.Sprintf("Errors: %d\n", int(errors)))
-			}
-			if warnings, ok := counts["warnings"].(float64); ok {
-				summary.WriteString(fmt.Sprintf("Warnings: %d\n", int(warnings)))
+			if errors, ok := counts["errors"].(float64); ok && errors > 0 {
+				summary.WriteString(fmt.Sprintf("Total errors found: %d\n", int(errors)))
+			} else {
+				summary.WriteString("No errors found in aggregated analysis\n")
 			}
 		}
 		
@@ -487,6 +557,158 @@ func (t *IntelligentDebugTool) generateDebugSummary(jobDetails map[string]interf
 	}
 
 	return summary.String()
+}
+
+// analyzeSpecificLogFile provides detailed analysis for a specific log file
+func (t *IntelligentDebugTool) analyzeSpecificLogFile(sandboxPath, logFile string) string {
+	var result strings.Builder
+	
+	// Try to get the log content
+	url := fmt.Sprintf("http://localhost:8080/api/sandbox/logs?path=%s&file=%s", sandboxPath, logFile)
+	resp, err := utils.GetHTTP(url)
+	if err != nil {
+		result.WriteString(fmt.Sprintf("  ⚠️  Failed to read: %v\n", err))
+		return result.String()
+	}
+	
+	// Analyze based on file type
+	baseName := filepath.Base(logFile)
+	switch baseName {
+	case "containers.log":
+		result.WriteString("  Container runtime logs (all containers in pod):\n")
+	case "std.err":
+		result.WriteString("  Application error output:\n")
+	case "std.out":
+		result.WriteString("  Application standard output:\n")
+	case "deploy.log":
+		if logFile != baseName {
+			result.WriteString(fmt.Sprintf("  Deployment process logs (%s):\n", logFile))
+		} else {
+			result.WriteString("  Deployment process logs:\n")
+		}
+	default:
+		result.WriteString(fmt.Sprintf("  %s content:\n", logFile))
+	}
+	
+	// Extract and categorize errors (ignore warnings)
+	lines := strings.Split(resp, "\n")
+	errorCount := 0
+	var criticalErrors []string
+	var lastNonErrorLines []string
+	
+	for i, line := range lines {
+		lowerLine := strings.ToLower(line)
+		
+		// Skip warnings - they're just noise
+		if strings.Contains(lowerLine, "warning") || strings.Contains(lowerLine, "warn") {
+			continue
+		}
+		
+		// Keep track of last few non-error lines for context
+		if !strings.Contains(lowerLine, "error") && !strings.Contains(lowerLine, "exception") &&
+			!strings.Contains(lowerLine, "failed") && !strings.Contains(lowerLine, "fatal") {
+			lastNonErrorLines = append(lastNonErrorLines, line)
+			if len(lastNonErrorLines) > 3 {
+				lastNonErrorLines = lastNonErrorLines[1:]
+			}
+		}
+		
+		// Identify actual errors and exceptions
+		if strings.Contains(lowerLine, "error") || strings.Contains(lowerLine, "exception") ||
+			strings.Contains(lowerLine, "failed") || strings.Contains(lowerLine, "fatal") {
+			errorCount++
+			
+			// For critical errors, include context
+			if errorCount <= 3 {
+				// Include previous lines for context
+				if len(lastNonErrorLines) > 0 && i > 0 {
+					criticalErrors = append(criticalErrors, "    [Context] "+lastNonErrorLines[len(lastNonErrorLines)-1])
+				}
+				criticalErrors = append(criticalErrors, fmt.Sprintf("    [Line %d] %s", i+1, strings.TrimSpace(line)))
+			}
+		}
+	}
+	
+	// Report findings
+	if errorCount == 0 {
+		result.WriteString("  ✅ No errors found\n")
+	} else {
+		result.WriteString(fmt.Sprintf("  ❌ Found %d error(s)\n", errorCount))
+		if len(criticalErrors) > 0 {
+			result.WriteString("  Critical errors with context:\n")
+			for _, err := range criticalErrors {
+				result.WriteString(err + "\n")
+			}
+			if errorCount > 3 {
+				result.WriteString(fmt.Sprintf("    ... and %d more errors\n", errorCount-3))
+			}
+		}
+	}
+	
+	// File-specific insights
+	if logFile == "containers.log" && errorCount > 0 {
+		// Check for specific container issues
+		if containsContainerError(resp, "OOMKilled") {
+			result.WriteString("  💥 Container was killed due to Out of Memory\n")
+		}
+		if containsContainerError(resp, "CrashLoopBackOff") {
+			result.WriteString("  🔄 Container is in crash loop\n")
+		}
+	}
+	
+	return result.String()
+}
+
+// determineRootCauseFromLogs analyzes all logs to determine root cause
+func (t *IntelligentDebugTool) determineRootCauseFromLogs(logFiles []string, sandboxPath string) string {
+	var rootCauses []string
+	
+	// Check each log file for specific patterns
+	for _, file := range logFiles {
+		url := fmt.Sprintf("http://localhost:8080/api/sandbox/logs?path=%s&file=%s", sandboxPath, file)
+		resp, err := utils.GetHTTP(url)
+		if err != nil {
+			continue
+		}
+		
+		// Look for specific root cause patterns
+		if strings.Contains(resp, "Unable to properly resolve the host") {
+			rootCauses = append(rootCauses, "DNS resolution failure - host cannot be resolved")
+		}
+		if strings.Contains(resp, "Connection refused") {
+			rootCauses = append(rootCauses, "Service connection refused - target service may be down")
+		}
+		if strings.Contains(resp, "OOMKilled") {
+			rootCauses = append(rootCauses, "Out of Memory - container exceeded memory limits")
+		}
+		if strings.Contains(resp, "Permission denied") {
+			rootCauses = append(rootCauses, "Permission denied - check RBAC or file permissions")
+		}
+		if strings.Contains(resp, "No such file or directory") {
+			rootCauses = append(rootCauses, "Missing required files or directories")
+		}
+		if strings.Contains(resp, "timeout") || strings.Contains(resp, "Timeout") {
+			rootCauses = append(rootCauses, "Operation timeout - check network connectivity or increase timeout")
+		}
+	}
+	
+	if len(rootCauses) == 0 {
+		return ""
+	}
+	
+	// Build root cause summary
+	var result strings.Builder
+	result.WriteString("Based on log analysis, the following root causes were identified:\n")
+	for i, cause := range rootCauses {
+		result.WriteString(fmt.Sprintf("%d. %s\n", i+1, cause))
+	}
+	
+	return result.String()
+}
+
+// containsContainerError checks if specific container error exists
+func containsContainerError(logContent, errorType string) bool {
+	return strings.Contains(logContent, errorType)
 }
 
 // Helper function to safely extract string from map

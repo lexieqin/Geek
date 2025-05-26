@@ -45,7 +45,7 @@ var serverCmd = &cobra.Command{
 		clustersTool := tools.NewClusterTool()
 		podTool := tools.NewPodTool()
 		resourceInfoTool := tools.NewResourceInfoTool()
-		jobDebugTool := tools.NewJobDebugTool()
+		// jobDebugTool := tools.NewJobDebugTool() // Disabled - for K8s Jobs only
 		sandboxLogTool := tools.NewSandboxLogTool()
 		intelligentDebugTool := tools.NewIntelligentDebugTool()
 
@@ -70,7 +70,7 @@ var serverCmd = &cobra.Command{
 			fmt.Printf("Received query: %s (session: %s, show thinking: %v)\n", request.Query, request.SessionID, request.ShowThinkingProcess)
 			response, sessionID := processQueryWithSession(request.Query, request.SessionID, request.ShowThinkingProcess, 
 				createTool, listTool, deleteTool, humanTool, clustersTool, podTool, resourceInfoTool, 
-				jobDebugTool, sandboxLogTool, intelligentDebugTool)
+				sandboxLogTool, intelligentDebugTool)
 			fmt.Printf("Sending response: %s\n", response)
 
 			w.Header().Set("Content-Type", "application/json")
@@ -134,7 +134,7 @@ func getOrCreateSession(sessionID string) *Session {
 func processQueryWithSession(query, sessionID string, showThinkingProcess bool, 
 	createTool *tools.CreateTool, listTool *tools.ListTool, deleteTool *tools.DeleteTool, 
 	humanTool *tools.HumanTool, clustersTool *tools.ClusterTool, podTool *tools.PodTool, 
-	resourceInfoTool *tools.ResourceInfoTool, jobDebugTool *tools.JobDebugTool,
+	resourceInfoTool *tools.ResourceInfoTool,
 	sandboxLogTool *tools.SandboxLogTool, intelligentDebugTool *tools.IntelligentDebugTool) (string, string) {
 	
 	// Get or create session
@@ -149,7 +149,7 @@ func processQueryWithSession(query, sessionID string, showThinkingProcess bool,
 		
 		// Continue processing from where we left off
 		response := processQueryWithSessionObj("", showThinkingProcess, session, createTool, listTool, 
-			deleteTool, humanTool, clustersTool, podTool, resourceInfoTool, jobDebugTool, 
+			deleteTool, humanTool, clustersTool, podTool, resourceInfoTool, 
 			sandboxLogTool, intelligentDebugTool)
 		
 		return response, session.ID
@@ -157,7 +157,7 @@ func processQueryWithSession(query, sessionID string, showThinkingProcess bool,
 	
 	// Process query with session's message store
 	response := processQueryWithSessionObj(query, showThinkingProcess, session, createTool, listTool, 
-		deleteTool, humanTool, clustersTool, podTool, resourceInfoTool, jobDebugTool, 
+		deleteTool, humanTool, clustersTool, podTool, resourceInfoTool, 
 		sandboxLogTool, intelligentDebugTool)
 	
 	return response, session.ID
@@ -166,13 +166,13 @@ func processQueryWithSession(query, sessionID string, showThinkingProcess bool,
 func processQueryWithSessionObj(query string, showThinkingProcess bool, session *Session,
 	createTool *tools.CreateTool, listTool *tools.ListTool, 
 	deleteTool *tools.DeleteTool, humanTool *tools.HumanTool, clustersTool *tools.ClusterTool, 
-	podTool *tools.PodTool, resourceInfoTool *tools.ResourceInfoTool, jobDebugTool *tools.JobDebugTool,
+	podTool *tools.PodTool, resourceInfoTool *tools.ResourceInfoTool,
 	sandboxLogTool *tools.SandboxLogTool, intelligentDebugTool *tools.IntelligentDebugTool) string {
 	
 	// Build prompt
 	if query != "" {
 		prompt := buildServerPrompt(createTool, listTool, deleteTool, humanTool, clustersTool, 
-			podTool, resourceInfoTool, jobDebugTool, sandboxLogTool, intelligentDebugTool, query)
+			podTool, resourceInfoTool, sandboxLogTool, intelligentDebugTool, query)
 		
 		// Use the session's messageStore to maintain context
 		session.MessageStore.AddForUser(prompt)
@@ -220,7 +220,7 @@ func processQueryWithSessionObj(query string, showThinkingProcess bool, session 
 		if len(action) > 1 && len(actionInput) > 1 {
 			observation := executeAction(action[1], actionInput[1], createTool, listTool, 
 				deleteTool, humanTool, clustersTool, podTool, resourceInfoTool, 
-				jobDebugTool, sandboxLogTool, intelligentDebugTool)
+				sandboxLogTool, intelligentDebugTool)
 			
 			// Check if human confirmation is required
 			if strings.Contains(observation, "[HUMAN_CONFIRMATION_REQUIRED]") {
@@ -267,7 +267,7 @@ func processQueryWithSessionObj(query string, showThinkingProcess bool, session 
 
 func executeAction(actionName, actionInput string, createTool *tools.CreateTool, listTool *tools.ListTool,
 	deleteTool *tools.DeleteTool, humanTool *tools.HumanTool, clustersTool *tools.ClusterTool,
-	podTool *tools.PodTool, resourceInfoTool *tools.ResourceInfoTool, jobDebugTool *tools.JobDebugTool,
+	podTool *tools.PodTool, resourceInfoTool *tools.ResourceInfoTool,
 	sandboxLogTool *tools.SandboxLogTool, intelligentDebugTool *tools.IntelligentDebugTool) string {
 	
 	observation := "Observation: "
@@ -325,13 +325,13 @@ func executeAction(actionName, actionInput string, createTool *tools.CreateTool,
 			observation += output
 		}
 		
-	case jobDebugTool.Name():
-		output, err := jobDebugTool.Run(actionInput)
-		if err != nil {
-			observation += "Error: " + err.Error()
-		} else {
-			observation += output
-		}
+	// case jobDebugTool.Name():
+	// 	output, err := jobDebugTool.Run(actionInput)
+	// 	if err != nil {
+	// 		observation += "Error: " + err.Error()
+	// 	} else {
+	// 		observation += output
+	// 	}
 		
 	case sandboxLogTool.Name():
 		output, err := sandboxLogTool.Run(actionInput)
@@ -358,11 +358,11 @@ func executeAction(actionName, actionInput string, createTool *tools.CreateTool,
 
 func buildServerPrompt(createTool *tools.CreateTool, listTool *tools.ListTool, deleteTool *tools.DeleteTool, 
 	humanTool *tools.HumanTool, clustersTool *tools.ClusterTool, podTool *tools.PodTool, 
-	resourceInfoTool *tools.ResourceInfoTool, jobDebugTool *tools.JobDebugTool, 
+	resourceInfoTool *tools.ResourceInfoTool, 
 	sandboxLogTool *tools.SandboxLogTool, intelligentDebugTool *tools.IntelligentDebugTool, query string) string {
 	// For now, use the same logic as chat - we could refactor this into a shared package
 	return buildPrompt(createTool, listTool, deleteTool, humanTool, clustersTool, 
-		podTool, resourceInfoTool, jobDebugTool, sandboxLogTool, intelligentDebugTool, query)
+		podTool, resourceInfoTool, sandboxLogTool, intelligentDebugTool, query)
 }
 
 func init() {

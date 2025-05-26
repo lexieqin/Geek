@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -21,14 +22,15 @@ func NewMockDataController() *MockDataController {
 	}
 }
 
-// GetJobByTenantAndUUID handles /tenant/{tenant}/jobs?requuid={jobid}
-func (c *MockDataController) GetJobByTenantAndUUID(ctx *gin.Context) {
+// GetJobByTenantAndJobID handles /tenant/{tenant}/job/{jobid}?trace=true
+func (c *MockDataController) GetJobByTenantAndJobID(ctx *gin.Context) {
 	tenant := ctx.Param("tenant")
-	jobID := ctx.Query("requuid")
+	jobID := ctx.Param("jobid")
+	_ = ctx.Query("trace") // Optional trace parameter (used in production)
 	
 	if tenant == "" || jobID == "" {
 		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error": "Missing tenant or requuid parameter",
+			"error": "Missing tenant or jobid parameter",
 		})
 		return
 	}
@@ -73,7 +75,7 @@ func (c *MockDataController) GetDatadogTrace(ctx *gin.Context) {
 // GetSandboxLog handles sandbox log requests
 func (c *MockDataController) GetSandboxLog(ctx *gin.Context) {
 	// Extract parameters from the request
-	_ = ctx.Query("path")  // path parameter (used in real implementation)
+	_ = ctx.Query("path")  // e.g., /csi-data-dir/7d1f4a89-b6ec-44e4-b047-d34d6d3f9704
 	_ = ctx.Query("hostip") // hostIP parameter (used in real implementation)
 	logFile := ctx.Query("file")
 	
@@ -82,9 +84,25 @@ func (c *MockDataController) GetSandboxLog(ctx *gin.Context) {
 		logFile = "containers.log"
 	}
 	
-	// Read the containers.log file
-	logData, err := ioutil.ReadFile(filepath.Join(c.staticFilePath, logFile))
+	// For mock purposes, we map any sandbox path to our sandboxlink directory
+	// This simulates having different sandboxes with their own log files
+	sandboxLinkPath := filepath.Join(c.staticFilePath, "sandboxlink")
+	
+	// Try to read the requested log file from sandboxlink directory
+	// The logFile parameter can include subdirectories (e.g., "applog/deploy.log")
+	logFilePath := filepath.Join(sandboxLinkPath, logFile)
+	
+	// Clean the path to prevent directory traversal attacks
+	logFilePath = filepath.Clean(logFilePath)
+	logData, err := ioutil.ReadFile(logFilePath)
 	if err != nil {
+		// If file doesn't exist, return appropriate error
+		if os.IsNotExist(err) {
+			ctx.JSON(http.StatusNotFound, gin.H{
+				"error": fmt.Sprintf("Log file %s not found in sandbox", logFile),
+			})
+			return
+		}
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": fmt.Sprintf("Failed to read log data: %v", err),
 		})
@@ -103,10 +121,57 @@ func (c *MockDataController) GetSandboxLog(ctx *gin.Context) {
 	ctx.String(http.StatusOK, string(logData))
 }
 
+// GetSandboxLogList handles listing files in sandbox directory
+func (c *MockDataController) GetSandboxLogList(ctx *gin.Context) {
+	// Check if path parameter is provided (for realistic behavior)
+	sandboxPath := ctx.Query("path")
+	if sandboxPath == "" {
+		// If no path provided, return empty list (simulating no sandbox)
+		ctx.JSON(http.StatusOK, []string{})
+		return
+	}
+	
+	// For mock purposes, list files from our sandboxlink directory
+	// This simulates listing actual files in a sandbox
+	sandboxLinkPath := filepath.Join(c.staticFilePath, "sandboxlink")
+	
+	// Recursively find all files in the directory tree
+	availableFiles := []string{}
+	err := filepath.Walk(sandboxLinkPath, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return nil // Skip files we can't access
+		}
+		
+		// Skip directories and README
+		if !info.IsDir() && info.Name() != "README.md" {
+			// Get relative path from sandboxlink directory
+			relPath, err := filepath.Rel(sandboxLinkPath, path)
+			if err == nil {
+				// Convert to forward slashes for consistency
+				relPath = filepath.ToSlash(relPath)
+				availableFiles = append(availableFiles, relPath)
+			}
+		}
+		return nil
+	})
+	
+	if err != nil {
+		// If walk fails, return empty list
+		ctx.JSON(http.StatusOK, []string{})
+		return
+	}
+	
+	// Return the list of all discovered files with their relative paths
+	ctx.JSON(http.StatusOK, availableFiles)
+}
+
 // GetSandboxLogSmart handles smart log retrieval with critical log extraction
 func (c *MockDataController) GetSandboxLogSmart(ctx *gin.Context) {
-	// Read the containers.log file
-	logData, err := ioutil.ReadFile(filepath.Join(c.staticFilePath, "containers.log"))
+	// For mock purposes, analyze all logs in sandboxlink directory
+	sandboxLinkPath := filepath.Join(c.staticFilePath, "sandboxlink")
+	
+	// Try to read containers.log as the primary log file
+	logData, err := ioutil.ReadFile(filepath.Join(sandboxLinkPath, "containers.log"))
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": fmt.Sprintf("Failed to read log data: %v", err),
