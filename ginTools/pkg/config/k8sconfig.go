@@ -30,7 +30,7 @@ func NewK8sConfig() *K8sConfig {
 	return &K8sConfig{}
 }
 
-// 初始化k8s配置 - 优先使用 in-cluster config，失败则使用 kubeconfig
+// Initialize k8s config - prefer in-cluster config, fallback to kubeconfig
 func (k *K8sConfig) InitRestConfig(optfuncs ...K8sConfigOptionFunc) *K8sConfig {
 	// First try in-cluster config
 	config, err := rest.InClusterConfig()
@@ -56,7 +56,7 @@ func (k *K8sConfig) InitRestConfig(optfuncs ...K8sConfigOptionFunc) *K8sConfig {
 }
 
 func (k *K8sConfig) InitConfigInCluster() *K8sConfig {
-	// 加载 in-cluster 配置
+	// Load in-cluster config
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		k.e = errors.Wrap(errors.New("k8s config is nil"), "init k8s client failed")
@@ -69,7 +69,7 @@ func (k *K8sConfig) Error() error {
 	return k.e
 }
 
-// 初始化clientSet客户端
+// Initialize clientSet client
 func (k *K8sConfig) InitClientSet() *kubernetes.Clientset {
 	if k.Config == nil {
 		k.e = errors.Wrap(errors.New("k8s config is nil"), "init k8s client failed")
@@ -84,7 +84,7 @@ func (k *K8sConfig) InitClientSet() *kubernetes.Clientset {
 	return clientSet
 }
 
-// 初始化动态客户端
+// Initialize dynamic client
 func (k *K8sConfig) InitDynamicClient() *dynamic.DynamicClient {
 	if k.Config == nil {
 		k.e = errors.Wrap(errors.New("k8s config is nil"), "init k8s client failed")
@@ -99,7 +99,7 @@ func (k *K8sConfig) InitDynamicClient() *dynamic.DynamicClient {
 	return dynamicClient
 }
 
-// 获取  所有api groupresource
+// Get all API group resources
 func (k *K8sConfig) InitRestMapper() meta.RESTMapper {
 	gr, err := restmapper.GetAPIGroupResources(k.InitClientSet().Discovery())
 	if err != nil {
@@ -111,7 +111,7 @@ func (k *K8sConfig) InitRestMapper() meta.RESTMapper {
 }
 
 func (k *K8sConfig) InitInformer() informers.SharedInformerFactory {
-	fact := informers.NewSharedInformerFactory(k.InitClientSet(), 0) //创建通用informer工厂
+	fact := informers.NewSharedInformerFactory(k.InitClientSet(), 0) // Create shared informer factory
 
 	informer := fact.Core().V1().Pods()
 	informer.Informer().AddEventHandler(&cache.ResourceEventHandlerFuncs{})

@@ -1,0 +1,26 @@
+#!/bin/bash
+
+# Script to switch GenesisGpt to production APIs
+
+echo "Switching GenesisGpt to production APIs..."
+echo ""
+echo "Set the following environment variables before running GenesisGpt:"
+echo ""
+echo "# Set environment to production"
+echo "export ENVIRONMENT=production"
+echo ""
+echo "# Set your production API endpoints"
+echo "export PROD_JOB_API=https://api.yourplatform.com"
+echo "export PROD_TRACE_API=https://api.datadoghq.com"
+echo "export PROD_SANDBOX_API=https://sandbox.yourplatform.com"
+echo ""
+echo "# Optional: Set authentication tokens if needed"
+echo "export JOB_API_TOKEN=your-job-api-token"
+echo "export DATADOG_API_KEY=your-datadog-api-key"
+echo "export DATADOG_APP_KEY=your-datadog-app-key"
+echo ""
+echo "Then run GenesisGpt:"
+echo "./genesisgpt chat"
+echo ""
+echo "To switch back to mock/development mode, simply unset ENVIRONMENT:"
+echo "unset ENVIRONMENT"
