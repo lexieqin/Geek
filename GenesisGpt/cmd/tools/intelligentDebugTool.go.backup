@@ -1,0 +1,1482 @@
+package tools
+
+import (
+	"encoding/json"
+	"fmt"
+	"net/url"
+	"path/filepath"
+	"regexp"
+	"strings"
+	"time"
+
+	"github.com/lexieqin/Geek/GenesisGpt/cmd/ai"
+	"github.com/lexieqin/Geek/GenesisGpt/cmd/config"
+	"github.com/lexieqin/Geek/GenesisGpt/cmd/utils"
+	apiconfig "github.com/lexieqin/Geek/GenesisGpt/config"
+	openai "github.com/sashabaranov/go-openai"
+)
+
+type IntelligentDebugTool struct{
+	apiEndpoints *apiconfig.APIEndpoints
+}
+
+// Removed SandboxInfo struct - we'll use the URL directly
+
+func NewIntelligentDebugTool() *IntelligentDebugTool {
+	return &IntelligentDebugTool{
+		apiEndpoints: apiconfig.GetAPIEndpoints(),
+	}
+}
+
+func (t *IntelligentDebugTool) Name() string {
+	return "IntelligentDebugTool"
+}
+
+func (t *IntelligentDebugTool) Description() string {
+	return "Debug failed deployment platform jobs (NOT Kubernetes Jobs) by analyzing job details, errors, Datadog traces, and sandbox logs. IMPORTANT: This tool returns a structured report that MUST be preserved exactly as formatted. Do not summarize or reorganize the output before presenting it. The tool will return actual data with specific timestamps, error messages, and trace IDs - never generate these yourself."
+}
+
+func (t *IntelligentDebugTool) ArgsSchema() string {
+	return `{
+		"type": "object",
+		"properties": {
+			"jobId": {
+				"type": "string",
+				"description": "The job ID or UUID to debug"
+			},
+			"tenant": {
+				"type": "string",
+				"description": "The tenant name",
+				"default": "default-tenant"
+			},
+			"namespace": {
+				"type": "string",
+				"description": "The namespace of the job",
+				"default": "default"
+			},
+			"debugLevel": {
+				"type": "string",
+				"enum": ["quick", "traces", "full"],
+				"description": "Debug level: quick (JobError only), traces (JobError + Datadog), full (all including sandbox logs)",
+				"default": "quick"
+			}
+		},
+		"required": ["jobId"]
+	}`
+}
+
+func (t *IntelligentDebugTool) Run(input string) (string, error) {
+	var args struct {
+		JobID      string `json:"jobId"`
+		Tenant     string `json:"tenant"`
+		Namespace  string `json:"namespace"`
+		DebugLevel string `json:"debugLevel"`
+	}
+
+	if err := json.Unmarshal([]byte(input), &args); err != nil {
+		return "", fmt.Errorf("invalid input: %v", err)
+	}
+
+	// Set defaults
+	if args.Tenant == "" {
+		args.Tenant = "default-tenant"
+	}
+	if args.Namespace == "" {
+		args.Namespace = "default"
+	}
+	if args.DebugLevel == "" {
+		args.DebugLevel = "quick"
+	}
+
+	var result strings.Builder
+	result.WriteString(fmt.Sprintf("=== Debugging Job: %s (Tenant: %s) ===\n\n", args.JobID, args.Tenant))
+
+	// Step 1: Get job details
+	jobDetails, err := t.getJobDetails(args.Tenant, args.Namespace, args.JobID)
+	if err != nil {
+		return "", fmt.Errorf("failed to get job details: %v", err)
+	}
+
+	// Step 2: Check JobError section
+	jobError := t.extractJobError(jobDetails)
+	if jobError != "" {
+		result.WriteString("=== Job Error (Pre-categorized) ===\n")
+		result.WriteString(jobError)
+		result.WriteString("\n\n")
+
+		if args.DebugLevel == "quick" {
+			result.WriteString("💡 Quick analysis complete. Use debugLevel='traces' or 'full' for deeper investigation.\n")
+			return result.String(), nil
+		}
+	} else {
+		result.WriteString("=== Job Error ===\n")
+		result.WriteString("No pre-categorized errors found in JobError section.\n\n")
+	}
+
+	// Step 3: Get Datadog traces if requested
+	if args.DebugLevel == "traces" || args.DebugLevel == "full" {
+		traceID := t.extractDatadogTraceID(jobDetails)
+		if traceID != "" {
+			result.WriteString("=== Datadog Traces ===\n")
+			result.WriteString(fmt.Sprintf("Trace ID: %s\n", traceID))
+
+			// Here we would fetch actual traces via Datadog API
+			// For now, we'll simulate it
+			traceErrors := t.fetchDatadogTraces(traceID)
+			if traceErrors != "" {
+				result.WriteString("Errors from traces:\n")
+				result.WriteString(traceErrors)
+				result.WriteString("\n")
+			} else {
+				result.WriteString("No errors found in Datadog traces (system level looks OK).\n")
+			}
+			result.WriteString("\n")
+
+			if args.DebugLevel == "traces" {
+				result.WriteString("💡 Trace analysis complete. Use debugLevel='full' to check application logs.\n")
+				return result.String(), nil
+			}
+		}
+	}
+
+	// Step 4: Analyze sandbox logs if requested
+	if args.DebugLevel == "full" {
+		sandboxURL := t.extractSandboxURL(jobDetails)
+		if sandboxURL != "" {
+			// Buffer to collect detailed analysis
+			var detailedAnalysis strings.Builder
+			
+			detailedAnalysis.WriteString("=== Sandbox Log Analysis ===\n")
+			detailedAnalysis.WriteString(fmt.Sprintf("Sandbox URL: %s\n\n", sandboxURL))
+
+			// In production mode, we can't programmatically access the web-based file browser
+			if !config.IsMockMode() {
+				detailedAnalysis.WriteString("ℹ️  Production mode detected - Sandbox logs cannot be programmatically accessed\n")
+				detailedAnalysis.WriteString("   The sandbox URL above points to a web-based file browser interface.\n")
+				detailedAnalysis.WriteString("   Please click the link to browse logs interactively.\n\n")
+				detailedAnalysis.WriteString("📂 Expected log file structure:\n")
+				detailedAnalysis.WriteString("   └── [sandbox-id]/\n")
+				detailedAnalysis.WriteString("       ├── containers.log     (all container runtime logs)\n")
+				detailedAnalysis.WriteString("       └── app/\n")
+				detailedAnalysis.WriteString("           ├── std.out        (application stdout)\n")
+				detailedAnalysis.WriteString("           ├── std.err        (application stderr)\n")
+				detailedAnalysis.WriteString("           └── deploy.log     (deployment process logs)\n\n")
+				detailedAnalysis.WriteString("💡 Tips for manual debugging:\n")
+				detailedAnalysis.WriteString("   1. Check containers.log first for runtime errors\n")
+				detailedAnalysis.WriteString("   2. Look for ERROR/FATAL keywords (ignore INFO lines with 'error' in message)\n")
+				detailedAnalysis.WriteString("   3. Check std.err for stack traces and exceptions\n")
+				detailedAnalysis.WriteString("   4. Review deploy.log for deployment-stage issues\n\n")
+				
+				// Generate executive summary and add to result
+				summary := t.generateExecutiveSummary(detailedAnalysis.String())
+				result.WriteString(summary)
+				result.WriteString("\n")
+				result.WriteString(detailedAnalysis.String())
+			} else {
+				// Check if sandbox logs are available
+				logAvailable, logFiles := t.checkSandboxLogsAvailable(sandboxURL)
+				if !logAvailable {
+					detailedAnalysis.WriteString("❌ Sandbox logs not available\n")
+					detailedAnalysis.WriteString("This usually indicates the deployment failed at an early stage before application logs were generated.\n")
+					detailedAnalysis.WriteString("Check the Job Error section above for deployment-level issues.\n\n")
+				} else {
+					detailedAnalysis.WriteString("📁 Discovered log files:\n")
+					if len(logFiles) > 0 {
+						for _, file := range logFiles {
+							detailedAnalysis.WriteString(fmt.Sprintf("  • %s\n", file))
+						}
+						detailedAnalysis.WriteString("\n")
+
+						// Analyze each discovered log file layer by layer
+						detailedAnalysis.WriteString("📋 Layer-by-Layer Log Analysis:\n\n")
+					
+					// Priority order for log analysis
+					priorityFiles := []string{"containers.log", "std.err", "std.out", "deploy.log"}
+					analyzedFiles := make(map[string]bool)
+					
+					// First analyze priority files in order
+					for _, priorityFile := range priorityFiles {
+						if t.containsFile(logFiles, priorityFile) {
+							detailedAnalysis.WriteString(fmt.Sprintf("▶ Analyzing %s:\n", priorityFile))
+							analysis := t.analyzeSpecificLogFile(sandboxURL, priorityFile)
+							detailedAnalysis.WriteString(analysis)
+							detailedAnalysis.WriteString("\n")
+							analyzedFiles[priorityFile] = true
+						}
+					}
+					
+					// Then analyze any other discovered files
+					for _, file := range logFiles {
+						if !analyzedFiles[file] {
+							detailedAnalysis.WriteString(fmt.Sprintf("▶ Analyzing %s:\n", file))
+							analysis := t.analyzeSpecificLogFile(sandboxURL, file)
+							detailedAnalysis.WriteString(analysis)
+							detailedAnalysis.WriteString("\n")
+						}
+					}
+
+					// Provide comprehensive smart analysis across all logs
+					smartAnalysis := t.getSmartLogAnalysis(sandboxURL)
+					if smartAnalysis != "" {
+						detailedAnalysis.WriteString("📊 Aggregated Analysis Across All Logs:\n")
+						detailedAnalysis.WriteString(smartAnalysis)
+						detailedAnalysis.WriteString("\n")
+					}
+					
+						// Root cause analysis based on all findings
+						rootCause := t.determineRootCauseFromLogs(logFiles, sandboxURL)
+						if rootCause != "" {
+							detailedAnalysis.WriteString("🎯 Root Cause Analysis:\n")
+							detailedAnalysis.WriteString(rootCause)
+							detailedAnalysis.WriteString("\n")
+						}
+					} else {
+						detailedAnalysis.WriteString("  ❌ No log files discovered in sandbox\n")
+						detailedAnalysis.WriteString("  This indicates the application never started or sandbox was not properly initialized.\n\n")
+					}
+				}
+				
+				// Generate executive summary and add both to result
+				summary := t.generateExecutiveSummary(detailedAnalysis.String())
+				result.WriteString(summary)
+				result.WriteString("\n")
+				result.WriteString(detailedAnalysis.String())
+			}
+		} else {
+			result.WriteString("=== Sandbox Logs ===\n")
+			result.WriteString("❌ No sandbox path found in job details\n")
+			result.WriteString("This indicates the job failed before sandbox initialization.\n")
+			result.WriteString("Check the Job Error section for early-stage deployment issues.\n\n")
+		}
+	}
+
+	// Step 5: Provide summary
+	result.WriteString("=== Debug Summary ===\n")
+	result.WriteString(t.generateDebugSummary(jobDetails, args.DebugLevel))
+	result.WriteString("\n")
+	
+	// Format the complete debug report
+	debugReport := result.String()
+	
+	// Return with clear structure and unique markers to prevent hallucination
+	timestamp := time.Now().Unix()
+	return fmt.Sprintf("=== ACTUAL TOOL OUTPUT START [TS:%d] ===\nDebug Report for Job %s:\n\n%s\n=== ACTUAL TOOL OUTPUT END [TS:%d] ===", 
+		timestamp, args.JobID, debugReport, timestamp), nil
+}
+
+func (t *IntelligentDebugTool) getJobDetails(tenant, namespace, jobID string) (map[string]interface{}, error) {
+	// Use the correct job API endpoint: /tenant/{tenant}/job/{jobid}?trace=true
+	// This calls your deployment platform's job API, not Kubernetes Job resources
+	url := fmt.Sprintf("%s/tenant/%s/job/%s?trace=true", t.apiEndpoints.JobAPI, tenant, jobID)
+	resp, err := utils.GetHTTP(url)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get job details from deployment platform: %v", err)
+	}
+
+	var jobDetails map[string]interface{}
+	if err := json.Unmarshal([]byte(resp), &jobDetails); err != nil {
+		return nil, fmt.Errorf("failed to parse job details response: %v", err)
+	}
+
+	return jobDetails, nil
+}
+
+func (t *IntelligentDebugTool) extractJobError(jobDetails map[string]interface{}) string {
+	// Look for JobError section in the response
+	if jobError, ok := jobDetails["jobError"].(map[string]interface{}); ok {
+		if errMessages, ok := jobError["errMessage"].([]interface{}); ok {
+			var errorMsg strings.Builder
+			for _, errMsg := range errMessages {
+				if errMap, ok := errMsg.(map[string]interface{}); ok {
+					if error, ok := errMap["error"].(map[string]interface{}); ok {
+						if category, ok := error["category"].(string); ok {
+							errorMsg.WriteString(fmt.Sprintf("Category: %s\n", category))
+						}
+						if subCategory, ok := error["sub-category"].(string); ok {
+							errorMsg.WriteString(fmt.Sprintf("Sub-category: %s\n", subCategory))
+						}
+						if component, ok := error["component"].(string); ok {
+							errorMsg.WriteString(fmt.Sprintf("Component: %s\n", component))
+						}
+						if message, ok := error["message"].(string); ok {
+							errorMsg.WriteString(fmt.Sprintf("Message: %s\n", message))
+						}
+						errorMsg.WriteString("\n")
+					}
+				}
+			}
+			return errorMsg.String()
+		}
+	}
+	return ""
+}
+
+func (t *IntelligentDebugTool) extractDatadogTraceID(jobDetails map[string]interface{}) string {
+	// Extract trace ID from contextData
+	if contextData, ok := jobDetails["contextData"].(map[string]interface{}); ok {
+		if traceURL, ok := contextData["Genesis-TraceID"].(string); ok {
+			// Extract trace ID from URL
+			// URL format: https://company-qa.datadoghq.com/apm/trace/81325fc3b05e4d9aada2d2399aebe135
+			parts := strings.Split(traceURL, "/")
+			if len(parts) > 0 {
+				return parts[len(parts)-1]
+			}
+		}
+	}
+	return ""
+}
+
+func (t *IntelligentDebugTool) extractSandboxURL(jobDetails map[string]interface{}) string {
+	// Look for DEPLOY_SB_SAMPLE_LINK in dzStatus -> <dz> -> dzProgress -> msg
+	if dzStatus, ok := jobDetails["dzStatus"].(map[string]interface{}); ok {
+		// Iterate through each DZ (data zone)
+		for dzName, dzData := range dzStatus {
+			// Skip GFSM as it's the global FSM, not a deployment zone
+			if dzName == "GFSM" {
+				continue
+			}
+			
+			if dzMap, ok := dzData.(map[string]interface{}); ok {
+				if dzProgress, ok := dzMap["dzProgress"].([]interface{}); ok {
+					// Look through each step in dzProgress
+					for _, step := range dzProgress {
+						if stepMap, ok := step.(map[string]interface{}); ok {
+							if msgs, ok := stepMap["msg"].([]interface{}); ok {
+								// Look through messages in this step
+								for _, msg := range msgs {
+									if msgMap, ok := msg.(map[string]interface{}); ok {
+										if msgType, ok := msgMap["msgType"].(string); ok && msgType == "DEPLOY_SB_SAMPLE_LINK" {
+											// Found the sandbox link message
+											if fields, ok := msgMap["fields"].(map[string]interface{}); ok {
+												// Check different status fields (STARTING, SUCCESS, FAILED, etc.)
+												for _, value := range fields {
+													if links, ok := value.([]interface{}); ok && len(links) > 0 {
+														if link, ok := links[0].(string); ok {
+															return link // Return the full URL directly
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	// Fallback: check jobLogLinks (this is for FSM logs, not application logs)
+	// But we can try to use them if no sandbox link is found
+	if jobLogLinks, ok := jobDetails["jobLogLinks"].(map[string]interface{}); ok {
+		// Skip GFSM and look for actual deployment zone logs
+		for dzName, links := range jobLogLinks {
+			if dzName != "GFSM" {
+				if linkArray, ok := links.([]interface{}); ok && len(linkArray) > 0 {
+					if firstLink, ok := linkArray[0].(map[string]interface{}); ok {
+						if _, ok := firstLink["logLink"].(string); ok {
+							// Note: These are FSM logs, not application logs
+							// Skip FSM logs for now
+							continue
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	return "" // Return empty string when no sandbox URL found
+}
+
+// extractPathFromURL extracts the path parameter from sandbox URL
+// Used only in mock mode to work with our mock endpoints
+func extractPathFromURL(url string) string {
+	if strings.Contains(url, "path=") {
+		parts := strings.Split(url, "path=")
+		if len(parts) > 1 {
+			pathAndParams := parts[1]
+			// Extract just the path part before &
+			pathParts := strings.Split(pathAndParams, "&")
+			return pathParts[0]
+		}
+	}
+	return ""
+}
+
+func (t *IntelligentDebugTool) fetchDatadogTraces(traceID string) string {
+	// Call datadog trace endpoint
+	url := fmt.Sprintf("%s/trace/%s", t.apiEndpoints.TraceAPI, traceID)
+	resp, err := utils.GetHTTPWithAuth(url, "datadog")
+	if err != nil {
+		return fmt.Sprintf("Failed to fetch traces: %v", err)
+	}
+
+	var traceData map[string]interface{}
+	if err := json.Unmarshal([]byte(resp), &traceData); err != nil {
+		return "Failed to parse trace data"
+	}
+
+	// Extract errors from trace data
+	var errorSpans []map[string]interface{}
+	
+	// Navigate to the actual spans location: data.attributes.spans
+	var spans []interface{}
+	if data, ok := traceData["data"].(map[string]interface{}); ok {
+		if attributes, ok := data["attributes"].(map[string]interface{}); ok {
+			if spansData, ok := attributes["spans"].([]interface{}); ok {
+				spans = spansData
+			}
+		}
+	}
+	
+	// If not found in nested structure, try top level (for backward compatibility)
+	if len(spans) == 0 {
+		if spansData, ok := traceData["spans"].([]interface{}); ok {
+			spans = spansData
+		}
+	}
+	
+	if len(spans) > 0 {
+		for _, span := range spans {
+			if spanMap, ok := span.(map[string]interface{}); ok {
+				hasError := false
+				errorDetails := ""
+				
+				// Check meta fields for error information
+				if meta, ok := spanMap["meta"].(map[string]interface{}); ok {
+					// Check for OpenTelemetry error status (case insensitive)
+					if otelStatus, ok := meta["otel.status_code"].(string); ok && strings.EqualFold(otelStatus, "ERROR") {
+						hasError = true
+					}
+					
+					// Extract error details from meta (check regardless of hasError)
+					// Try multiple fields for error message
+					if errMsg, ok := meta["error.message"].(string); ok && errMsg != "" {
+						errorDetails = errMsg
+					} else if errMsg, ok := meta["err.msg"].(string); ok && errMsg != "" {
+						errorDetails = errMsg
+					} else if errMsg, ok := meta["message"].(string); ok && errMsg != "" {
+						errorDetails = errMsg
+					} else if errStack, ok := meta["err.stack"].(string); ok && errStack != "" {
+						// Extract first line of stack trace as error message
+						if lines := strings.Split(errStack, "\n"); len(lines) > 0 {
+							errorDetails = lines[0]
+						}
+					}
+					
+					// Add error type and category if available
+					if errType, ok := meta["err.type"].(string); ok && errType != "" {
+						if errorDetails == "" {
+							errorDetails = fmt.Sprintf("[%s]", errType)
+						} else {
+							errorDetails = fmt.Sprintf("[%s] %s", errType, errorDetails)
+						}
+					}
+					if errSubCat, ok := meta["err.sub_category"].(string); ok && errSubCat != "" {
+						if errorDetails == "" {
+							errorDetails = fmt.Sprintf("[%s]", errSubCat)
+						} else {
+							errorDetails = fmt.Sprintf("[%s] %s", errSubCat, errorDetails)
+						}
+					}
+					
+					// If still no error details, check for error in span description
+					if errorDetails == "" {
+						if spanName, ok := spanMap["name"].(string); ok && strings.Contains(strings.ToLower(spanName), "error") {
+							errorDetails = spanName
+						}
+					}
+				}
+				
+				// Also check numeric error field
+				if errorFlag, ok := spanMap["error"].(float64); ok && errorFlag == 1 {
+					hasError = true
+				}
+				
+				if hasError {
+					errorSpan := map[string]interface{}{
+						"service": spanMap["service"],
+						"operation": spanMap["name"],  // Using "name" field from actual trace
+						"resource": spanMap["resource"],
+						"error": errorDetails,
+					}
+					errorSpans = append(errorSpans, errorSpan)
+				}
+			}
+		}
+	}
+
+	if len(errorSpans) > 0 {
+		var result strings.Builder
+		result.WriteString(fmt.Sprintf("Found %d error spans in trace:\n\n", len(errorSpans)))
+		
+		// Add high-level summary first
+		result.WriteString("📍 Summary: ")
+		
+		// Look for the most specific error (usually ppregistrator or environment errors)
+		summaryFound := false
+		for _, span := range errorSpans {
+			if errorMsg, ok := span["error"].(string); ok && errorMsg != "" {
+				// Look for specific error patterns that indicate root cause
+				if strings.Contains(errorMsg, "LCM Error:") || 
+				   strings.Contains(errorMsg, "Unable to properly resolve") ||
+				   strings.Contains(errorMsg, "Environment-Error") {
+					// Extract just the core error message
+					if idx := strings.Index(errorMsg, "LCM Error:"); idx != -1 {
+						result.WriteString(errorMsg[idx:])
+					} else if idx := strings.Index(errorMsg, "Unable to"); idx != -1 {
+						result.WriteString(errorMsg[idx:])
+					} else {
+						// Remove error categories and show just the message
+						msg := errorMsg
+						msg = strings.TrimPrefix(msg, "[Environment-Error] ")
+						msg = strings.TrimPrefix(msg, "[System-Error] ")
+						result.WriteString(msg)
+					}
+					summaryFound = true
+					break
+				}
+			}
+		}
+		
+		// If no specific root cause found, use the first ppregistrator error
+		if !summaryFound {
+			for _, span := range errorSpans {
+				if service, ok := span["service"].(string); ok && service == "ppregistrator" {
+					if errorMsg, ok := span["error"].(string); ok && errorMsg != "" {
+						// Extract core message
+						msg := errorMsg
+						// Remove common prefixes
+						prefixes := []string{"[Environment-Error] ", "[System-Error] ", "[Deploy-Driver-Error] ", "[Fsm-Error] "}
+						for _, prefix := range prefixes {
+							msg = strings.TrimPrefix(msg, prefix)
+						}
+						result.WriteString(msg)
+						summaryFound = true
+						break
+					}
+				}
+			}
+		}
+		
+		// Fallback to replica set failure if nothing else found
+		if !summaryFound {
+			for _, span := range errorSpans {
+				if errorMsg, ok := span["error"].(string); ok && strings.Contains(errorMsg, "replica set") && strings.Contains(errorMsg, "failed") {
+					// Just show the replica set failure
+					if idx := strings.Index(errorMsg, "replica set"); idx != -1 {
+						result.WriteString(errorMsg[idx:])
+					} else {
+						result.WriteString("Deployment failed")
+					}
+					break
+				}
+			}
+		}
+		
+		result.WriteString("\n\n")
+		
+		// Find root cause - usually ppregistrator or the first error
+		var rootCause map[string]interface{}
+		for _, span := range errorSpans {
+			if service, ok := span["service"].(string); ok && service == "ppregistrator" {
+				rootCause = span
+				break
+			}
+		}
+		if rootCause == nil && len(errorSpans) > 0 {
+			rootCause = errorSpans[0]
+		}
+		
+		// Show root cause prominently
+		if rootCause != nil {
+			result.WriteString("Root Cause:\n")
+			if service, ok := rootCause["service"].(string); ok {
+				result.WriteString(fmt.Sprintf("  Service: %s\n", service))
+			}
+			if resource, ok := rootCause["resource"].(string); ok {
+				result.WriteString(fmt.Sprintf("  Resource: %s\n", resource))
+			}
+			if error, ok := rootCause["error"].(string); ok && error != "" {
+				result.WriteString(fmt.Sprintf("  Error: %s\n", error))
+			}
+			result.WriteString("\n")
+		}
+		
+		// Show error propagation chain with error details
+		if len(errorSpans) > 1 {
+			result.WriteString("Error Propagation Chain:\n")
+			seenServices := make(map[string]bool)
+			
+			for _, span := range errorSpans {
+				if service, ok := span["service"].(string); ok {
+					if !seenServices[service] {
+						seenServices[service] = true
+						result.WriteString(fmt.Sprintf("  • %s", service))
+						
+						// Add error details if available
+						if errorMsg, ok := span["error"].(string); ok && errorMsg != "" {
+							result.WriteString(fmt.Sprintf(": %s", errorMsg))
+						}
+						result.WriteString("\n")
+					}
+				}
+			}
+		}
+		
+		return result.String()
+	}
+	return "No error spans found in Datadog traces (all spans have OK status)"
+}
+
+func (t *IntelligentDebugTool) checkSandboxLogsAvailable(sandboxURL string) (bool, []string) {
+	// In mock mode, use our mock endpoint instead
+	var url string
+	if config.IsMockMode() {
+		// Extract path from sandbox URL and use mock endpoint
+		path := extractPathFromURL(sandboxURL)
+		url = fmt.Sprintf("%s/logs/list?path=%s", t.apiEndpoints.SandboxAPI, path)
+	} else {
+		// In production, use the sandbox URL directly
+		url = sandboxURL + "&action=list"
+	}
+	resp, err := utils.GetHTTP(url)
+	if err != nil {
+		// If listing fails, sandbox might not exist or be accessible
+		return false, nil
+	}
+
+	// Try to parse the response as JSON array of filenames
+	var files []string
+	if err := json.Unmarshal([]byte(resp), &files); err != nil {
+		// If JSON parsing fails, try to parse as plain text list
+		lines := strings.Split(strings.TrimSpace(resp), "\n")
+		for _, line := range lines {
+			line = strings.TrimSpace(line)
+			if line != "" && !strings.Contains(line, "error") && !strings.Contains(line, "not found") {
+				files = append(files, line)
+			}
+		}
+	}
+
+	return len(files) > 0, files
+}
+
+func (t *IntelligentDebugTool) containsFile(files []string, targetFile string) bool {
+	for _, file := range files {
+		if file == targetFile {
+			return true
+		}
+	}
+	return false
+}
+
+func (t *IntelligentDebugTool) analyzeLogFile(sandboxURL, logFile string) string {
+	// In mock mode, use our mock endpoint instead
+	var url string
+	if config.IsMockMode() {
+		path := extractPathFromURL(sandboxURL)
+		url = fmt.Sprintf("%s/logs?path=%s&file=%s", t.apiEndpoints.SandboxAPI, path, logFile)
+	} else {
+		// In production, use the sandbox URL directly
+		url = fmt.Sprintf("%s&action=read&file=%s", sandboxURL, logFile)
+	}
+	resp, err := utils.GetHTTP(url)
+	if err != nil {
+		return fmt.Sprintf("Failed to read %s: %v", logFile, err)
+	}
+	
+	return t.performSemanticLogAnalysis(resp, logFile)
+}
+
+type LogEntry struct {
+	LineNumber  int
+	Timestamp   string
+	Level       string
+	Message     string
+	Source      string // stdout/stderr
+	Component   string // container name
+	Context     string // additional context
+	RawLine     string
+}
+
+// performSemanticLogAnalysis provides intelligent analysis of log content
+func (t *IntelligentDebugTool) performSemanticLogAnalysis(logContent, logFile string) string {
+	// Check if log content is large enough to benefit from LLM analysis
+	lines := strings.Split(logContent, "\n")
+	if len(lines) < 10 {
+		// For small logs, use rule-based analysis
+		return t.performRuleBasedAnalysis(logContent, logFile)
+	}
+	
+	// For larger logs, use LLM-powered analysis
+	return t.performLLMLogAnalysis(logContent, logFile)
+}
+
+// performLLMLogAnalysis uses LLM to intelligently analyze log content
+func (t *IntelligentDebugTool) performLLMLogAnalysis(logContent, logFile string) string {
+	// Prepare the log analysis prompt
+	prompt := t.buildLogAnalysisPrompt(logContent, logFile)
+	
+	// Create messages for LLM
+	messages := []openai.ChatCompletionMessage{
+		{
+			Role:    openai.ChatMessageRoleSystem,
+			Content: t.getLogAnalysisSystemPrompt(),
+		},
+		{
+			Role:    openai.ChatMessageRoleUser,
+			Content: prompt,
+		},
+	}
+	
+	// Call LLM for analysis
+	response := ai.NormalChat(messages)
+	
+	// If LLM call fails, fall back to rule-based analysis
+	if response.Content == "" {
+		return t.performRuleBasedAnalysis(logContent, logFile)
+	}
+	
+	return response.Content
+}
+
+// getLogAnalysisSystemPrompt returns the system prompt for log analysis
+func (t *IntelligentDebugTool) getLogAnalysisSystemPrompt() string {
+	return `You are an expert log analyzer specializing in debugging distributed systems and containerized applications. Your task is to analyze log files and identify root causes of failures.
+
+When analyzing logs, follow these guidelines:
+
+1. **Root Cause Identification**:
+   - Look for error patterns and stack traces
+   - Identify the earliest error that triggered subsequent failures
+   - Distinguish between symptoms and root causes
+   - Recognize common patterns: OOM, DNS failures, connection issues, permission errors, configuration problems
+
+2. **Error Correlation**:
+   - Connect related errors across different components
+   - Understand error propagation chains
+   - Identify cascade failures
+
+3. **Output Format**:
+   - Start with a clear root cause statement if identified
+   - List critical errors with context
+   - Provide actionable debugging suggestions
+   - Be concise but thorough
+
+4. **Common Patterns to Recognize**:
+   - LCM errors (e.g., "LCM 1109:" indicates DNS resolution issues)
+   - Exit codes (non-zero indicates failure)
+   - Connection refused/timeout (network or service issues)
+   - Permission denied (RBAC or file system issues)
+   - OOMKilled (memory limit exceeded)
+   - File not found (missing configuration or dependencies)
+   - Unable to resolve host (DNS issues)
+
+5. **Important**:
+   - Focus on ERROR and FATAL messages, ignore INFO unless relevant
+   - Warnings are only important if no errors are found
+   - If stderr contains errors, prioritize those
+   - Look for the earliest point of failure`
+}
+
+// buildLogAnalysisPrompt creates the prompt for LLM log analysis
+func (t *IntelligentDebugTool) buildLogAnalysisPrompt(logContent, logFile string) string {
+	// Truncate log content if it's too large (keep first and last parts)
+	maxLogSize := 8000 // characters
+	truncatedLog := logContent
+	
+	if len(logContent) > maxLogSize {
+		// Keep first 3000 and last 3000 characters, with middle truncation indicator
+		firstPart := logContent[:3000]
+		lastPart := logContent[len(logContent)-3000:]
+		lineCount := strings.Count(logContent, "\n")
+		truncatedLog = fmt.Sprintf("%s\n\n[... truncated %d lines from middle of log ...]\n\n%s", 
+			firstPart, lineCount-strings.Count(firstPart+lastPart, "\n"), lastPart)
+	}
+	
+	return fmt.Sprintf(`Analyze the following log file and provide a structured analysis:
+
+Log File: %s
+Log Content:
+%s
+
+Provide your analysis in this format:
+
+🎯 Root Cause Analysis:
+[Identify the primary root cause if found]
+
+❌ Critical Errors:
+[List critical errors with their context]
+
+🔍 Error Pattern Analysis:
+[Describe any patterns or relationships between errors]
+
+💡 Debugging Suggestions:
+[Provide specific, actionable suggestions to resolve the issues]
+
+Focus on identifying the root cause, not just listing errors. If you see error propagation, trace it back to the origin.`, logFile, truncatedLog)
+}
+
+// performRuleBasedAnalysis is the fallback rule-based analysis
+func (t *IntelligentDebugTool) performRuleBasedAnalysis(logContent, logFile string) string {
+	lines := strings.Split(logContent, "\n")
+	
+	var criticalErrors []LogEntry
+	var warnings []LogEntry
+	var importantInfo []LogEntry
+	var rootCauseIndicators []LogEntry
+	
+	// Phase 1: Parse and categorize all log entries
+	for i, line := range lines {
+		if strings.TrimSpace(line) == "" {
+			continue
+		}
+		
+		entry := t.parseLogEntry(line, i+1)
+		if entry == nil {
+			continue
+		}
+		
+		// Categorize based on semantic analysis
+		switch {
+		case t.isCriticalError(entry):
+			criticalErrors = append(criticalErrors, *entry)
+		case t.isRootCauseIndicator(entry):
+			rootCauseIndicators = append(rootCauseIndicators, *entry)
+		case t.isWarning(entry):
+			warnings = append(warnings, *entry)
+		case t.isImportantInfo(entry):
+			importantInfo = append(importantInfo, *entry)
+		}
+	}
+	
+	// Phase 2: Determine root cause through semantic analysis
+	rootCause := t.analyzeRootCause(criticalErrors, rootCauseIndicators, importantInfo)
+	
+	// Phase 3: Generate intelligent summary
+	var result strings.Builder
+	
+	if rootCause != "" {
+		result.WriteString("🎯 Root Cause Analysis:\n")
+		result.WriteString(fmt.Sprintf("  %s\n\n", rootCause))
+	}
+	
+	if len(criticalErrors) > 0 {
+		result.WriteString("❌ Critical Errors:\n")
+		for _, err := range criticalErrors {
+			result.WriteString(fmt.Sprintf("  [%s] %s\n", err.Level, err.Message))
+			if err.Context != "" {
+				result.WriteString(fmt.Sprintf("    Context: %s\n", err.Context))
+			}
+		}
+		result.WriteString("\n")
+	}
+	
+	if len(rootCauseIndicators) > 0 && rootCause == "" {
+		result.WriteString("🔍 Potential Root Cause Indicators:\n")
+		for _, indicator := range rootCauseIndicators[:t.min(3, len(rootCauseIndicators))] {
+			result.WriteString(fmt.Sprintf("  %s\n", indicator.Message))
+		}
+		result.WriteString("\n")
+	}
+	
+	if len(warnings) > 0 && len(criticalErrors) == 0 {
+		result.WriteString("⚠️  Notable Warnings (may be related):\n")
+		for _, warn := range warnings[:t.min(2, len(warnings))] {
+			result.WriteString(fmt.Sprintf("  %s\n", warn.Message))
+		}
+		result.WriteString("\n")
+	}
+	
+	if result.Len() == 0 {
+		result.WriteString("✅ No critical issues found in this log file\n")
+	}
+	
+	return result.String()
+}
+
+// parseLogEntry extracts structured information from a log line
+func (t *IntelligentDebugTool) parseLogEntry(line string, lineNum int) *LogEntry {
+	// Parse container log format: [container] timestamp source F [timestamp] LEVEL message
+	if !strings.Contains(line, "] ") {
+		return nil
+	}
+	
+	entry := &LogEntry{
+		LineNumber: lineNum,
+		RawLine:    line,
+	}
+	
+	// Extract component (container name)
+	if strings.HasPrefix(line, "[") {
+		endBracket := strings.Index(line, "]")
+		if endBracket > 0 {
+			entry.Component = line[1:endBracket]
+		}
+	}
+	
+	// Extract source (stdout/stderr)
+	if strings.Contains(line, " stdout F ") {
+		entry.Source = "stdout"
+	} else if strings.Contains(line, " stderr F ") {
+		entry.Source = "stderr"
+	}
+	
+	// Extract the actual log message part
+	parts := strings.Split(line, "] ")
+	if len(parts) < 3 {
+		return entry
+	}
+	
+	logMessage := parts[len(parts)-1]
+	
+	// Extract log level and message from the log content
+	if strings.Contains(logMessage, "] INFO ") {
+		entry.Level = "INFO"
+		entry.Message = strings.SplitN(logMessage, "] INFO ", 2)[1]
+	} else if strings.Contains(logMessage, "] ERROR ") {
+		entry.Level = "ERROR"
+		entry.Message = strings.SplitN(logMessage, "] ERROR ", 2)[1]
+	} else if strings.Contains(logMessage, "] WARNING ") || strings.Contains(logMessage, "] WARN ") {
+		entry.Level = "WARNING"
+		if strings.Contains(logMessage, "] WARNING ") {
+			entry.Message = strings.SplitN(logMessage, "] WARNING ", 2)[1]
+		} else {
+			entry.Message = strings.SplitN(logMessage, "] WARN ", 2)[1]
+		}
+	} else if strings.Contains(logMessage, "] FATAL ") {
+		entry.Level = "FATAL"
+		entry.Message = strings.SplitN(logMessage, "] FATAL ", 2)[1]
+	} else {
+		// No explicit log level, use the whole message
+		entry.Message = logMessage
+		// Infer level from content and source
+		if entry.Source == "stderr" && (strings.Contains(strings.ToLower(logMessage), "error") || 
+			strings.Contains(strings.ToLower(logMessage), "failed") ||
+			strings.Contains(strings.ToLower(logMessage), "exception")) {
+			entry.Level = "ERROR"
+		}
+	}
+	
+	return entry
+}
+
+// isCriticalError determines if a log entry represents a critical error
+func (t *IntelligentDebugTool) isCriticalError(entry *LogEntry) bool {
+	if entry.Level == "ERROR" || entry.Level == "FATAL" {
+		return true
+	}
+	
+	// Check for critical patterns in stderr
+	if entry.Source == "stderr" {
+		lowerMsg := strings.ToLower(entry.Message)
+		criticalPatterns := []string{
+			"unable to", "cannot", "failed to", "connection refused",
+			"permission denied", "no such file", "command not found",
+			"timeout", "connection reset", "segmentation fault",
+		}
+		
+		for _, pattern := range criticalPatterns {
+			if strings.Contains(lowerMsg, pattern) {
+				return true
+			}
+		}
+	}
+	
+	return false
+}
+
+// isRootCauseIndicator identifies entries that indicate root causes
+func (t *IntelligentDebugTool) isRootCauseIndicator(entry *LogEntry) bool {
+	lowerMsg := strings.ToLower(entry.Message)
+	
+	// Exit codes and return codes indicate failure points
+	if strings.Contains(lowerMsg, "exit ") && !strings.Contains(lowerMsg, "exit 0") {
+		return true
+	}
+	
+	if strings.Contains(lowerMsg, "rc=") && !strings.Contains(lowerMsg, "rc=0") {
+		return true
+	}
+	
+	// LCM error codes are root causes
+	if strings.Contains(lowerMsg, "lcm") && strings.Contains(lowerMsg, ":") {
+		return true
+	}
+	
+	// "Unable to successfully complete" indicates a failure summary
+	if strings.Contains(lowerMsg, "unable to successfully complete") {
+		return true
+	}
+	
+	return false
+}
+
+// isWarning determines if entry is a warning
+func (t *IntelligentDebugTool) isWarning(entry *LogEntry) bool {
+	return entry.Level == "WARNING" || entry.Level == "WARN"
+}
+
+// isImportantInfo identifies important informational entries
+func (t *IntelligentDebugTool) isImportantInfo(entry *LogEntry) bool {
+	if entry.Level != "INFO" {
+		return false
+	}
+	
+	lowerMsg := strings.ToLower(entry.Message)
+	importantPatterns := []string{
+		"lcmstepend", "lcmphase", "application name:",
+		"partner_stage:", "bootstrap_token", "environment",
+	}
+	
+	for _, pattern := range importantPatterns {
+		if strings.Contains(lowerMsg, pattern) {
+			return true
+		}
+	}
+	
+	return false
+}
+
+// analyzeRootCause performs semantic analysis to determine the root cause
+func (t *IntelligentDebugTool) analyzeRootCause(criticalErrors, indicators, info []LogEntry) string {
+	// Look for LCM error codes first - these are usually the root cause
+	for _, err := range criticalErrors {
+		if strings.Contains(err.Message, "LCM") && strings.Contains(err.Message, ":") {
+			return fmt.Sprintf("LCM Error: %s", err.Message)
+		}
+	}
+	
+	// Look for DNS/network resolution issues
+	for _, err := range criticalErrors {
+		if strings.Contains(strings.ToLower(err.Message), "unable to properly resolve") ||
+		   strings.Contains(strings.ToLower(err.Message), "host") {
+			return fmt.Sprintf("DNS/Network Resolution Issue: %s", err.Message)
+		}
+	}
+	
+	// Look for exit codes in indicators
+	for _, indicator := range indicators {
+		if strings.Contains(strings.ToLower(indicator.Message), "exit ") && 
+		   !strings.Contains(strings.ToLower(indicator.Message), "exit 0") {
+			return fmt.Sprintf("Process Exit Failure: %s", indicator.Message)
+		}
+	}
+	
+	// Look for configuration issues
+	for _, err := range criticalErrors {
+		lowerMsg := strings.ToLower(err.Message)
+		if strings.Contains(lowerMsg, "no such file") || 
+		   strings.Contains(lowerMsg, "command not found") ||
+		   strings.Contains(lowerMsg, "permission denied") {
+			return fmt.Sprintf("Configuration/Environment Issue: %s", err.Message)
+		}
+	}
+	
+	// If we have critical errors but no specific root cause, return the first critical error
+	if len(criticalErrors) > 0 {
+		return fmt.Sprintf("Primary Error: %s", criticalErrors[0].Message)
+	}
+	
+	return ""
+}
+
+// min helper function
+func (t *IntelligentDebugTool) min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
+func (t *IntelligentDebugTool) getSmartLogAnalysis(sandboxURL string) string {
+	// Collect all log files for comprehensive analysis
+	var allLogs strings.Builder
+	logFiles := []string{"containers.log", "std.err", "std.out", "deploy.log"}
+	
+	for _, logFile := range logFiles {
+		var url string
+		if config.IsMockMode() {
+			path := extractPathFromURL(sandboxURL)
+			url = fmt.Sprintf("%s/logs?path=%s&file=%s", t.apiEndpoints.SandboxAPI, path, logFile)
+		} else {
+			// In production, use the sandbox URL directly
+			url = fmt.Sprintf("%s&action=read&file=%s", sandboxURL, logFile)
+		}
+		
+		resp, err := utils.GetHTTP(url)
+		if err != nil || resp == "" {
+			continue
+		}
+		
+		allLogs.WriteString(fmt.Sprintf("\n=== %s ===\n", logFile))
+		allLogs.WriteString(resp)
+		allLogs.WriteString("\n")
+	}
+	
+	// If no logs collected, return empty
+	if allLogs.Len() == 0 {
+		return ""
+	}
+	
+	// Use LLM to analyze all logs together for better correlation
+	return t.performComprehensiveLLMAnalysis(allLogs.String())
+}
+
+// performComprehensiveLLMAnalysis analyzes all logs together for better insights
+func (t *IntelligentDebugTool) performComprehensiveLLMAnalysis(allLogs string) string {
+	prompt := fmt.Sprintf(`Analyze these logs from different sources and provide a comprehensive analysis. Look for correlations between errors in different log files.
+
+%s
+
+Provide:
+1. Overall root cause (trace errors back to their origin)
+2. Error correlation across different log files
+3. Timeline of failure (which component failed first)
+4. Specific fix recommendations
+
+Format your response as:
+📊 Aggregated Analysis Across All Logs:
+[Your comprehensive analysis]`, allLogs)
+	
+	messages := []openai.ChatCompletionMessage{
+		{
+			Role:    openai.ChatMessageRoleSystem,
+			Content: t.getLogAnalysisSystemPrompt(),
+		},
+		{
+			Role:    openai.ChatMessageRoleUser,
+			Content: prompt,
+		},
+	}
+	
+	response := ai.NormalChat(messages)
+	
+	if response.Content == "" {
+		return "Failed to perform comprehensive analysis"
+	}
+	
+	return response.Content
+}
+
+func (t *IntelligentDebugTool) generateDebugSummary(jobDetails map[string]interface{}, debugLevel string) string {
+	var summary strings.Builder
+
+	summary.WriteString("Debug level: " + debugLevel + "\n")
+
+	// Add recommendations based on findings
+	if debugLevel == "quick" {
+		summary.WriteString("- Checked JobError section only\n")
+		summary.WriteString("- For system-level issues, use debugLevel='traces'\n")
+		summary.WriteString("- For application-level issues, use debugLevel='full'\n")
+	} else if debugLevel == "traces" {
+		summary.WriteString("- Checked JobError and Datadog traces\n")
+		summary.WriteString("- If issue not found, likely application-level - use debugLevel='full'\n")
+	} else {
+		summary.WriteString("- Performed full analysis including sandbox logs\n")
+		summary.WriteString("- Check std.out for detailed application errors\n")
+		summary.WriteString("- Check std.err for stack traces\n")
+	}
+
+	return summary.String()
+}
+
+// analyzeSpecificLogFile provides detailed analysis for a specific log file
+func (t *IntelligentDebugTool) analyzeSpecificLogFile(sandboxURL, logFile string) string {
+	var result strings.Builder
+	
+	// In mock mode, use our mock endpoint instead
+	var url string
+	if config.IsMockMode() {
+		path := extractPathFromURL(sandboxURL)
+		url = fmt.Sprintf("%s/logs?path=%s&file=%s", t.apiEndpoints.SandboxAPI, path, logFile)
+	} else {
+		// In production, use the sandbox URL directly
+		url = fmt.Sprintf("%s&action=read&file=%s", sandboxURL, logFile)
+	}
+	resp, err := utils.GetHTTP(url)
+	if err != nil {
+		result.WriteString(fmt.Sprintf("  ⚠️  Failed to read: %v\n", err))
+		return result.String()
+	}
+	
+	// Analyze based on file type
+	baseName := filepath.Base(logFile)
+	switch baseName {
+	case "containers.log":
+		result.WriteString("  Container runtime logs (all containers in pod):\n")
+	case "std.err":
+		result.WriteString("  Application error output:\n")
+	case "std.out":
+		result.WriteString("  Application standard output:\n")
+	case "deploy.log":
+		if logFile != baseName {
+			result.WriteString(fmt.Sprintf("  Deployment process logs (%s):\n", logFile))
+		} else {
+			result.WriteString("  Deployment process logs:\n")
+		}
+	default:
+		result.WriteString(fmt.Sprintf("  %s content:\n", logFile))
+	}
+	
+	// For large or complex logs, use LLM analysis
+	lines := strings.Split(resp, "\n")
+	if len(lines) > 50 {
+		// Use LLM for better analysis
+		analysis := t.performLLMLogAnalysis(resp, logFile)
+		result.WriteString(analysis)
+		return result.String()
+	}
+	
+	// For smaller logs, use quick rule-based analysis
+	errorCount := 0
+	var criticalErrors []string
+	var lastNonErrorLines []string
+	
+	for i, line := range lines {
+		lowerLine := strings.ToLower(line)
+		
+		// Skip warnings - they're just noise
+		if strings.Contains(lowerLine, "warning") || strings.Contains(lowerLine, "warn") {
+			continue
+		}
+		
+		// Keep track of last few non-error lines for context
+		if !strings.Contains(lowerLine, "error") && !strings.Contains(lowerLine, "exception") &&
+			!strings.Contains(lowerLine, "failed") && !strings.Contains(lowerLine, "fatal") {
+			lastNonErrorLines = append(lastNonErrorLines, line)
+			if len(lastNonErrorLines) > 3 {
+				lastNonErrorLines = lastNonErrorLines[1:]
+			}
+		}
+		
+		// Identify actual errors and exceptions
+		if strings.Contains(lowerLine, "error") || strings.Contains(lowerLine, "exception") ||
+			strings.Contains(lowerLine, "failed") || strings.Contains(lowerLine, "fatal") {
+			errorCount++
+			
+			// For critical errors, include context
+			if errorCount <= 3 {
+				// Include previous lines for context
+				if len(lastNonErrorLines) > 0 && i > 0 {
+					criticalErrors = append(criticalErrors, "    [Context] "+lastNonErrorLines[len(lastNonErrorLines)-1])
+				}
+				criticalErrors = append(criticalErrors, fmt.Sprintf("    [Line %d] %s", i+1, strings.TrimSpace(line)))
+			}
+		}
+	}
+	
+	// Report findings
+	if errorCount == 0 {
+		result.WriteString("  ✅ No errors found\n")
+	} else {
+		result.WriteString(fmt.Sprintf("  ❌ Found %d error(s)\n", errorCount))
+		if len(criticalErrors) > 0 {
+			result.WriteString("  Critical errors with context:\n")
+			for _, err := range criticalErrors {
+				result.WriteString(err + "\n")
+			}
+			if errorCount > 3 {
+				result.WriteString(fmt.Sprintf("    ... and %d more errors\n", errorCount-3))
+			}
+		}
+	}
+	
+	// File-specific insights
+	if logFile == "containers.log" && errorCount > 0 {
+		// Check for specific container issues
+		if containsContainerError(resp, "OOMKilled") {
+			result.WriteString("  💥 Container was killed due to Out of Memory\n")
+		}
+		if containsContainerError(resp, "CrashLoopBackOff") {
+			result.WriteString("  🔄 Container is in crash loop\n")
+		}
+	}
+	
+	return result.String()
+}
+
+// determineRootCauseFromLogs analyzes all logs to determine root cause
+func (t *IntelligentDebugTool) determineRootCauseFromLogs(logFiles []string, sandboxURL string) string {
+	// Collect samples from each log file
+	var logSamples []string
+	
+	for _, file := range logFiles {
+		var url string
+		if config.IsMockMode() {
+			path := extractPathFromURL(sandboxURL)
+			url = fmt.Sprintf("%s/logs?path=%s&file=%s", t.apiEndpoints.SandboxAPI, path, file)
+		} else {
+			// In production, use the sandbox URL directly
+			url = fmt.Sprintf("%s&action=read&file=%s", sandboxURL, file)
+		}
+		resp, err := utils.GetHTTP(url)
+		if err != nil || resp == "" {
+			continue
+		}
+		
+		// Extract error snippets for LLM analysis
+		lines := strings.Split(resp, "\n")
+		for _, line := range lines {
+			lowerLine := strings.ToLower(line)
+			if strings.Contains(lowerLine, "error") || strings.Contains(lowerLine, "failed") ||
+			   strings.Contains(lowerLine, "exception") || strings.Contains(lowerLine, "fatal") ||
+			   strings.Contains(lowerLine, "unable to") || strings.Contains(lowerLine, "cannot") {
+				logSamples = append(logSamples, fmt.Sprintf("[%s] %s", file, line))
+			}
+		}
+	}
+	
+	if len(logSamples) == 0 {
+		return ""
+	}
+	
+	// Use LLM to determine root cause from error samples
+	samplesText := strings.Join(logSamples[:t.min(20, len(logSamples))], "\n")
+	
+	prompt := fmt.Sprintf(`Based on these error messages from different log files, identify the root cause:
+
+%s
+
+Provide:
+1. The primary root cause (not symptoms)
+2. How the errors are related
+3. Specific steps to fix the issue
+
+Be concise and actionable.`, samplesText)
+	
+	messages := []openai.ChatCompletionMessage{
+		{
+			Role:    openai.ChatMessageRoleSystem,
+			Content: "You are an expert at root cause analysis for distributed systems. Identify the earliest failure that triggered other errors.",
+		},
+		{
+			Role:    openai.ChatMessageRoleUser,
+			Content: prompt,
+		},
+	}
+	
+	response := ai.NormalChat(messages)
+	
+	if response.Content == "" {
+		// Fallback to rule-based analysis
+		var rootCauses []string
+		
+		for _, sample := range logSamples {
+			if strings.Contains(sample, "Unable to properly resolve the host") {
+				rootCauses = append(rootCauses, "DNS resolution failure - host cannot be resolved")
+			}
+			if strings.Contains(sample, "Connection refused") {
+				rootCauses = append(rootCauses, "Service connection refused - target service may be down")
+			}
+			if strings.Contains(sample, "OOMKilled") {
+				rootCauses = append(rootCauses, "Out of Memory - container exceeded memory limits")
+			}
+			if strings.Contains(sample, "Permission denied") {
+				rootCauses = append(rootCauses, "Permission denied - check RBAC or file permissions")
+			}
+			if strings.Contains(sample, "No such file or directory") {
+				rootCauses = append(rootCauses, "Missing required files or directories")
+			}
+		}
+		
+		if len(rootCauses) > 0 {
+			var result strings.Builder
+			result.WriteString("Based on log analysis, the following root causes were identified:\n")
+			for i, cause := range rootCauses {
+				result.WriteString(fmt.Sprintf("%d. %s\n", i+1, cause))
+			}
+			return result.String()
+		}
+		return ""
+	}
+	
+	return response.Content
+}
+
+// generateExecutiveSummary creates a concise summary from detailed log analysis
+func (t *IntelligentDebugTool) generateExecutiveSummary(detailedAnalysis string) string {
+	// Use LLM to create a concise summary
+	prompt := fmt.Sprintf(`Based on this detailed log analysis, create a concise executive summary:
+
+%s
+
+Create a summary with these sections ONLY:
+## 🎯 Executive Summary
+**Root Cause:** [One sentence identifying the primary issue]
+**Impact:** [One sentence describing what failed]
+**Fix:** [One sentence with the most important action to take]
+
+Keep it to 3 lines maximum.`, detailedAnalysis)
+	
+	messages := []openai.ChatCompletionMessage{
+		{
+			Role:    openai.ChatMessageRoleSystem,
+			Content: "You are an expert at creating concise technical summaries. Be extremely brief and focus only on the most critical information.",
+		},
+		{
+			Role:    openai.ChatMessageRoleUser,
+			Content: prompt,
+		},
+	}
+	
+	response := ai.NormalChat(messages)
+	
+	if response.Content == "" {
+		// Fallback to extracting key points from the analysis
+		return t.extractKeyPointsFromAnalysis(detailedAnalysis)
+	}
+	
+	return response.Content + "\n"
+}
+
+// extractKeyPointsFromAnalysis extracts key points when LLM is not available
+func (t *IntelligentDebugTool) extractKeyPointsFromAnalysis(analysis string) string {
+	var summary strings.Builder
+	summary.WriteString("## 🎯 Executive Summary\n")
+	
+	// Extract root cause if present
+	if rootCauseIdx := strings.Index(analysis, "Root Cause:"); rootCauseIdx != -1 {
+		endIdx := strings.Index(analysis[rootCauseIdx:], "\n")
+		if endIdx != -1 {
+			rootCause := strings.TrimSpace(analysis[rootCauseIdx:rootCauseIdx+endIdx])
+			summary.WriteString(fmt.Sprintf("**%s\n", rootCause))
+		}
+	}
+	
+	// Look for DNS, OOM, or connection errors
+	lowerAnalysis := strings.ToLower(analysis)
+	if strings.Contains(lowerAnalysis, "dns") {
+		summary.WriteString("**Impact:** DNS resolution failure preventing service connection\n")
+		summary.WriteString("**Fix:** Verify DNS configuration and host accessibility\n")
+	} else if strings.Contains(lowerAnalysis, "oom") || strings.Contains(lowerAnalysis, "memory") {
+		summary.WriteString("**Impact:** Container terminated due to memory exhaustion\n")
+		summary.WriteString("**Fix:** Increase memory limits or optimize application memory usage\n")
+	} else if strings.Contains(lowerAnalysis, "connection refused") {
+		summary.WriteString("**Impact:** Unable to connect to required service\n")
+		summary.WriteString("**Fix:** Ensure target service is running and accessible\n")
+	} else {
+		summary.WriteString("**Impact:** Deployment failed during initialization\n")
+		summary.WriteString("**Fix:** Check error logs for specific failure details\n")
+	}
+	
+	return summary.String() + "\n"
+}
+
+// containsContainerError checks if specific container error exists
+func containsContainerError(logContent, errorType string) bool {
+	return strings.Contains(logContent, errorType)
+}
+
+// Helper function to safely extract string from map
+func getStringFromMap(m map[string]interface{}, key string) string {
+	if val, ok := m[key]; ok {
+		if str, ok := val.(string); ok {
+			return str
+		}
+	}
+	return ""
+}

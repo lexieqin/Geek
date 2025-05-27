@@ -49,6 +49,8 @@ type CommonConfig struct {
 var (
 	globalConfig *Config
 	configPath   = "config/config.yaml"
+	isMockCached bool
+	mockModeCache bool
 )
 
 // LoadConfig loads configuration from file
@@ -99,16 +101,24 @@ func GetConfig() *Config {
 
 // IsMockMode returns true if running in mock mode
 func IsMockMode() bool {
+	if isMockCached {
+		return mockModeCache
+	}
 	config := GetConfig()
-	return config.Mode == "mock"
+	mockModeCache = config.Mode == "mock"
+	isMockCached = true
+	return mockModeCache
 }
 
 // GetAPIConfig returns the appropriate API configuration based on mode
 func GetAPIConfig() APIConfig {
 	config := GetConfig()
+	fmt.Printf("DEBUG: GetAPIConfig - Mode: %s\n", config.Mode)
 	if config.Mode == "production" {
+		fmt.Printf("DEBUG: Using production config - JobAPI: %s\n", config.Production.APIConfig.JobAPIURL)
 		return config.Production.APIConfig
 	}
+	fmt.Printf("DEBUG: Using mock config - JobAPI: %s\n", config.Mock.JobAPIURL)
 	return config.Mock
 }
 

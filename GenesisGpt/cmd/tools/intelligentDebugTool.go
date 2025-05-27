@@ -3,13 +3,17 @@ package tools
 import (
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
+	"github.com/lexieqin/Geek/GenesisGpt/cmd/ai"
 	"github.com/lexieqin/Geek/GenesisGpt/cmd/config"
 	"github.com/lexieqin/Geek/GenesisGpt/cmd/utils"
 	apiconfig "github.com/lexieqin/Geek/GenesisGpt/config"
+	openai "github.com/sashabaranov/go-openai"
 )
 
 type IntelligentDebugTool struct{
@@ -139,71 +143,80 @@ func (t *IntelligentDebugTool) Run(input string) (string, error) {
 	if args.DebugLevel == "full" {
 		sandboxURL := t.extractSandboxURL(jobDetails)
 		if sandboxURL != "" {
-			result.WriteString("=== Sandbox Log Analysis ===\n")
-			result.WriteString(fmt.Sprintf("Sandbox URL: %s\n\n", sandboxURL))
+			// Buffer to collect detailed analysis
+			var detailedAnalysis strings.Builder
+			
+			detailedAnalysis.WriteString("=== Sandbox Log Analysis ===\n")
+			detailedAnalysis.WriteString(fmt.Sprintf("Sandbox URL: %s\n\n", sandboxURL))
 
-			// Check if sandbox logs are available
+			// Check if sandbox logs are available (works in both mock and production modes)
 			logAvailable, logFiles := t.checkSandboxLogsAvailable(sandboxURL)
 			if !logAvailable {
-				result.WriteString("❌ Sandbox logs not available\n")
-				result.WriteString("This usually indicates the deployment failed at an early stage before application logs were generated.\n")
-				result.WriteString("Check the Job Error section above for deployment-level issues.\n\n")
+				detailedAnalysis.WriteString("❌ Sandbox logs not available\n")
+				detailedAnalysis.WriteString("This usually indicates the deployment failed at an early stage before application logs were generated.\n")
+				detailedAnalysis.WriteString("Check the Job Error section above for deployment-level issues.\n\n")
 			} else {
-				result.WriteString("📁 Discovered log files:\n")
+				detailedAnalysis.WriteString("📁 Discovered log files:\n")
 				if len(logFiles) > 0 {
 					for _, file := range logFiles {
-						result.WriteString(fmt.Sprintf("  • %s\n", file))
+						detailedAnalysis.WriteString(fmt.Sprintf("  • %s\n", file))
 					}
-					result.WriteString("\n")
+					detailedAnalysis.WriteString("\n")
 
 					// Analyze each discovered log file layer by layer
-					result.WriteString("📋 Layer-by-Layer Log Analysis:\n\n")
-					
-					// Priority order for log analysis
-					priorityFiles := []string{"containers.log", "std.err", "std.out", "deploy.log"}
-					analyzedFiles := make(map[string]bool)
-					
-					// First analyze priority files in order
-					for _, priorityFile := range priorityFiles {
-						if t.containsFile(logFiles, priorityFile) {
-							result.WriteString(fmt.Sprintf("▶ Analyzing %s:\n", priorityFile))
-							analysis := t.analyzeSpecificLogFile(sandboxURL, priorityFile)
-							result.WriteString(analysis)
-							result.WriteString("\n")
-							analyzedFiles[priorityFile] = true
-						}
+					detailedAnalysis.WriteString("📋 Layer-by-Layer Log Analysis:\n\n")
+				
+				// Priority order for log analysis
+				priorityFiles := []string{"containers.log", "std.err", "std.out", "deploy.log"}
+				analyzedFiles := make(map[string]bool)
+				
+				// First analyze priority files in order
+				for _, priorityFile := range priorityFiles {
+					if t.containsFile(logFiles, priorityFile) {
+						detailedAnalysis.WriteString(fmt.Sprintf("▶ Analyzing %s:\n", priorityFile))
+						analysis := t.analyzeSpecificLogFile(sandboxURL, priorityFile)
+						detailedAnalysis.WriteString(analysis)
+						detailedAnalysis.WriteString("\n")
+						analyzedFiles[priorityFile] = true
 					}
-					
-					// Then analyze any other discovered files
-					for _, file := range logFiles {
-						if !analyzedFiles[file] {
-							result.WriteString(fmt.Sprintf("▶ Analyzing %s:\n", file))
-							analysis := t.analyzeSpecificLogFile(sandboxURL, file)
-							result.WriteString(analysis)
-							result.WriteString("\n")
-						}
+				}
+				
+				// Then analyze any other discovered files
+				for _, file := range logFiles {
+					if !analyzedFiles[file] {
+						detailedAnalysis.WriteString(fmt.Sprintf("▶ Analyzing %s:\n", file))
+						analysis := t.analyzeSpecificLogFile(sandboxURL, file)
+						detailedAnalysis.WriteString(analysis)
+						detailedAnalysis.WriteString("\n")
 					}
+				}
 
-					// Provide comprehensive smart analysis across all logs
-					smartAnalysis := t.getSmartLogAnalysis(sandboxURL)
-					if smartAnalysis != "" {
-						result.WriteString("📊 Aggregated Analysis Across All Logs:\n")
-						result.WriteString(smartAnalysis)
-						result.WriteString("\n")
-					}
-					
+				// Provide comprehensive smart analysis across all logs
+				smartAnalysis := t.getSmartLogAnalysis(sandboxURL)
+				if smartAnalysis != "" {
+					detailedAnalysis.WriteString("📊 Aggregated Analysis Across All Logs:\n")
+					detailedAnalysis.WriteString(smartAnalysis)
+					detailedAnalysis.WriteString("\n")
+				}
+				
 					// Root cause analysis based on all findings
 					rootCause := t.determineRootCauseFromLogs(logFiles, sandboxURL)
 					if rootCause != "" {
-						result.WriteString("🎯 Root Cause Analysis:\n")
-						result.WriteString(rootCause)
-						result.WriteString("\n")
+						detailedAnalysis.WriteString("🎯 Root Cause Analysis:\n")
+						detailedAnalysis.WriteString(rootCause)
+						detailedAnalysis.WriteString("\n")
 					}
 				} else {
-					result.WriteString("  ❌ No log files discovered in sandbox\n")
-					result.WriteString("  This indicates the application never started or sandbox was not properly initialized.\n\n")
+					detailedAnalysis.WriteString("  ❌ No log files discovered in sandbox\n")
+					detailedAnalysis.WriteString("  This indicates the application never started or sandbox was not properly initialized.\n\n")
 				}
 			}
+			
+			// Generate executive summary and add both to result
+			summary := t.generateExecutiveSummary(detailedAnalysis.String())
+			result.WriteString(summary)
+			result.WriteString("\n")
+			result.WriteString(detailedAnalysis.String())
 		} else {
 			result.WriteString("=== Sandbox Logs ===\n")
 			result.WriteString("❌ No sandbox path found in job details\n")
@@ -601,8 +614,8 @@ func (t *IntelligentDebugTool) checkSandboxLogsAvailable(sandboxURL string) (boo
 		path := extractPathFromURL(sandboxURL)
 		url = fmt.Sprintf("%s/logs/list?path=%s", t.apiEndpoints.SandboxAPI, path)
 	} else {
-		// In production, use the sandbox URL directly
-		url = sandboxURL + "&action=list"
+		// In production, parse the HTML page to find available files
+		return t.parseSandboxHTMLForFiles(sandboxURL)
 	}
 	resp, err := utils.GetHTTP(url)
 	if err != nil {
@@ -626,6 +639,162 @@ func (t *IntelligentDebugTool) checkSandboxLogsAvailable(sandboxURL string) (boo
 	return len(files) > 0, files
 }
 
+// parseSandboxHTMLForFiles parses the HTML response from sandbox URL to find available files
+func (t *IntelligentDebugTool) parseSandboxHTMLForFiles(sandboxURL string) (bool, []string) {
+	// First, get the HTML content from the sandbox URL
+	resp, err := utils.GetHTTP(sandboxURL)
+	if err != nil {
+		return false, nil
+	}
+
+	// Parse the HTML to find file links
+	// Look for common patterns in file browsers:
+	// 1. Links with href containing file paths
+	// 2. Table rows or list items containing file names
+	// 3. JavaScript-rendered content (check for data attributes)
+	
+	var files []string
+	
+	// Pattern 1: Look for anchor tags with file links
+	// Example: <a href="/path/to/file.log">file.log</a>
+	anchorPattern := regexp.MustCompile(`<a[^>]+href=["']([^"']+)["'][^>]*>([^<]+)</a>`)
+	matches := anchorPattern.FindAllStringSubmatch(resp, -1)
+	for _, match := range matches {
+		if len(match) > 2 {
+			fileName := strings.TrimSpace(match[2])
+			// Filter out navigation links and only keep actual files
+			if isLogFile(fileName) {
+				files = append(files, fileName)
+			}
+		}
+	}
+	
+	// Pattern 2: Look for file names in table cells or list items
+	// Example: <td>containers.log</td> or <li>std.err</li>
+	fileNamePattern := regexp.MustCompile(`<(?:td|li)[^>]*>\s*([^<]+\.(?:log|out|err))\s*</(?:td|li)>`)
+	matches = fileNamePattern.FindAllStringSubmatch(resp, -1)
+	for _, match := range matches {
+		if len(match) > 1 {
+			fileName := strings.TrimSpace(match[1])
+			if !contains(files, fileName) {
+				files = append(files, fileName)
+			}
+		}
+	}
+	
+	// Pattern 3: Look for data attributes that might contain file names
+	// Example: <div data-file="deploy.log">
+	dataPattern := regexp.MustCompile(`data-(?:file|name|path)=["']([^"']+\.(?:log|out|err))["']`)
+	matches = dataPattern.FindAllStringSubmatch(resp, -1)
+	for _, match := range matches {
+		if len(match) > 1 {
+			fileName := filepath.Base(match[1])
+			if !contains(files, fileName) {
+				files = append(files, fileName)
+			}
+		}
+	}
+	
+	// Pattern 4: Look for JavaScript objects or arrays containing file lists
+	// Example: files: ["containers.log", "std.out", ...]
+	jsArrayPattern := regexp.MustCompile(`["']([^"']+\.(?:log|out|err))["']`)
+	matches = jsArrayPattern.FindAllStringSubmatch(resp, -1)
+	for _, match := range matches {
+		if len(match) > 1 {
+			fileName := filepath.Base(match[1])
+			if !contains(files, fileName) && isLogFile(fileName) {
+				files = append(files, fileName)
+			}
+		}
+	}
+	
+	// If we found files, also check for subdirectories containing log files
+	if len(files) == 0 {
+		// Try to find folder links that might contain logs
+		folderPattern := regexp.MustCompile(`<a[^>]+href=["']([^"']+)["'][^>]*>\s*(app|logs?)\s*/?\s*</a>`)
+		matches = folderPattern.FindAllStringSubmatch(resp, -1)
+		for _, match := range matches {
+			if len(match) > 1 {
+				// Try to access the subfolder
+				subfolderURL := t.constructSubfolderURL(sandboxURL, match[1])
+				if subfolderURL != "" {
+					_, subFiles := t.parseSandboxHTMLForFiles(subfolderURL)
+					for _, subFile := range subFiles {
+						files = append(files, fmt.Sprintf("%s/%s", match[2], subFile))
+					}
+				}
+			}
+		}
+	}
+	
+	// Common log files we expect to find
+	expectedFiles := []string{"containers.log", "std.out", "std.err", "deploy.log", "decout", "decerr"}
+	
+	// If no files found via parsing, check if the response mentions these files
+	if len(files) == 0 {
+		lowerResp := strings.ToLower(resp)
+		for _, expectedFile := range expectedFiles {
+			if strings.Contains(lowerResp, expectedFile) {
+				files = append(files, expectedFile)
+			}
+		}
+	}
+	
+	return len(files) > 0, files
+}
+
+// isLogFile checks if a filename looks like a log file
+func isLogFile(fileName string) bool {
+	fileName = strings.ToLower(strings.TrimSpace(fileName))
+	// Check for common log file extensions and names
+	return strings.HasSuffix(fileName, ".log") ||
+		strings.HasSuffix(fileName, ".out") ||
+		strings.HasSuffix(fileName, ".err") ||
+		fileName == "decout" ||
+		fileName == "decerr" ||
+		strings.Contains(fileName, "stdout") ||
+		strings.Contains(fileName, "stderr")
+}
+
+// contains checks if a string slice contains a value
+func contains(slice []string, item string) bool {
+	for _, s := range slice {
+		if s == item {
+			return true
+		}
+	}
+	return false
+}
+
+// constructSubfolderURL constructs a URL for accessing a subfolder
+func (t *IntelligentDebugTool) constructSubfolderURL(baseURL, folderPath string) string {
+	// Parse the base URL to understand its structure
+	parsedURL, err := url.Parse(baseURL)
+	if err != nil {
+		return ""
+	}
+	
+	// Check if the folder path is relative or absolute
+	if strings.HasPrefix(folderPath, "http") {
+		return folderPath
+	}
+	
+	// If it's a relative path, construct the full URL
+	if strings.HasPrefix(folderPath, "/") {
+		// Absolute path from root
+		parsedURL.Path = folderPath
+	} else {
+		// Relative path
+		if strings.HasSuffix(parsedURL.Path, "/") {
+			parsedURL.Path = parsedURL.Path + folderPath
+		} else {
+			parsedURL.Path = filepath.Dir(parsedURL.Path) + "/" + folderPath
+		}
+	}
+	
+	return parsedURL.String()
+}
+
 func (t *IntelligentDebugTool) containsFile(files []string, targetFile string) bool {
 	for _, file := range files {
 		if file == targetFile {
@@ -638,19 +807,139 @@ func (t *IntelligentDebugTool) containsFile(files []string, targetFile string) b
 func (t *IntelligentDebugTool) analyzeLogFile(sandboxURL, logFile string) string {
 	// In mock mode, use our mock endpoint instead
 	var url string
+	var resp string
+	var err error
+	
 	if config.IsMockMode() {
 		path := extractPathFromURL(sandboxURL)
 		url = fmt.Sprintf("%s/logs?path=%s&file=%s", t.apiEndpoints.SandboxAPI, path, logFile)
+		resp, err = utils.GetHTTP(url)
 	} else {
-		// In production, use the sandbox URL directly
-		url = fmt.Sprintf("%s&action=read&file=%s", sandboxURL, logFile)
+		// In production, fetch the log file content from the web interface
+		resp, err = t.fetchLogFileFromHTML(sandboxURL, logFile)
 	}
-	resp, err := utils.GetHTTP(url)
+	
 	if err != nil {
 		return fmt.Sprintf("Failed to read %s: %v", logFile, err)
 	}
 	
 	return t.performSemanticLogAnalysis(resp, logFile)
+}
+
+// fetchLogFileFromHTML fetches log file content from the HTML web interface
+func (t *IntelligentDebugTool) fetchLogFileFromHTML(sandboxURL, logFile string) (string, error) {
+	// Try different strategies to fetch the log file
+	
+	// Strategy 1: Try appending the file name as a parameter
+	fileURL := fmt.Sprintf("%s&file=%s", sandboxURL, url.QueryEscape(logFile))
+	resp, err := utils.GetHTTP(fileURL)
+	if err == nil && !strings.Contains(resp, "<html") && !strings.Contains(resp, "<!DOCTYPE") {
+		// If we got non-HTML content, it's likely the log file
+		return resp, nil
+	}
+	
+	// Strategy 2: Try modifying the path parameter to include the file
+	parsedURL, err := url.Parse(sandboxURL)
+	if err == nil {
+		q := parsedURL.Query()
+		if path := q.Get("path"); path != "" {
+			// Try appending the file to the path
+			newPath := path
+			if !strings.HasSuffix(path, "/") {
+				newPath += "/"
+			}
+			newPath += logFile
+			q.Set("path", newPath)
+			parsedURL.RawQuery = q.Encode()
+			
+			resp, err := utils.GetHTTP(parsedURL.String())
+			if err == nil && !strings.Contains(resp, "<html") && !strings.Contains(resp, "<!DOCTYPE") {
+				return resp, nil
+			}
+		}
+	}
+	
+	// Strategy 3: Try to find a direct download link in the HTML
+	htmlResp, err := utils.GetHTTP(sandboxURL)
+	if err == nil {
+		// Look for download links for the specific file
+		downloadPattern := regexp.MustCompile(fmt.Sprintf(`href=["']([^"']+)["'][^>]*>\s*(?:download\s*)?%s`, regexp.QuoteMeta(logFile)))
+		matches := downloadPattern.FindStringSubmatch(htmlResp)
+		if len(matches) > 1 {
+			downloadURL := t.constructAbsoluteURL(sandboxURL, matches[1])
+			if downloadURL != "" {
+				resp, err := utils.GetHTTP(downloadURL)
+				if err == nil && !strings.Contains(resp, "<html") {
+					return resp, nil
+				}
+			}
+		}
+		
+		// Look for API endpoints in JavaScript
+		apiPattern := regexp.MustCompile(`["']([^"']*(?:api|download|raw|content)[^"']*` + regexp.QuoteMeta(logFile) + `[^"']*)["']`)
+		matches = apiPattern.FindStringSubmatch(htmlResp)
+		if len(matches) > 1 {
+			apiURL := t.constructAbsoluteURL(sandboxURL, matches[1])
+			if apiURL != "" {
+				resp, err := utils.GetHTTP(apiURL)
+				if err == nil && !strings.Contains(resp, "<html") {
+					return resp, nil
+				}
+			}
+		}
+	}
+	
+	// Strategy 4: Try common API patterns
+	baseURL := t.getBaseURL(sandboxURL)
+	if baseURL != "" {
+		// Try common API endpoints
+		apiPatterns := []string{
+			"%s/api/logs/%s",
+			"%s/api/files/%s",
+			"%s/download/%s",
+			"%s/raw/%s",
+			"%s/content/%s",
+		}
+		
+		for _, pattern := range apiPatterns {
+			tryURL := fmt.Sprintf(pattern, baseURL, url.QueryEscape(logFile))
+			resp, err := utils.GetHTTP(tryURL)
+			if err == nil && !strings.Contains(resp, "<html") && !strings.Contains(resp, "<!DOCTYPE") {
+				return resp, nil
+			}
+		}
+	}
+	
+	return "", fmt.Errorf("unable to fetch log file content from web interface")
+}
+
+// constructAbsoluteURL constructs an absolute URL from a base URL and a potentially relative path
+func (t *IntelligentDebugTool) constructAbsoluteURL(baseURL, path string) string {
+	if strings.HasPrefix(path, "http") {
+		return path
+	}
+	
+	parsedBase, err := url.Parse(baseURL)
+	if err != nil {
+		return ""
+	}
+	
+	parsedPath, err := url.Parse(path)
+	if err != nil {
+		return ""
+	}
+	
+	return parsedBase.ResolveReference(parsedPath).String()
+}
+
+// getBaseURL extracts the base URL from a full URL
+func (t *IntelligentDebugTool) getBaseURL(fullURL string) string {
+	parsedURL, err := url.Parse(fullURL)
+	if err != nil {
+		return ""
+	}
+	
+	return fmt.Sprintf("%s://%s", parsedURL.Scheme, parsedURL.Host)
 }
 
 type LogEntry struct {
@@ -666,6 +955,135 @@ type LogEntry struct {
 
 // performSemanticLogAnalysis provides intelligent analysis of log content
 func (t *IntelligentDebugTool) performSemanticLogAnalysis(logContent, logFile string) string {
+	// Check if log content is large enough to benefit from LLM analysis
+	lines := strings.Split(logContent, "\n")
+	
+	// For performance, only use LLM for large logs with significant errors
+	errorCount := 0
+	for _, line := range lines {
+		lowerLine := strings.ToLower(line)
+		if strings.Contains(lowerLine, "error") || strings.Contains(lowerLine, "failed") ||
+		   strings.Contains(lowerLine, "exception") || strings.Contains(lowerLine, "fatal") {
+			errorCount++
+		}
+	}
+	
+	// Use LLM only for complex cases with multiple errors or very large logs
+	if len(lines) > 100 && errorCount > 5 {
+		return t.performLLMLogAnalysis(logContent, logFile)
+	}
+	
+	// For most cases, use faster rule-based analysis
+	return t.performRuleBasedAnalysis(logContent, logFile)
+}
+
+// performLLMLogAnalysis uses LLM to intelligently analyze log content
+func (t *IntelligentDebugTool) performLLMLogAnalysis(logContent, logFile string) string {
+	// Prepare the log analysis prompt
+	prompt := t.buildLogAnalysisPrompt(logContent, logFile)
+	
+	// Create messages for LLM
+	messages := []openai.ChatCompletionMessage{
+		{
+			Role:    openai.ChatMessageRoleSystem,
+			Content: t.getLogAnalysisSystemPrompt(),
+		},
+		{
+			Role:    openai.ChatMessageRoleUser,
+			Content: prompt,
+		},
+	}
+	
+	// Call LLM for analysis
+	response := ai.NormalChat(messages)
+	
+	// If LLM call fails, fall back to rule-based analysis
+	if response.Content == "" {
+		return t.performRuleBasedAnalysis(logContent, logFile)
+	}
+	
+	return response.Content
+}
+
+// getLogAnalysisSystemPrompt returns the system prompt for log analysis
+func (t *IntelligentDebugTool) getLogAnalysisSystemPrompt() string {
+	return `You are an expert log analyzer specializing in debugging distributed systems and containerized applications. Your task is to analyze log files and identify root causes of failures.
+
+When analyzing logs, follow these guidelines:
+
+1. **Root Cause Identification**:
+   - Look for error patterns and stack traces
+   - Identify the earliest error that triggered subsequent failures
+   - Distinguish between symptoms and root causes
+   - Recognize common patterns: OOM, DNS failures, connection issues, permission errors, configuration problems
+
+2. **Error Correlation**:
+   - Connect related errors across different components
+   - Understand error propagation chains
+   - Identify cascade failures
+
+3. **Output Format**:
+   - Start with a clear root cause statement if identified
+   - List critical errors with context
+   - Provide actionable debugging suggestions
+   - Be concise but thorough
+
+4. **Common Patterns to Recognize**:
+   - LCM errors (e.g., "LCM 1109:" indicates DNS resolution issues)
+   - Exit codes (non-zero indicates failure)
+   - Connection refused/timeout (network or service issues)
+   - Permission denied (RBAC or file system issues)
+   - OOMKilled (memory limit exceeded)
+   - File not found (missing configuration or dependencies)
+   - Unable to resolve host (DNS issues)
+
+5. **Important**:
+   - Focus on ERROR and FATAL messages, ignore INFO unless relevant
+   - Warnings are only important if no errors are found
+   - If stderr contains errors, prioritize those
+   - Look for the earliest point of failure`
+}
+
+// buildLogAnalysisPrompt creates the prompt for LLM log analysis
+func (t *IntelligentDebugTool) buildLogAnalysisPrompt(logContent, logFile string) string {
+	// Truncate log content if it's too large (keep first and last parts)
+	maxLogSize := 8000 // characters
+	truncatedLog := logContent
+	
+	if len(logContent) > maxLogSize {
+		// Keep first 3000 and last 3000 characters, with middle truncation indicator
+		firstPart := logContent[:3000]
+		lastPart := logContent[len(logContent)-3000:]
+		lineCount := strings.Count(logContent, "\n")
+		truncatedLog = fmt.Sprintf("%s\n\n[... truncated %d lines from middle of log ...]\n\n%s", 
+			firstPart, lineCount-strings.Count(firstPart+lastPart, "\n"), lastPart)
+	}
+	
+	return fmt.Sprintf(`Analyze the following log file and provide a structured analysis:
+
+Log File: %s
+Log Content:
+%s
+
+Provide your analysis in this format:
+
+🎯 Root Cause Analysis:
+[Identify the primary root cause if found]
+
+❌ Critical Errors:
+[List critical errors with their context]
+
+🔍 Error Pattern Analysis:
+[Describe any patterns or relationships between errors]
+
+💡 Debugging Suggestions:
+[Provide specific, actionable suggestions to resolve the issues]
+
+Focus on identifying the root cause, not just listing errors. If you see error propagation, trace it back to the origin.`, logFile, truncatedLog)
+}
+
+// performRuleBasedAnalysis is the fallback rule-based analysis
+func (t *IntelligentDebugTool) performRuleBasedAnalysis(logContent, logFile string) string {
 	lines := strings.Split(logContent, "\n")
 	
 	var criticalErrors []LogEntry
@@ -937,48 +1355,77 @@ func (t *IntelligentDebugTool) min(a, b int) int {
 }
 
 func (t *IntelligentDebugTool) getSmartLogAnalysis(sandboxURL string) string {
-	// In mock mode, use our mock endpoint instead
-	var url string
-	if config.IsMockMode() {
-		path := extractPathFromURL(sandboxURL)
-		url = fmt.Sprintf("%s/logs/smart?path=%s", t.apiEndpoints.SandboxAPI, path)
-	} else {
-		// In production, use the sandbox URL directly
-		url = sandboxURL + "&action=analyze"
-	}
-	resp, err := utils.GetHTTP(url)
-	if err != nil {
-		return ""
-	}
-
-	var logAnalysis map[string]interface{}
-	if err := json.Unmarshal([]byte(resp), &logAnalysis); err != nil {
-		return ""
-	}
-
-	var summary strings.Builder
+	// Collect all log files for comprehensive analysis
+	var allLogs strings.Builder
+	logFiles := []string{"containers.log", "std.err", "std.out", "deploy.log"}
 	
-	// Extract summary information (focus on errors only, ignore warnings)
-	if summaryData, ok := logAnalysis["summary"].(map[string]interface{}); ok {
-		if counts, ok := summaryData["counts"].(map[string]interface{}); ok {
-			if errors, ok := counts["errors"].(float64); ok && errors > 0 {
-				summary.WriteString(fmt.Sprintf("Total errors found: %d\n", int(errors)))
-			} else {
-				summary.WriteString("No errors found in aggregated analysis\n")
-			}
+	for _, logFile := range logFiles {
+		var resp string
+		var err error
+		
+		if config.IsMockMode() {
+			path := extractPathFromURL(sandboxURL)
+			url := fmt.Sprintf("%s/logs?path=%s&file=%s", t.apiEndpoints.SandboxAPI, path, logFile)
+			resp, err = utils.GetHTTP(url)
+		} else {
+			// In production, fetch the log file content from the web interface
+			resp, err = t.fetchLogFileFromHTML(sandboxURL, logFile)
 		}
 		
-		if errorCategories, ok := summaryData["error_categories"].(map[string]interface{}); ok {
-			summary.WriteString("\nError Categories:\n")
-			for category, count := range errorCategories {
-				if countFloat, ok := count.(float64); ok {
-					summary.WriteString(fmt.Sprintf("- %s: %d\n", category, int(countFloat)))
-				}
-			}
+		if err != nil || resp == "" {
+			continue
 		}
+		
+		allLogs.WriteString(fmt.Sprintf("\n=== %s ===\n", logFile))
+		allLogs.WriteString(resp)
+		allLogs.WriteString("\n")
 	}
 	
-	return summary.String()
+	// If no logs collected, return empty
+	if allLogs.Len() == 0 {
+		return ""
+	}
+	
+	// Use LLM to analyze all logs together for better correlation
+	return t.performComprehensiveLLMAnalysis(allLogs.String())
+}
+
+// performComprehensiveLLMAnalysis analyzes all logs together for better insights
+func (t *IntelligentDebugTool) performComprehensiveLLMAnalysis(allLogs string) string {
+	// For performance, skip if logs are small or have minimal errors
+	if len(allLogs) < 1000 {
+		return ""
+	}
+	
+	prompt := fmt.Sprintf(`Analyze these logs from different sources and provide a CONCISE analysis. Avoid repeating information already shown in individual log analysis.
+
+%s
+
+Provide ONLY new insights not already covered:
+1. Cross-log correlations (if any)
+2. Timeline if multiple failures occurred
+3. One specific fix recommendation
+
+Keep response under 5 sentences. Be extremely concise.`, allLogs)
+	
+	messages := []openai.ChatCompletionMessage{
+		{
+			Role:    openai.ChatMessageRoleSystem,
+			Content: "You are an expert at finding correlations between logs. Be extremely concise and avoid repeating information.",
+		},
+		{
+			Role:    openai.ChatMessageRoleUser,
+			Content: prompt,
+		},
+	}
+	
+	response := ai.NormalChat(messages)
+	
+	if response.Content == "" {
+		return ""
+	}
+	
+	return response.Content
 }
 
 func (t *IntelligentDebugTool) generateDebugSummary(jobDetails map[string]interface{}, debugLevel string) string {
@@ -1006,17 +1453,19 @@ func (t *IntelligentDebugTool) generateDebugSummary(jobDetails map[string]interf
 // analyzeSpecificLogFile provides detailed analysis for a specific log file
 func (t *IntelligentDebugTool) analyzeSpecificLogFile(sandboxURL, logFile string) string {
 	var result strings.Builder
+	var resp string
+	var err error
 	
 	// In mock mode, use our mock endpoint instead
-	var url string
 	if config.IsMockMode() {
 		path := extractPathFromURL(sandboxURL)
-		url = fmt.Sprintf("%s/logs?path=%s&file=%s", t.apiEndpoints.SandboxAPI, path, logFile)
+		url := fmt.Sprintf("%s/logs?path=%s&file=%s", t.apiEndpoints.SandboxAPI, path, logFile)
+		resp, err = utils.GetHTTP(url)
 	} else {
-		// In production, use the sandbox URL directly
-		url = fmt.Sprintf("%s&action=read&file=%s", sandboxURL, logFile)
+		// In production, fetch the log file content from the web interface
+		resp, err = t.fetchLogFileFromHTML(sandboxURL, logFile)
 	}
-	resp, err := utils.GetHTTP(url)
+	
 	if err != nil {
 		result.WriteString(fmt.Sprintf("  ⚠️  Failed to read: %v\n", err))
 		return result.String()
@@ -1041,8 +1490,16 @@ func (t *IntelligentDebugTool) analyzeSpecificLogFile(sandboxURL, logFile string
 		result.WriteString(fmt.Sprintf("  %s content:\n", logFile))
 	}
 	
-	// Extract and categorize errors (ignore warnings)
+	// For large or complex logs, use LLM analysis
 	lines := strings.Split(resp, "\n")
+	if len(lines) > 50 {
+		// Use LLM for better analysis
+		analysis := t.performLLMLogAnalysis(resp, logFile)
+		result.WriteString(analysis)
+		return result.String()
+	}
+	
+	// For smaller logs, use quick rule-based analysis
 	errorCount := 0
 	var criticalErrors []string
 	var lastNonErrorLines []string
@@ -1112,56 +1569,223 @@ func (t *IntelligentDebugTool) analyzeSpecificLogFile(sandboxURL, logFile string
 
 // determineRootCauseFromLogs analyzes all logs to determine root cause
 func (t *IntelligentDebugTool) determineRootCauseFromLogs(logFiles []string, sandboxURL string) string {
-	var rootCauses []string
+	// Collect samples from each log file
+	var logSamples []string
 	
-	// Check each log file for specific patterns
 	for _, file := range logFiles {
-		var url string
+		var resp string
+		var err error
+		
 		if config.IsMockMode() {
 			path := extractPathFromURL(sandboxURL)
-			url = fmt.Sprintf("%s/logs?path=%s&file=%s", t.apiEndpoints.SandboxAPI, path, file)
+			url := fmt.Sprintf("%s/logs?path=%s&file=%s", t.apiEndpoints.SandboxAPI, path, file)
+			resp, err = utils.GetHTTP(url)
 		} else {
-			// In production, use the sandbox URL directly
-			url = fmt.Sprintf("%s&action=read&file=%s", sandboxURL, file)
+			// In production, fetch the log file content from the web interface
+			resp, err = t.fetchLogFileFromHTML(sandboxURL, file)
 		}
-		resp, err := utils.GetHTTP(url)
-		if err != nil {
+		
+		if err != nil || resp == "" {
 			continue
 		}
 		
-		// Look for specific root cause patterns
-		if strings.Contains(resp, "Unable to properly resolve the host") {
-			rootCauses = append(rootCauses, "DNS resolution failure - host cannot be resolved")
-		}
-		if strings.Contains(resp, "Connection refused") {
-			rootCauses = append(rootCauses, "Service connection refused - target service may be down")
-		}
-		if strings.Contains(resp, "OOMKilled") {
-			rootCauses = append(rootCauses, "Out of Memory - container exceeded memory limits")
-		}
-		if strings.Contains(resp, "Permission denied") {
-			rootCauses = append(rootCauses, "Permission denied - check RBAC or file permissions")
-		}
-		if strings.Contains(resp, "No such file or directory") {
-			rootCauses = append(rootCauses, "Missing required files or directories")
-		}
-		if strings.Contains(resp, "timeout") || strings.Contains(resp, "Timeout") {
-			rootCauses = append(rootCauses, "Operation timeout - check network connectivity or increase timeout")
+		// Extract error snippets for LLM analysis
+		lines := strings.Split(resp, "\n")
+		for _, line := range lines {
+			lowerLine := strings.ToLower(line)
+			if strings.Contains(lowerLine, "error") || strings.Contains(lowerLine, "failed") ||
+			   strings.Contains(lowerLine, "exception") || strings.Contains(lowerLine, "fatal") ||
+			   strings.Contains(lowerLine, "unable to") || strings.Contains(lowerLine, "cannot") {
+				logSamples = append(logSamples, fmt.Sprintf("[%s] %s", file, line))
+			}
 		}
 	}
 	
-	if len(rootCauses) == 0 {
+	if len(logSamples) == 0 {
 		return ""
 	}
 	
-	// Build root cause summary
-	var result strings.Builder
-	result.WriteString("Based on log analysis, the following root causes were identified:\n")
-	for i, cause := range rootCauses {
-		result.WriteString(fmt.Sprintf("%d. %s\n", i+1, cause))
+	// For simple cases, use pattern matching instead of LLM
+	if len(logSamples) < 5 {
+		return t.extractRootCauseFromPatterns(logSamples)
 	}
 	
-	return result.String()
+	// Use LLM to determine root cause from error samples
+	samplesText := strings.Join(logSamples[:t.min(10, len(logSamples))], "\n")
+	
+	prompt := fmt.Sprintf(`Based on these error messages, identify the ROOT CAUSE in ONE sentence:
+
+%s
+
+Just state the primary root cause, nothing else.`, samplesText)
+	
+	messages := []openai.ChatCompletionMessage{
+		{
+			Role:    openai.ChatMessageRoleSystem,
+			Content: "You are an expert at root cause analysis for distributed systems. Identify the earliest failure that triggered other errors.",
+		},
+		{
+			Role:    openai.ChatMessageRoleUser,
+			Content: prompt,
+		},
+	}
+	
+	response := ai.NormalChat(messages)
+	
+	if response.Content == "" {
+		// Fallback to rule-based analysis
+		var rootCauses []string
+		
+		for _, sample := range logSamples {
+			if strings.Contains(sample, "Unable to properly resolve the host") {
+				rootCauses = append(rootCauses, "DNS resolution failure - host cannot be resolved")
+			}
+			if strings.Contains(sample, "Connection refused") {
+				rootCauses = append(rootCauses, "Service connection refused - target service may be down")
+			}
+			if strings.Contains(sample, "OOMKilled") {
+				rootCauses = append(rootCauses, "Out of Memory - container exceeded memory limits")
+			}
+			if strings.Contains(sample, "Permission denied") {
+				rootCauses = append(rootCauses, "Permission denied - check RBAC or file permissions")
+			}
+			if strings.Contains(sample, "No such file or directory") {
+				rootCauses = append(rootCauses, "Missing required files or directories")
+			}
+		}
+		
+		if len(rootCauses) > 0 {
+			var result strings.Builder
+			result.WriteString("Based on log analysis, the following root causes were identified:\n")
+			for i, cause := range rootCauses {
+				result.WriteString(fmt.Sprintf("%d. %s\n", i+1, cause))
+			}
+			return result.String()
+		}
+		return ""
+	}
+	
+	return response.Content
+}
+
+// generateExecutiveSummary creates a concise summary from detailed log analysis
+func (t *IntelligentDebugTool) generateExecutiveSummary(detailedAnalysis string) string {
+	// For performance, try to extract summary without LLM first
+	summary := t.extractKeyPointsFromAnalysis(detailedAnalysis)
+	
+	// Only use LLM if we couldn't extract a good summary and analysis is complex
+	if strings.Contains(summary, "Check error logs for specific failure details") && len(detailedAnalysis) > 5000 {
+		// Use LLM for complex cases
+		prompt := fmt.Sprintf(`Based on this detailed log analysis, create a concise executive summary:
+
+%s
+
+Create a summary with these sections ONLY:
+## 🎯 Executive Summary
+**Root Cause:** [One sentence identifying the primary issue]
+**Impact:** [One sentence describing what failed]
+**Fix:** [One sentence with the most important action to take]
+
+Keep it to 3 lines maximum.`, detailedAnalysis)
+		
+		messages := []openai.ChatCompletionMessage{
+			{
+				Role:    openai.ChatMessageRoleSystem,
+				Content: "You are an expert at creating concise technical summaries. Be extremely brief and focus only on the most critical information.",
+			},
+			{
+				Role:    openai.ChatMessageRoleUser,
+				Content: prompt,
+			},
+		}
+		
+		response := ai.NormalChat(messages)
+		
+		if response.Content != "" {
+			return response.Content + "\n"
+		}
+	}
+	
+	return summary
+}
+
+// extractKeyPointsFromAnalysis extracts key points when LLM is not available
+func (t *IntelligentDebugTool) extractKeyPointsFromAnalysis(analysis string) string {
+	var summary strings.Builder
+	summary.WriteString("## 🎯 Executive Summary\n")
+	
+	// Look for DNS, OOM, or connection errors
+	lowerAnalysis := strings.ToLower(analysis)
+	
+	// Extract root cause if present
+	rootCauseFound := false
+	if rootCauseIdx := strings.Index(analysis, "Root Cause:"); rootCauseIdx != -1 {
+		endIdx := strings.Index(analysis[rootCauseIdx:], "\n")
+		if endIdx != -1 {
+			rootCause := strings.TrimSpace(analysis[rootCauseIdx:rootCauseIdx+endIdx])
+			summary.WriteString(fmt.Sprintf("**%s\n", rootCause))
+			rootCauseFound = true
+		}
+	}
+	
+	// If no root cause found in analysis, extract from error patterns
+	if !rootCauseFound {
+		// Extract most critical error
+		if lcmIdx := strings.Index(lowerAnalysis, "lcm1109"); lcmIdx != -1 {
+			summary.WriteString("**Root Cause:** DNS resolution failure (LCM1109) - unable to resolve host\n")
+		} else if strings.Contains(lowerAnalysis, "configmap") && strings.Contains(lowerAnalysis, "not found") {
+			summary.WriteString("**Root Cause:** Missing ConfigMap preventing deployment\n")
+		} else if strings.Contains(lowerAnalysis, "oom") {
+			summary.WriteString("**Root Cause:** Out of memory error - container exceeded limits\n") 
+		} else if strings.Contains(lowerAnalysis, "connection refused") {
+			summary.WriteString("**Root Cause:** Service connection refused - target unavailable\n")
+		} else {
+			summary.WriteString("**Root Cause:** Deployment failed - check logs for details\n")
+		}
+	}
+	if strings.Contains(lowerAnalysis, "dns") {
+		summary.WriteString("**Impact:** DNS resolution failure preventing service connection\n")
+		summary.WriteString("**Fix:** Verify DNS configuration and host accessibility\n")
+	} else if strings.Contains(lowerAnalysis, "oom") || strings.Contains(lowerAnalysis, "memory") {
+		summary.WriteString("**Impact:** Container terminated due to memory exhaustion\n")
+		summary.WriteString("**Fix:** Increase memory limits or optimize application memory usage\n")
+	} else if strings.Contains(lowerAnalysis, "connection refused") {
+		summary.WriteString("**Impact:** Unable to connect to required service\n")
+		summary.WriteString("**Fix:** Ensure target service is running and accessible\n")
+	} else {
+		summary.WriteString("**Impact:** Deployment failed during initialization\n")
+		summary.WriteString("**Fix:** Check error logs for specific failure details\n")
+	}
+	
+	return summary.String() + "\n"
+}
+
+// extractRootCauseFromPatterns uses pattern matching for common root causes
+func (t *IntelligentDebugTool) extractRootCauseFromPatterns(logSamples []string) string {
+	allSamples := strings.Join(logSamples, " ")
+	lowerSamples := strings.ToLower(allSamples)
+	
+	// Check for common patterns
+	if strings.Contains(lowerSamples, "lcm1109") || strings.Contains(lowerSamples, "unable to properly resolve the host") {
+		return "DNS resolution failure - unable to resolve the specified host"
+	}
+	if strings.Contains(lowerSamples, "configmap") && strings.Contains(lowerSamples, "not found") {
+		return "Missing ConfigMap preventing deployment"
+	}
+	if strings.Contains(lowerSamples, "oomkilled") {
+		return "Container terminated due to out of memory"
+	}
+	if strings.Contains(lowerSamples, "connection refused") {
+		return "Service connection refused - target service unavailable"
+	}
+	if strings.Contains(lowerSamples, "permission denied") {
+		return "Permission denied - check RBAC or file permissions"
+	}
+	if strings.Contains(lowerSamples, "no such file or directory") {
+		return "Missing required files or directories"
+	}
+	
+	return ""
 }
 
 // containsContainerError checks if specific container error exists
