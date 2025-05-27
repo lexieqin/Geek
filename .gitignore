@@ -1,0 +1,65 @@
+# Binaries for all projects
+genesisgpt
+ginTools/ginTools
+k8sgpt
+agent/agent
+function-calling/function-calling
+wasm-ai/main.wasm
+*.exe
+
+# Go build artifacts
+*.o
+*.a
+*.so
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Test artifacts
+*.test
+*.out
+coverage.txt
+coverage.html
+
+# Dependencies (uncomment if you don't want to track vendor)
+# vendor/
+
+# Configuration files with secrets
+config/config.yaml
+config/production.yaml
+config/*.prod.yaml
+config/*.production.yaml
+**/config/config.yaml
+
+# Environment files
+.env
+.env.local
+.env.production
+.env.*
+
+# Logs
+*.log
+logs/
+*.log.*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+tmp/
+temp/
+
+# Build directories
+build/
+dist/
+out/
+
+# Debug files
+*.pprof
