@@ -30,9 +30,7 @@ type ProductionConfig struct {
 }
 
 type AuthConfig struct {
-	JobAPI   AuthMethod `yaml:"job_api"`
 	Datadog  AuthMethod `yaml:"datadog"`
-	Sandbox  AuthMethod `yaml:"sandbox"`
 }
 
 type AuthMethod struct {
@@ -81,6 +79,11 @@ func LoadConfig() (*Config, error) {
 	// Replace environment variables
 	config.replaceEnvVars()
 
+	// Validate configuration
+	if err := config.validate(); err != nil {
+		return nil, err
+	}
+
 	globalConfig = &config
 	return globalConfig, nil
 }
@@ -122,17 +125,11 @@ func GetAuthConfig() *AuthConfig {
 func (c *Config) replaceEnvVars() {
 	if c.Mode == "production" {
 		// Replace auth tokens
-		if c.Production.Auth.JobAPI.Token != "" {
-			c.Production.Auth.JobAPI.Token = expandEnv(c.Production.Auth.JobAPI.Token)
-		}
 		if c.Production.Auth.Datadog.APIKey != "" {
 			c.Production.Auth.Datadog.APIKey = expandEnv(c.Production.Auth.Datadog.APIKey)
 		}
 		if c.Production.Auth.Datadog.AppKey != "" {
 			c.Production.Auth.Datadog.AppKey = expandEnv(c.Production.Auth.Datadog.AppKey)
-		}
-		if c.Production.Auth.Sandbox.Token != "" {
-			c.Production.Auth.Sandbox.Token = expandEnv(c.Production.Auth.Sandbox.Token)
 		}
 	}
 }
@@ -145,14 +142,84 @@ func expandEnv(s string) string {
 	return s
 }
 
+// validate checks if the configuration is valid
+func (c *Config) validate() error {
+	// Validate mode
+	if c.Mode != "mock" && c.Mode != "production" {
+		return fmt.Errorf("invalid mode: %s (must be 'mock' or 'production')", c.Mode)
+	}
+
+	// In production mode, validate required auth settings
+	if c.Mode == "production" {
+		// Check if Datadog credentials are set (only warn, don't fail)
+		if c.Production.Auth.Datadog.APIKey == "" || c.Production.Auth.Datadog.AppKey == "" {
+			fmt.Println("Warning: Datadog API credentials not set. Datadog API calls will fail.")
+			fmt.Println("Set DD_API_KEY and DD_APPLICATION_KEY environment variables for Datadog integration.")
+		}
+	}
+
+	return nil
+}
+
+// PrintConfig prints the current configuration (for debugging)
+func PrintConfig() {
+	cfg := GetConfig()
+	fmt.Println("=== GenesisGpt Configuration ===")
+	fmt.Printf("Mode: %s\n", cfg.Mode)
+	
+	apiConfig := GetAPIConfig()
+	fmt.Println("\nAPI Endpoints:")
+	fmt.Printf("  Job API: %s\n", apiConfig.JobAPIURL)
+	fmt.Printf("  Datadog API: %s\n", apiConfig.DatadogAPIURL)
+	fmt.Printf("  Sandbox Logs API: %s\n", apiConfig.SandboxLogsAPIURL)
+	
+	if cfg.Mode == "production" {
+		fmt.Println("\nAuthentication:")
+		fmt.Printf("  Datadog API Key: %s\n", maskSecret(cfg.Production.Auth.Datadog.APIKey))
+		fmt.Printf("  Datadog App Key: %s\n", maskSecret(cfg.Production.Auth.Datadog.AppKey))
+	}
+	
+	fmt.Println("\nCommon Settings:")
+	fmt.Printf("  Timeout: %v\n", cfg.Common.Timeout)
+	fmt.Printf("  Retry Count: %d\n", cfg.Common.RetryCount)
+	fmt.Printf("  Retry Delay: %v\n", cfg.Common.RetryDelay)
+	fmt.Println("================================")
+}
+
+// maskSecret masks sensitive information for display
+func maskSecret(secret string) string {
+	if secret == "" {
+		return "<not set>"
+	}
+	if len(secret) <= 8 {
+		return "****"
+	}
+	return secret[:4] + "****" + secret[len(secret)-4:]
+}
+
 func getDefaultConfig() *Config {
 	return &Config{
 		Mode: "mock",
 		Mock: APIConfig{
-			JobAPIURL:           "http://localhost:8080/tenant/{tenant}/jobs",
-			DatadogAPIURL:       "http://localhost:8080/api/datadog/trace/{traceID}",
-			SandboxLogsAPIURL:   "http://localhost:8080/api/sandbox/logs",
-			SandboxSmartLogsURL: "http://localhost:8080/api/sandbox/logs/smart",
+			JobAPIURL:           "http://localhost:8080",
+			DatadogAPIURL:       "http://localhost:8080/api/datadog",
+			SandboxLogsAPIURL:   "http://localhost:8080/api/sandbox",
+			SandboxSmartLogsURL: "http://localhost:8080/api/sandbox",
+		},
+		Production: ProductionConfig{
+			APIConfig: APIConfig{
+				JobAPIURL:           "https://genesis.company.com/api/v1",
+				DatadogAPIURL:       "https://api.datadoghq.com/api/v2/traces",
+				SandboxLogsAPIURL:   "https://sandboxlogs.company.com/api/logs",
+				SandboxSmartLogsURL: "https://sandboxlogs.company.com/api/logs",
+			},
+			Auth: AuthConfig{
+				Datadog: AuthMethod{
+					Type:   "api-key",
+					APIKey: "",  // Must be set via environment variables
+					AppKey: "",  // Must be set via environment variables
+				},
+			},
 		},
 		Common: CommonConfig{
 			Timeout:    30 * time.Second,

@@ -35,23 +35,11 @@
     "gintools_url": "https://tools.genesis.company.com"
   },
   "auth": {
-    "job_service": {
-      "type": "bearer",
-      "credentials": {
-        "token": "${JOB_SERVICE_TOKEN}"
-      }
-    },
     "datadog": {
       "type": "api_key",
       "credentials": {
         "api_key": "${DD_API_KEY}",
-        "app_key": "${DD_APP_KEY}"
-      }
-    },
-    "sandbox": {
-      "type": "bearer",
-      "credentials": {
-        "token": "${SANDBOX_TOKEN}"
+        "app_key": "${DD_APPLICATION_KEY}"
       }
     }
   },

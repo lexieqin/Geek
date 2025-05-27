@@ -47,16 +47,10 @@ production:
   sandbox_smart_logs_api_url: "https://sandboxlogs.company.com/api/logs/smart"
   
   auth:
-    job_api:
-      type: "bearer"
-      token: "${GENESIS_API_TOKEN}"  # Will read from env var
     datadog:
       type: "api-key"
       api_key: "${DD_API_KEY}"
-      app_key: "${DD_APP_KEY}"
-    sandbox:
-      type: "bearer"
-      token: "${SANDBOX_API_TOKEN}"
+      app_key: "${DD_APPLICATION_KEY}"
 ```
 
 Then run:

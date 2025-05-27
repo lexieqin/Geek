@@ -7,17 +7,20 @@ import (
 	"strings"
 	"time"
 
+	"github.com/lexieqin/Geek/GenesisGpt/cmd/config"
 	"github.com/lexieqin/Geek/GenesisGpt/cmd/utils"
-	"github.com/lexieqin/Geek/GenesisGpt/config"
+	apiconfig "github.com/lexieqin/Geek/GenesisGpt/config"
 )
 
 type IntelligentDebugTool struct{
-	apiEndpoints *config.APIEndpoints
+	apiEndpoints *apiconfig.APIEndpoints
 }
+
+// Removed SandboxInfo struct - we'll use the URL directly
 
 func NewIntelligentDebugTool() *IntelligentDebugTool {
 	return &IntelligentDebugTool{
-		apiEndpoints: config.GetAPIEndpoints(),
+		apiEndpoints: apiconfig.GetAPIEndpoints(),
 	}
 }
 
@@ -134,13 +137,13 @@ func (t *IntelligentDebugTool) Run(input string) (string, error) {
 
 	// Step 4: Analyze sandbox logs if requested
 	if args.DebugLevel == "full" {
-		sandboxPath := t.extractSandboxPath(jobDetails)
-		if sandboxPath != "" {
+		sandboxURL := t.extractSandboxURL(jobDetails)
+		if sandboxURL != "" {
 			result.WriteString("=== Sandbox Log Analysis ===\n")
-			result.WriteString(fmt.Sprintf("Sandbox Path: %s\n\n", sandboxPath))
+			result.WriteString(fmt.Sprintf("Sandbox URL: %s\n\n", sandboxURL))
 
 			// Check if sandbox logs are available
-			logAvailable, logFiles := t.checkSandboxLogsAvailable(sandboxPath)
+			logAvailable, logFiles := t.checkSandboxLogsAvailable(sandboxURL)
 			if !logAvailable {
 				result.WriteString("❌ Sandbox logs not available\n")
 				result.WriteString("This usually indicates the deployment failed at an early stage before application logs were generated.\n")
@@ -164,7 +167,7 @@ func (t *IntelligentDebugTool) Run(input string) (string, error) {
 					for _, priorityFile := range priorityFiles {
 						if t.containsFile(logFiles, priorityFile) {
 							result.WriteString(fmt.Sprintf("▶ Analyzing %s:\n", priorityFile))
-							analysis := t.analyzeSpecificLogFile(sandboxPath, priorityFile)
+							analysis := t.analyzeSpecificLogFile(sandboxURL, priorityFile)
 							result.WriteString(analysis)
 							result.WriteString("\n")
 							analyzedFiles[priorityFile] = true
@@ -175,14 +178,14 @@ func (t *IntelligentDebugTool) Run(input string) (string, error) {
 					for _, file := range logFiles {
 						if !analyzedFiles[file] {
 							result.WriteString(fmt.Sprintf("▶ Analyzing %s:\n", file))
-							analysis := t.analyzeSpecificLogFile(sandboxPath, file)
+							analysis := t.analyzeSpecificLogFile(sandboxURL, file)
 							result.WriteString(analysis)
 							result.WriteString("\n")
 						}
 					}
 
 					// Provide comprehensive smart analysis across all logs
-					smartAnalysis := t.getSmartLogAnalysis(sandboxPath)
+					smartAnalysis := t.getSmartLogAnalysis(sandboxURL)
 					if smartAnalysis != "" {
 						result.WriteString("📊 Aggregated Analysis Across All Logs:\n")
 						result.WriteString(smartAnalysis)
@@ -190,7 +193,7 @@ func (t *IntelligentDebugTool) Run(input string) (string, error) {
 					}
 					
 					// Root cause analysis based on all findings
-					rootCause := t.determineRootCauseFromLogs(logFiles, sandboxPath)
+					rootCause := t.determineRootCauseFromLogs(logFiles, sandboxURL)
 					if rootCause != "" {
 						result.WriteString("🎯 Root Cause Analysis:\n")
 						result.WriteString(rootCause)
@@ -285,31 +288,89 @@ func (t *IntelligentDebugTool) extractDatadogTraceID(jobDetails map[string]inter
 	return ""
 }
 
-func (t *IntelligentDebugTool) extractSandboxPath(jobDetails map[string]interface{}) string {
-	// Look for sandbox log links in jobLogLinks
-	if jobLogLinks, ok := jobDetails["jobLogLinks"].(map[string]interface{}); ok {
-		// Get the first log link
-		if logLink, ok := jobLogLinks["logLink"].(string); ok {
-			// Extract path from URL like:
-			// http://genesis.dev.companyinc.com:9101/sandboxlogs/#/katbox/browse?path=/csi-data-dir/7d1f4a89-b6ec-44e4-b047-d34d6d3f9704&hostip=000.000.000.000
-			if strings.Contains(logLink, "path=") {
-				parts := strings.Split(logLink, "path=")
-				if len(parts) > 1 {
-					pathAndParams := parts[1]
-					// Extract just the path part before &
-					pathParts := strings.Split(pathAndParams, "&")
-					return pathParts[0]
+func (t *IntelligentDebugTool) extractSandboxURL(jobDetails map[string]interface{}) string {
+	// Look for DEPLOY_SB_SAMPLE_LINK in dzStatus -> <dz> -> dzProgress -> msg
+	if dzStatus, ok := jobDetails["dzStatus"].(map[string]interface{}); ok {
+		// Iterate through each DZ (data zone)
+		for dzName, dzData := range dzStatus {
+			// Skip GFSM as it's the global FSM, not a deployment zone
+			if dzName == "GFSM" {
+				continue
+			}
+			
+			if dzMap, ok := dzData.(map[string]interface{}); ok {
+				if dzProgress, ok := dzMap["dzProgress"].([]interface{}); ok {
+					// Look through each step in dzProgress
+					for _, step := range dzProgress {
+						if stepMap, ok := step.(map[string]interface{}); ok {
+							if msgs, ok := stepMap["msg"].([]interface{}); ok {
+								// Look through messages in this step
+								for _, msg := range msgs {
+									if msgMap, ok := msg.(map[string]interface{}); ok {
+										if msgType, ok := msgMap["msgType"].(string); ok && msgType == "DEPLOY_SB_SAMPLE_LINK" {
+											// Found the sandbox link message
+											if fields, ok := msgMap["fields"].(map[string]interface{}); ok {
+												// Check different status fields (STARTING, SUCCESS, FAILED, etc.)
+												for _, value := range fields {
+													if links, ok := value.([]interface{}); ok && len(links) > 0 {
+														if link, ok := links[0].(string); ok {
+															return link // Return the full URL directly
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
 				}
 			}
 		}
 	}
-	return "/csi-data-dir/7d1f4a89-b6ec-44e4-b047-d34d6d3f9704" // Default for demo
+	
+	// Fallback: check jobLogLinks (this is for FSM logs, not application logs)
+	// But we can try to use them if no sandbox link is found
+	if jobLogLinks, ok := jobDetails["jobLogLinks"].(map[string]interface{}); ok {
+		// Skip GFSM and look for actual deployment zone logs
+		for dzName, links := range jobLogLinks {
+			if dzName != "GFSM" {
+				if linkArray, ok := links.([]interface{}); ok && len(linkArray) > 0 {
+					if firstLink, ok := linkArray[0].(map[string]interface{}); ok {
+						if _, ok := firstLink["logLink"].(string); ok {
+							// Note: These are FSM logs, not application logs
+							// Skip FSM logs for now
+							continue
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	return "" // Return empty string when no sandbox URL found
+}
+
+// extractPathFromURL extracts the path parameter from sandbox URL
+// Used only in mock mode to work with our mock endpoints
+func extractPathFromURL(url string) string {
+	if strings.Contains(url, "path=") {
+		parts := strings.Split(url, "path=")
+		if len(parts) > 1 {
+			pathAndParams := parts[1]
+			// Extract just the path part before &
+			pathParts := strings.Split(pathAndParams, "&")
+			return pathParts[0]
+		}
+	}
+	return ""
 }
 
 func (t *IntelligentDebugTool) fetchDatadogTraces(traceID string) string {
 	// Call datadog trace endpoint
 	url := fmt.Sprintf("%s/trace/%s", t.apiEndpoints.TraceAPI, traceID)
-	resp, err := utils.GetHTTP(url)
+	resp, err := utils.GetHTTPWithAuth(url, "datadog")
 	if err != nil {
 		return fmt.Sprintf("Failed to fetch traces: %v", err)
 	}
@@ -347,25 +408,46 @@ func (t *IntelligentDebugTool) fetchDatadogTraces(traceID string) string {
 				
 				// Check meta fields for error information
 				if meta, ok := spanMap["meta"].(map[string]interface{}); ok {
-					// Check for OpenTelemetry error status
-					if otelStatus, ok := meta["otel.status_code"].(string); ok && otelStatus == "ERROR" {
+					// Check for OpenTelemetry error status (case insensitive)
+					if otelStatus, ok := meta["otel.status_code"].(string); ok && strings.EqualFold(otelStatus, "ERROR") {
 						hasError = true
 					}
 					
-					// Extract error details from meta
-					if hasError {
-						if errMsg, ok := meta["error.message"].(string); ok {
-							errorDetails = errMsg
-						} else if errMsg, ok := meta["err.msg"].(string); ok {
-							errorDetails = errMsg
+					// Extract error details from meta (check regardless of hasError)
+					// Try multiple fields for error message
+					if errMsg, ok := meta["error.message"].(string); ok && errMsg != "" {
+						errorDetails = errMsg
+					} else if errMsg, ok := meta["err.msg"].(string); ok && errMsg != "" {
+						errorDetails = errMsg
+					} else if errMsg, ok := meta["message"].(string); ok && errMsg != "" {
+						errorDetails = errMsg
+					} else if errStack, ok := meta["err.stack"].(string); ok && errStack != "" {
+						// Extract first line of stack trace as error message
+						if lines := strings.Split(errStack, "\n"); len(lines) > 0 {
+							errorDetails = lines[0]
 						}
-						
-						// Add error type and category if available
-						if errType, ok := meta["err.type"].(string); ok {
+					}
+					
+					// Add error type and category if available
+					if errType, ok := meta["err.type"].(string); ok && errType != "" {
+						if errorDetails == "" {
+							errorDetails = fmt.Sprintf("[%s]", errType)
+						} else {
 							errorDetails = fmt.Sprintf("[%s] %s", errType, errorDetails)
 						}
-						if errSubCat, ok := meta["err.sub_category"].(string); ok {
+					}
+					if errSubCat, ok := meta["err.sub_category"].(string); ok && errSubCat != "" {
+						if errorDetails == "" {
+							errorDetails = fmt.Sprintf("[%s]", errSubCat)
+						} else {
 							errorDetails = fmt.Sprintf("[%s] %s", errSubCat, errorDetails)
+						}
+					}
+					
+					// If still no error details, check for error in span description
+					if errorDetails == "" {
+						if spanName, ok := spanMap["name"].(string); ok && strings.Contains(strings.ToLower(spanName), "error") {
+							errorDetails = spanName
 						}
 					}
 				}
@@ -391,6 +473,72 @@ func (t *IntelligentDebugTool) fetchDatadogTraces(traceID string) string {
 	if len(errorSpans) > 0 {
 		var result strings.Builder
 		result.WriteString(fmt.Sprintf("Found %d error spans in trace:\n\n", len(errorSpans)))
+		
+		// Add high-level summary first
+		result.WriteString("📍 Summary: ")
+		
+		// Look for the most specific error (usually ppregistrator or environment errors)
+		summaryFound := false
+		for _, span := range errorSpans {
+			if errorMsg, ok := span["error"].(string); ok && errorMsg != "" {
+				// Look for specific error patterns that indicate root cause
+				if strings.Contains(errorMsg, "LCM Error:") || 
+				   strings.Contains(errorMsg, "Unable to properly resolve") ||
+				   strings.Contains(errorMsg, "Environment-Error") {
+					// Extract just the core error message
+					if idx := strings.Index(errorMsg, "LCM Error:"); idx != -1 {
+						result.WriteString(errorMsg[idx:])
+					} else if idx := strings.Index(errorMsg, "Unable to"); idx != -1 {
+						result.WriteString(errorMsg[idx:])
+					} else {
+						// Remove error categories and show just the message
+						msg := errorMsg
+						msg = strings.TrimPrefix(msg, "[Environment-Error] ")
+						msg = strings.TrimPrefix(msg, "[System-Error] ")
+						result.WriteString(msg)
+					}
+					summaryFound = true
+					break
+				}
+			}
+		}
+		
+		// If no specific root cause found, use the first ppregistrator error
+		if !summaryFound {
+			for _, span := range errorSpans {
+				if service, ok := span["service"].(string); ok && service == "ppregistrator" {
+					if errorMsg, ok := span["error"].(string); ok && errorMsg != "" {
+						// Extract core message
+						msg := errorMsg
+						// Remove common prefixes
+						prefixes := []string{"[Environment-Error] ", "[System-Error] ", "[Deploy-Driver-Error] ", "[Fsm-Error] "}
+						for _, prefix := range prefixes {
+							msg = strings.TrimPrefix(msg, prefix)
+						}
+						result.WriteString(msg)
+						summaryFound = true
+						break
+					}
+				}
+			}
+		}
+		
+		// Fallback to replica set failure if nothing else found
+		if !summaryFound {
+			for _, span := range errorSpans {
+				if errorMsg, ok := span["error"].(string); ok && strings.Contains(errorMsg, "replica set") && strings.Contains(errorMsg, "failed") {
+					// Just show the replica set failure
+					if idx := strings.Index(errorMsg, "replica set"); idx != -1 {
+						result.WriteString(errorMsg[idx:])
+					} else {
+						result.WriteString("Deployment failed")
+					}
+					break
+				}
+			}
+		}
+		
+		result.WriteString("\n\n")
 		
 		// Find root cause - usually ppregistrator or the first error
 		var rootCause map[string]interface{}
@@ -419,23 +567,25 @@ func (t *IntelligentDebugTool) fetchDatadogTraces(traceID string) string {
 			result.WriteString("\n")
 		}
 		
-		// Show error propagation chain (unique services only)
+		// Show error propagation chain with error details
 		if len(errorSpans) > 1 {
-			result.WriteString("Error Propagation Chain:\n  ")
+			result.WriteString("Error Propagation Chain:\n")
 			seenServices := make(map[string]bool)
-			var chain []string
 			
-			// Start from the root cause
 			for _, span := range errorSpans {
 				if service, ok := span["service"].(string); ok {
 					if !seenServices[service] {
 						seenServices[service] = true
-						chain = append(chain, service)
+						result.WriteString(fmt.Sprintf("  • %s", service))
+						
+						// Add error details if available
+						if errorMsg, ok := span["error"].(string); ok && errorMsg != "" {
+							result.WriteString(fmt.Sprintf(": %s", errorMsg))
+						}
+						result.WriteString("\n")
 					}
 				}
 			}
-			result.WriteString(strings.Join(chain, " → "))
-			result.WriteString("\n")
 		}
 		
 		return result.String()
@@ -443,9 +593,17 @@ func (t *IntelligentDebugTool) fetchDatadogTraces(traceID string) string {
 	return "No error spans found in Datadog traces (all spans have OK status)"
 }
 
-func (t *IntelligentDebugTool) checkSandboxLogsAvailable(sandboxPath string) (bool, []string) {
-	// Try to list files in sandbox directory first
-	url := fmt.Sprintf("%s/logs/list?path=%s", t.apiEndpoints.SandboxAPI, sandboxPath)
+func (t *IntelligentDebugTool) checkSandboxLogsAvailable(sandboxURL string) (bool, []string) {
+	// In mock mode, use our mock endpoint instead
+	var url string
+	if config.IsMockMode() {
+		// Extract path from sandbox URL and use mock endpoint
+		path := extractPathFromURL(sandboxURL)
+		url = fmt.Sprintf("%s/logs/list?path=%s", t.apiEndpoints.SandboxAPI, path)
+	} else {
+		// In production, use the sandbox URL directly
+		url = sandboxURL + "&action=list"
+	}
 	resp, err := utils.GetHTTP(url)
 	if err != nil {
 		// If listing fails, sandbox might not exist or be accessible
@@ -477,9 +635,16 @@ func (t *IntelligentDebugTool) containsFile(files []string, targetFile string) b
 	return false
 }
 
-func (t *IntelligentDebugTool) analyzeLogFile(sandboxPath, logFile string) string {
-	// Use the sandbox log endpoint to get file contents
-	url := fmt.Sprintf("%s/logs?path=%s&file=%s", t.apiEndpoints.SandboxAPI, sandboxPath, logFile)
+func (t *IntelligentDebugTool) analyzeLogFile(sandboxURL, logFile string) string {
+	// In mock mode, use our mock endpoint instead
+	var url string
+	if config.IsMockMode() {
+		path := extractPathFromURL(sandboxURL)
+		url = fmt.Sprintf("%s/logs?path=%s&file=%s", t.apiEndpoints.SandboxAPI, path, logFile)
+	} else {
+		// In production, use the sandbox URL directly
+		url = fmt.Sprintf("%s&action=read&file=%s", sandboxURL, logFile)
+	}
 	resp, err := utils.GetHTTP(url)
 	if err != nil {
 		return fmt.Sprintf("Failed to read %s: %v", logFile, err)
@@ -507,9 +672,16 @@ func (t *IntelligentDebugTool) analyzeLogFile(sandboxPath, logFile string) strin
 	return strings.Join(errors, "\n")
 }
 
-func (t *IntelligentDebugTool) getSmartLogAnalysis(sandboxPath string) string {
-	// Use the smart log endpoint for comprehensive analysis
-	url := fmt.Sprintf("%s/logs/smart?path=%s", t.apiEndpoints.SandboxAPI, sandboxPath)
+func (t *IntelligentDebugTool) getSmartLogAnalysis(sandboxURL string) string {
+	// In mock mode, use our mock endpoint instead
+	var url string
+	if config.IsMockMode() {
+		path := extractPathFromURL(sandboxURL)
+		url = fmt.Sprintf("%s/logs/smart?path=%s", t.apiEndpoints.SandboxAPI, path)
+	} else {
+		// In production, use the sandbox URL directly
+		url = sandboxURL + "&action=analyze"
+	}
 	resp, err := utils.GetHTTP(url)
 	if err != nil {
 		return ""
@@ -568,11 +740,18 @@ func (t *IntelligentDebugTool) generateDebugSummary(jobDetails map[string]interf
 }
 
 // analyzeSpecificLogFile provides detailed analysis for a specific log file
-func (t *IntelligentDebugTool) analyzeSpecificLogFile(sandboxPath, logFile string) string {
+func (t *IntelligentDebugTool) analyzeSpecificLogFile(sandboxURL, logFile string) string {
 	var result strings.Builder
 	
-	// Try to get the log content
-	url := fmt.Sprintf("%s/logs?path=%s&file=%s", t.apiEndpoints.SandboxAPI, sandboxPath, logFile)
+	// In mock mode, use our mock endpoint instead
+	var url string
+	if config.IsMockMode() {
+		path := extractPathFromURL(sandboxURL)
+		url = fmt.Sprintf("%s/logs?path=%s&file=%s", t.apiEndpoints.SandboxAPI, path, logFile)
+	} else {
+		// In production, use the sandbox URL directly
+		url = fmt.Sprintf("%s&action=read&file=%s", sandboxURL, logFile)
+	}
 	resp, err := utils.GetHTTP(url)
 	if err != nil {
 		result.WriteString(fmt.Sprintf("  ⚠️  Failed to read: %v\n", err))
@@ -668,12 +847,19 @@ func (t *IntelligentDebugTool) analyzeSpecificLogFile(sandboxPath, logFile strin
 }
 
 // determineRootCauseFromLogs analyzes all logs to determine root cause
-func (t *IntelligentDebugTool) determineRootCauseFromLogs(logFiles []string, sandboxPath string) string {
+func (t *IntelligentDebugTool) determineRootCauseFromLogs(logFiles []string, sandboxURL string) string {
 	var rootCauses []string
 	
 	// Check each log file for specific patterns
 	for _, file := range logFiles {
-		url := fmt.Sprintf("%s/logs?path=%s&file=%s", t.apiEndpoints.SandboxAPI, sandboxPath, file)
+		var url string
+		if config.IsMockMode() {
+			path := extractPathFromURL(sandboxURL)
+			url = fmt.Sprintf("%s/logs?path=%s&file=%s", t.apiEndpoints.SandboxAPI, path, file)
+		} else {
+			// In production, use the sandbox URL directly
+			url = fmt.Sprintf("%s&action=read&file=%s", sandboxURL, file)
+		}
 		resp, err := utils.GetHTTP(url)
 		if err != nil {
 			continue

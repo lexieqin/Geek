@@ -63,10 +63,8 @@ export GENESIS_SANDBOX_API_URL="https://sandboxlogs.company.com/api/logs"
 
 # Set authentication tokens
 export OPENAI_API_KEY="your-openai-api-key"
-export GENESIS_API_TOKEN="your-genesis-api-token"
 export DD_API_KEY="your-datadog-api-key"
-export DD_APP_KEY="your-datadog-app-key"
-export SANDBOX_API_TOKEN="your-sandbox-api-token"
+export DD_APPLICATION_KEY="your-datadog-app-key"
 
 # Run GenesisGpt
 ./genesisgpt chat "debug job 81325fc3-b05e-4d9a-ada2-d2399aebe135 for testenv tenant"

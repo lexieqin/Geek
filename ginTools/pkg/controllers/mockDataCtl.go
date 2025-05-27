@@ -288,3 +288,180 @@ func summarizeLogs(criticalLogs []map[string]interface{}) map[string]interface{}
 		"error_categories": errorCategories,
 	}
 }
+
+// HandleSandboxURL handles the new sandbox URL pattern with action parameters
+// This mimics the real sandbox log service behavior
+func (c *MockDataController) HandleSandboxURL(ctx *gin.Context) {
+	// Extract parameters from query string
+	path := ctx.Query("path")       // e.g., /csi-data-dir/7d1f4a89-b6ec-44e4-b047-d34d6d3f9704
+	action := ctx.Query("action")   // e.g., list, read, analyze
+	file := ctx.Query("file")       // e.g., containers.log (for read action)
+	
+	// Route based on action
+	switch action {
+	case "list":
+		c.handleSandboxList(ctx, path)
+	case "read":
+		c.handleSandboxRead(ctx, path, file)
+	case "analyze":
+		c.handleSandboxAnalyze(ctx, path)
+	default:
+		// Default to read if no action specified
+		c.handleSandboxRead(ctx, path, file)
+	}
+}
+
+// handleSandboxList lists files in the sandbox
+func (c *MockDataController) handleSandboxList(ctx *gin.Context, path string) {
+	if path == "" {
+		ctx.JSON(http.StatusOK, []string{})
+		return
+	}
+	
+	// Use the same logic as GetSandboxLogList
+	sandboxLinkPath := filepath.Join(c.staticFilePath, "sandboxlink")
+	
+	availableFiles := []string{}
+	err := filepath.Walk(sandboxLinkPath, func(filePath string, info os.FileInfo, err error) error {
+		if err != nil {
+			return nil
+		}
+		
+		if !info.IsDir() && info.Name() != "README.md" {
+			relPath, err := filepath.Rel(sandboxLinkPath, filePath)
+			if err == nil {
+				relPath = filepath.ToSlash(relPath)
+				availableFiles = append(availableFiles, relPath)
+			}
+		}
+		return nil
+	})
+	
+	if err != nil {
+		ctx.JSON(http.StatusOK, []string{})
+		return
+	}
+	
+	ctx.JSON(http.StatusOK, availableFiles)
+}
+
+// handleSandboxRead reads a specific log file
+func (c *MockDataController) handleSandboxRead(ctx *gin.Context, path string, file string) {
+	if file == "" {
+		file = "containers.log"
+	}
+	
+	sandboxLinkPath := filepath.Join(c.staticFilePath, "sandboxlink")
+	logFilePath := filepath.Join(sandboxLinkPath, file)
+	logFilePath = filepath.Clean(logFilePath)
+	
+	logData, err := ioutil.ReadFile(logFilePath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			ctx.JSON(http.StatusNotFound, gin.H{
+				"error": fmt.Sprintf("Log file %s not found in sandbox", file),
+			})
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error": fmt.Sprintf("Failed to read log data: %v", err),
+		})
+		return
+	}
+	
+	ctx.String(http.StatusOK, string(logData))
+}
+
+// handleSandboxAnalyze provides smart log analysis
+func (c *MockDataController) handleSandboxAnalyze(ctx *gin.Context, path string) {
+	// Use the same logic as GetSandboxLogSmart
+	sandboxLinkPath := filepath.Join(c.staticFilePath, "sandboxlink")
+	
+	var allCriticalLogs []map[string]interface{}
+	errorCounts := make(map[string]int)
+	warningCount := 0
+	totalErrors := 0
+	
+	// Analyze all log files
+	err := filepath.Walk(sandboxLinkPath, func(filePath string, info os.FileInfo, err error) error {
+		if err != nil || info.IsDir() || info.Name() == "README.md" {
+			return nil
+		}
+		
+		logData, err := ioutil.ReadFile(filePath)
+		if err != nil {
+			return nil
+		}
+		
+		relPath, _ := filepath.Rel(sandboxLinkPath, filePath)
+		relPath = filepath.ToSlash(relPath)
+		
+		// Extract critical logs from this file
+		criticalLogs := extractCriticalLogsWithFile(string(logData), relPath)
+		for _, log := range criticalLogs {
+			if level, ok := log["level"].(string); ok {
+				if level == "ERROR" {
+					totalErrors++
+					if category, ok := log["category"].(string); ok {
+						errorCounts[category]++
+					}
+				} else if level == "WARNING" {
+					warningCount++
+				}
+			}
+		}
+		allCriticalLogs = append(allCriticalLogs, criticalLogs...)
+		
+		return nil
+	})
+	
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to analyze logs",
+		})
+		return
+	}
+	
+	ctx.JSON(http.StatusOK, gin.H{
+		"summary": gin.H{
+			"counts": gin.H{
+				"errors":   totalErrors,
+				"warnings": warningCount,
+			},
+			"error_categories": errorCounts,
+		},
+		"critical_logs": allCriticalLogs,
+	})
+}
+
+// extractCriticalLogsWithFile is similar to extractCriticalLogs but includes file info
+func extractCriticalLogsWithFile(logs string, fileName string) []map[string]interface{} {
+	var criticalLogs []map[string]interface{}
+	lines := strings.Split(logs, "\n")
+	
+	errorPattern := regexp.MustCompile(`(?i)(error|exception|fail|fatal|panic)`)
+	warningPattern := regexp.MustCompile(`(?i)(warning|warn)`)
+	
+	for i, line := range lines {
+		logEntry := map[string]interface{}{
+			"file":        fileName,
+			"line_number": i + 1,
+			"content":     line,
+		}
+		
+		if errorPattern.MatchString(line) {
+			logEntry["level"] = "ERROR"
+			logEntry["category"] = categorizeError(line)
+			criticalLogs = append(criticalLogs, logEntry)
+		} else if warningPattern.MatchString(line) {
+			logEntry["level"] = "WARNING"
+			criticalLogs = append(criticalLogs, logEntry)
+		}
+		
+		if len(criticalLogs) > 50 { // Limit per file
+			break
+		}
+	}
+	
+	return criticalLogs
+}

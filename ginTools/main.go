@@ -66,9 +66,15 @@ func main() {
 	r.GET("/tenant/:tenant/job/:jobid", mockDataCtl.GetJobByTenantAndJobID)
 	r.GET("/api/datadog/trace", mockDataCtl.GetDatadogTrace)
 	r.GET("/api/datadog/trace/:trace_id", mockDataCtl.GetDatadogTrace)
+	
+	// Legacy sandbox endpoints (for backward compatibility)
 	r.GET("/api/sandbox/logs", mockDataCtl.GetSandboxLog)
 	r.GET("/api/sandbox/logs/list", mockDataCtl.GetSandboxLogList)
 	r.GET("/api/sandbox/logs/smart", mockDataCtl.GetSandboxLogSmart)
+	
+	// New sandbox endpoint that mimics the real sandbox URL pattern
+	// Handles URLs like: /sandboxlogs/#/katbox/browse?path=/csi-data-dir/xxx&hostip=xxx&action=xxx
+	r.GET("/sandboxlogs/*any", mockDataCtl.HandleSandboxURL)
 
 	port := os.Getenv("PORT")
 	if port == "" {

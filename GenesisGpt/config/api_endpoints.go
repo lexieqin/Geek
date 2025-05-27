@@ -1,7 +1,7 @@
 package config
 
 import (
-	"os"
+	"github.com/lexieqin/Geek/GenesisGpt/cmd/config"
 )
 
 type APIEndpoints struct {
@@ -10,21 +10,13 @@ type APIEndpoints struct {
 	SandboxAPI  string
 }
 
+// GetAPIEndpoints returns API endpoints based on the YAML configuration
 func GetAPIEndpoints() *APIEndpoints {
-	env := os.Getenv("ENVIRONMENT")
+	apiConfig := config.GetAPIConfig()
 	
-	if env == "production" {
-		return &APIEndpoints{
-			JobAPI:     os.Getenv("PROD_JOB_API"),      // e.g., https://api.yourplatform.com
-			TraceAPI:   os.Getenv("PROD_TRACE_API"),    // e.g., https://api.datadoghq.com
-			SandboxAPI: os.Getenv("PROD_SANDBOX_API"),  // e.g., https://sandbox.yourplatform.com
-		}
-	}
-	
-	// Default to mock/development endpoints
 	return &APIEndpoints{
-		JobAPI:     "http://localhost:8080",
-		TraceAPI:   "http://localhost:8080/api/datadog",
-		SandboxAPI: "http://localhost:8080/api/sandbox",
+		JobAPI:     apiConfig.JobAPIURL,
+		TraceAPI:   apiConfig.DatadogAPIURL,
+		SandboxAPI: apiConfig.SandboxLogsAPIURL,
 	}
 }

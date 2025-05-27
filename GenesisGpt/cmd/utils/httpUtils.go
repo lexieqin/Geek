@@ -148,12 +148,9 @@ func GetHTTPWithAuth(url string, authType string) (string, error) {
 		authConfig := config.GetAuthConfig()
 		if authConfig != nil {
 			switch authType {
-			case "job":
-				addAuthHeaders(headers, authConfig.JobAPI)
 			case "datadog":
 				addDatadogHeaders(headers, authConfig.Datadog)
-			case "sandbox":
-				addAuthHeaders(headers, authConfig.Sandbox)
+			// Note: job and sandbox auth removed as not needed at this moment
 			}
 		}
 	}
