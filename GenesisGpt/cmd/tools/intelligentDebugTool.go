@@ -650,26 +650,290 @@ func (t *IntelligentDebugTool) analyzeLogFile(sandboxURL, logFile string) string
 		return fmt.Sprintf("Failed to read %s: %v", logFile, err)
 	}
 	
-	// Simple error extraction (ignore warnings)
-	var errors []string
-	lines := strings.Split(resp, "\n")
-	for _, line := range lines {
-		lowerLine := strings.ToLower(line)
-		
-		// Skip warnings - they're just noise
-		if strings.Contains(lowerLine, "warning") || strings.Contains(lowerLine, "warn") {
+	return t.performSemanticLogAnalysis(resp, logFile)
+}
+
+type LogEntry struct {
+	LineNumber  int
+	Timestamp   string
+	Level       string
+	Message     string
+	Source      string // stdout/stderr
+	Component   string // container name
+	Context     string // additional context
+	RawLine     string
+}
+
+// performSemanticLogAnalysis provides intelligent analysis of log content
+func (t *IntelligentDebugTool) performSemanticLogAnalysis(logContent, logFile string) string {
+	lines := strings.Split(logContent, "\n")
+	
+	var criticalErrors []LogEntry
+	var warnings []LogEntry
+	var importantInfo []LogEntry
+	var rootCauseIndicators []LogEntry
+	
+	// Phase 1: Parse and categorize all log entries
+	for i, line := range lines {
+		if strings.TrimSpace(line) == "" {
 			continue
 		}
 		
-		if strings.Contains(lowerLine, "error") || strings.Contains(lowerLine, "exception") ||
-			strings.Contains(lowerLine, "failed") || strings.Contains(lowerLine, "fatal") {
-			errors = append(errors, strings.TrimSpace(line))
-			if len(errors) >= 5 {
-				break
+		entry := t.parseLogEntry(line, i+1)
+		if entry == nil {
+			continue
+		}
+		
+		// Categorize based on semantic analysis
+		switch {
+		case t.isCriticalError(entry):
+			criticalErrors = append(criticalErrors, *entry)
+		case t.isRootCauseIndicator(entry):
+			rootCauseIndicators = append(rootCauseIndicators, *entry)
+		case t.isWarning(entry):
+			warnings = append(warnings, *entry)
+		case t.isImportantInfo(entry):
+			importantInfo = append(importantInfo, *entry)
+		}
+	}
+	
+	// Phase 2: Determine root cause through semantic analysis
+	rootCause := t.analyzeRootCause(criticalErrors, rootCauseIndicators, importantInfo)
+	
+	// Phase 3: Generate intelligent summary
+	var result strings.Builder
+	
+	if rootCause != "" {
+		result.WriteString("🎯 Root Cause Analysis:\n")
+		result.WriteString(fmt.Sprintf("  %s\n\n", rootCause))
+	}
+	
+	if len(criticalErrors) > 0 {
+		result.WriteString("❌ Critical Errors:\n")
+		for _, err := range criticalErrors {
+			result.WriteString(fmt.Sprintf("  [%s] %s\n", err.Level, err.Message))
+			if err.Context != "" {
+				result.WriteString(fmt.Sprintf("    Context: %s\n", err.Context))
+			}
+		}
+		result.WriteString("\n")
+	}
+	
+	if len(rootCauseIndicators) > 0 && rootCause == "" {
+		result.WriteString("🔍 Potential Root Cause Indicators:\n")
+		for _, indicator := range rootCauseIndicators[:t.min(3, len(rootCauseIndicators))] {
+			result.WriteString(fmt.Sprintf("  %s\n", indicator.Message))
+		}
+		result.WriteString("\n")
+	}
+	
+	if len(warnings) > 0 && len(criticalErrors) == 0 {
+		result.WriteString("⚠️  Notable Warnings (may be related):\n")
+		for _, warn := range warnings[:t.min(2, len(warnings))] {
+			result.WriteString(fmt.Sprintf("  %s\n", warn.Message))
+		}
+		result.WriteString("\n")
+	}
+	
+	if result.Len() == 0 {
+		result.WriteString("✅ No critical issues found in this log file\n")
+	}
+	
+	return result.String()
+}
+
+// parseLogEntry extracts structured information from a log line
+func (t *IntelligentDebugTool) parseLogEntry(line string, lineNum int) *LogEntry {
+	// Parse container log format: [container] timestamp source F [timestamp] LEVEL message
+	if !strings.Contains(line, "] ") {
+		return nil
+	}
+	
+	entry := &LogEntry{
+		LineNumber: lineNum,
+		RawLine:    line,
+	}
+	
+	// Extract component (container name)
+	if strings.HasPrefix(line, "[") {
+		endBracket := strings.Index(line, "]")
+		if endBracket > 0 {
+			entry.Component = line[1:endBracket]
+		}
+	}
+	
+	// Extract source (stdout/stderr)
+	if strings.Contains(line, " stdout F ") {
+		entry.Source = "stdout"
+	} else if strings.Contains(line, " stderr F ") {
+		entry.Source = "stderr"
+	}
+	
+	// Extract the actual log message part
+	parts := strings.Split(line, "] ")
+	if len(parts) < 3 {
+		return entry
+	}
+	
+	logMessage := parts[len(parts)-1]
+	
+	// Extract log level and message from the log content
+	if strings.Contains(logMessage, "] INFO ") {
+		entry.Level = "INFO"
+		entry.Message = strings.SplitN(logMessage, "] INFO ", 2)[1]
+	} else if strings.Contains(logMessage, "] ERROR ") {
+		entry.Level = "ERROR"
+		entry.Message = strings.SplitN(logMessage, "] ERROR ", 2)[1]
+	} else if strings.Contains(logMessage, "] WARNING ") || strings.Contains(logMessage, "] WARN ") {
+		entry.Level = "WARNING"
+		if strings.Contains(logMessage, "] WARNING ") {
+			entry.Message = strings.SplitN(logMessage, "] WARNING ", 2)[1]
+		} else {
+			entry.Message = strings.SplitN(logMessage, "] WARN ", 2)[1]
+		}
+	} else if strings.Contains(logMessage, "] FATAL ") {
+		entry.Level = "FATAL"
+		entry.Message = strings.SplitN(logMessage, "] FATAL ", 2)[1]
+	} else {
+		// No explicit log level, use the whole message
+		entry.Message = logMessage
+		// Infer level from content and source
+		if entry.Source == "stderr" && (strings.Contains(strings.ToLower(logMessage), "error") || 
+			strings.Contains(strings.ToLower(logMessage), "failed") ||
+			strings.Contains(strings.ToLower(logMessage), "exception")) {
+			entry.Level = "ERROR"
+		}
+	}
+	
+	return entry
+}
+
+// isCriticalError determines if a log entry represents a critical error
+func (t *IntelligentDebugTool) isCriticalError(entry *LogEntry) bool {
+	if entry.Level == "ERROR" || entry.Level == "FATAL" {
+		return true
+	}
+	
+	// Check for critical patterns in stderr
+	if entry.Source == "stderr" {
+		lowerMsg := strings.ToLower(entry.Message)
+		criticalPatterns := []string{
+			"unable to", "cannot", "failed to", "connection refused",
+			"permission denied", "no such file", "command not found",
+			"timeout", "connection reset", "segmentation fault",
+		}
+		
+		for _, pattern := range criticalPatterns {
+			if strings.Contains(lowerMsg, pattern) {
+				return true
 			}
 		}
 	}
-	return strings.Join(errors, "\n")
+	
+	return false
+}
+
+// isRootCauseIndicator identifies entries that indicate root causes
+func (t *IntelligentDebugTool) isRootCauseIndicator(entry *LogEntry) bool {
+	lowerMsg := strings.ToLower(entry.Message)
+	
+	// Exit codes and return codes indicate failure points
+	if strings.Contains(lowerMsg, "exit ") && !strings.Contains(lowerMsg, "exit 0") {
+		return true
+	}
+	
+	if strings.Contains(lowerMsg, "rc=") && !strings.Contains(lowerMsg, "rc=0") {
+		return true
+	}
+	
+	// LCM error codes are root causes
+	if strings.Contains(lowerMsg, "lcm") && strings.Contains(lowerMsg, ":") {
+		return true
+	}
+	
+	// "Unable to successfully complete" indicates a failure summary
+	if strings.Contains(lowerMsg, "unable to successfully complete") {
+		return true
+	}
+	
+	return false
+}
+
+// isWarning determines if entry is a warning
+func (t *IntelligentDebugTool) isWarning(entry *LogEntry) bool {
+	return entry.Level == "WARNING" || entry.Level == "WARN"
+}
+
+// isImportantInfo identifies important informational entries
+func (t *IntelligentDebugTool) isImportantInfo(entry *LogEntry) bool {
+	if entry.Level != "INFO" {
+		return false
+	}
+	
+	lowerMsg := strings.ToLower(entry.Message)
+	importantPatterns := []string{
+		"lcmstepend", "lcmphase", "application name:",
+		"partner_stage:", "bootstrap_token", "environment",
+	}
+	
+	for _, pattern := range importantPatterns {
+		if strings.Contains(lowerMsg, pattern) {
+			return true
+		}
+	}
+	
+	return false
+}
+
+// analyzeRootCause performs semantic analysis to determine the root cause
+func (t *IntelligentDebugTool) analyzeRootCause(criticalErrors, indicators, info []LogEntry) string {
+	// Look for LCM error codes first - these are usually the root cause
+	for _, err := range criticalErrors {
+		if strings.Contains(err.Message, "LCM") && strings.Contains(err.Message, ":") {
+			return fmt.Sprintf("LCM Error: %s", err.Message)
+		}
+	}
+	
+	// Look for DNS/network resolution issues
+	for _, err := range criticalErrors {
+		if strings.Contains(strings.ToLower(err.Message), "unable to properly resolve") ||
+		   strings.Contains(strings.ToLower(err.Message), "host") {
+			return fmt.Sprintf("DNS/Network Resolution Issue: %s", err.Message)
+		}
+	}
+	
+	// Look for exit codes in indicators
+	for _, indicator := range indicators {
+		if strings.Contains(strings.ToLower(indicator.Message), "exit ") && 
+		   !strings.Contains(strings.ToLower(indicator.Message), "exit 0") {
+			return fmt.Sprintf("Process Exit Failure: %s", indicator.Message)
+		}
+	}
+	
+	// Look for configuration issues
+	for _, err := range criticalErrors {
+		lowerMsg := strings.ToLower(err.Message)
+		if strings.Contains(lowerMsg, "no such file") || 
+		   strings.Contains(lowerMsg, "command not found") ||
+		   strings.Contains(lowerMsg, "permission denied") {
+			return fmt.Sprintf("Configuration/Environment Issue: %s", err.Message)
+		}
+	}
+	
+	// If we have critical errors but no specific root cause, return the first critical error
+	if len(criticalErrors) > 0 {
+		return fmt.Sprintf("Primary Error: %s", criticalErrors[0].Message)
+	}
+	
+	return ""
+}
+
+// min helper function
+func (t *IntelligentDebugTool) min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
 }
 
 func (t *IntelligentDebugTool) getSmartLogAnalysis(sandboxURL string) string {

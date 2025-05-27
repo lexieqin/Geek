@@ -207,22 +207,31 @@ func filterLogs(logs string, search string) string {
 	return strings.Join(filteredLines, "\n")
 }
 
-// Helper function to extract critical logs
+// Helper function to extract critical logs (simplified for mock)
 func extractCriticalLogs(logs string) []map[string]interface{} {
 	var criticalLogs []map[string]interface{}
 	lines := strings.Split(logs, "\n")
 	
-	// Patterns for critical logs
+	// Simple extraction - let GenesisGpt do the real semantic analysis
 	errorPattern := regexp.MustCompile(`(?i)(error|exception|fail|fatal|panic)`)
 	warningPattern := regexp.MustCompile(`(?i)(warning|warn)`)
 	
 	for i, line := range lines {
+		if strings.TrimSpace(line) == "" {
+			continue
+		}
+		
 		logEntry := map[string]interface{}{
 			"line_number": i + 1,
 			"content":     line,
 		}
 		
-		if errorPattern.MatchString(line) {
+		// Basic categorization for mock endpoints
+		if strings.Contains(line, "] ERROR ") || strings.Contains(line, "] FATAL ") {
+			logEntry["level"] = "ERROR"
+			logEntry["category"] = categorizeError(line)
+			criticalLogs = append(criticalLogs, logEntry)
+		} else if errorPattern.MatchString(line) && !strings.Contains(line, "] INFO ") {
 			logEntry["level"] = "ERROR"
 			logEntry["category"] = categorizeError(line)
 			criticalLogs = append(criticalLogs, logEntry)
@@ -231,8 +240,7 @@ func extractCriticalLogs(logs string) []map[string]interface{} {
 			criticalLogs = append(criticalLogs, logEntry)
 		}
 		
-		// Limit to most recent/relevant entries
-		if len(criticalLogs) > 100 {
+		if len(criticalLogs) > 50 {
 			break
 		}
 	}
