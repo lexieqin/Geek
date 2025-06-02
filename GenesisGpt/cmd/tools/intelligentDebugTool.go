@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/url"
 	"path/filepath"
-	"regexp"
 	"strings"
 	"time"
 
@@ -18,6 +17,19 @@ import (
 
 type IntelligentDebugTool struct{
 	apiEndpoints *apiconfig.APIEndpoints
+}
+
+// FileEntry represents a file or directory in the sandbox browser
+type FileEntry struct {
+	Path  string `json:"path"`
+	Mode  string `json:"mode"`
+	Size  int64  `json:"size"`
+	Name  string `json:"name"`
+}
+
+// DirListResponse represents the response from the browse endpoint
+type DirListResponse struct {
+	Data []FileEntry `json:"data"`
 }
 
 // Removed SandboxInfo struct - we'll use the URL directly
@@ -608,192 +620,90 @@ func (t *IntelligentDebugTool) fetchDatadogTraces(traceID string) string {
 
 func (t *IntelligentDebugTool) checkSandboxLogsAvailable(sandboxURL string) (bool, []string) {
 	// In mock mode, use our mock endpoint instead
-	var url string
 	if config.IsMockMode() {
 		// Extract path from sandbox URL and use mock endpoint
 		path := extractPathFromURL(sandboxURL)
-		url = fmt.Sprintf("%s/logs/list?path=%s", t.apiEndpoints.SandboxAPI, path)
-	} else {
-		// In production, parse the HTML page to find available files
-		return t.parseSandboxHTMLForFiles(sandboxURL)
-	}
-	resp, err := utils.GetHTTP(url)
-	if err != nil {
-		// If listing fails, sandbox might not exist or be accessible
-		return false, nil
-	}
+		url := fmt.Sprintf("%s/logs/list?path=%s", t.apiEndpoints.SandboxAPI, path)
+		resp, err := utils.GetHTTP(url)
+		if err != nil {
+			return false, nil
+		}
 
-	// Try to parse the response as JSON array of filenames
-	var files []string
-	if err := json.Unmarshal([]byte(resp), &files); err != nil {
-		// If JSON parsing fails, try to parse as plain text list
-		lines := strings.Split(strings.TrimSpace(resp), "\n")
-		for _, line := range lines {
-			line = strings.TrimSpace(line)
-			if line != "" && !strings.Contains(line, "error") && !strings.Contains(line, "not found") {
-				files = append(files, line)
-			}
-		}
-	}
-
-	return len(files) > 0, files
-}
-
-// parseSandboxHTMLForFiles parses the HTML response from sandbox URL to find available files
-func (t *IntelligentDebugTool) parseSandboxHTMLForFiles(sandboxURL string) (bool, []string) {
-	// First, get the HTML content from the sandbox URL
-	resp, err := utils.GetHTTP(sandboxURL)
-	if err != nil {
-		return false, nil
-	}
-
-	// Parse the HTML to find file links
-	// Look for common patterns in file browsers:
-	// 1. Links with href containing file paths
-	// 2. Table rows or list items containing file names
-	// 3. JavaScript-rendered content (check for data attributes)
-	
-	var files []string
-	
-	// Pattern 1: Look for anchor tags with file links
-	// Example: <a href="/path/to/file.log">file.log</a>
-	anchorPattern := regexp.MustCompile(`<a[^>]+href=["']([^"']+)["'][^>]*>([^<]+)</a>`)
-	matches := anchorPattern.FindAllStringSubmatch(resp, -1)
-	for _, match := range matches {
-		if len(match) > 2 {
-			fileName := strings.TrimSpace(match[2])
-			// Filter out navigation links and only keep actual files
-			if isLogFile(fileName) {
-				files = append(files, fileName)
-			}
-		}
-	}
-	
-	// Pattern 2: Look for file names in table cells or list items
-	// Example: <td>containers.log</td> or <li>std.err</li>
-	fileNamePattern := regexp.MustCompile(`<(?:td|li)[^>]*>\s*([^<]+\.(?:log|out|err))\s*</(?:td|li)>`)
-	matches = fileNamePattern.FindAllStringSubmatch(resp, -1)
-	for _, match := range matches {
-		if len(match) > 1 {
-			fileName := strings.TrimSpace(match[1])
-			if !contains(files, fileName) {
-				files = append(files, fileName)
-			}
-		}
-	}
-	
-	// Pattern 3: Look for data attributes that might contain file names
-	// Example: <div data-file="deploy.log">
-	dataPattern := regexp.MustCompile(`data-(?:file|name|path)=["']([^"']+\.(?:log|out|err))["']`)
-	matches = dataPattern.FindAllStringSubmatch(resp, -1)
-	for _, match := range matches {
-		if len(match) > 1 {
-			fileName := filepath.Base(match[1])
-			if !contains(files, fileName) {
-				files = append(files, fileName)
-			}
-		}
-	}
-	
-	// Pattern 4: Look for JavaScript objects or arrays containing file lists
-	// Example: files: ["containers.log", "std.out", ...]
-	jsArrayPattern := regexp.MustCompile(`["']([^"']+\.(?:log|out|err))["']`)
-	matches = jsArrayPattern.FindAllStringSubmatch(resp, -1)
-	for _, match := range matches {
-		if len(match) > 1 {
-			fileName := filepath.Base(match[1])
-			if !contains(files, fileName) && isLogFile(fileName) {
-				files = append(files, fileName)
-			}
-		}
-	}
-	
-	// If we found files, also check for subdirectories containing log files
-	if len(files) == 0 {
-		// Try to find folder links that might contain logs
-		folderPattern := regexp.MustCompile(`<a[^>]+href=["']([^"']+)["'][^>]*>\s*(app|logs?)\s*/?\s*</a>`)
-		matches = folderPattern.FindAllStringSubmatch(resp, -1)
-		for _, match := range matches {
-			if len(match) > 1 {
-				// Try to access the subfolder
-				subfolderURL := t.constructSubfolderURL(sandboxURL, match[1])
-				if subfolderURL != "" {
-					_, subFiles := t.parseSandboxHTMLForFiles(subfolderURL)
-					for _, subFile := range subFiles {
-						files = append(files, fmt.Sprintf("%s/%s", match[2], subFile))
-					}
+		var files []string
+		if err := json.Unmarshal([]byte(resp), &files); err != nil {
+			lines := strings.Split(strings.TrimSpace(resp), "\n")
+			for _, line := range lines {
+				line = strings.TrimSpace(line)
+				if line != "" && !strings.Contains(line, "error") && !strings.Contains(line, "not found") {
+					files = append(files, line)
 				}
 			}
 		}
+		return len(files) > 0, files
 	}
 	
-	// Common log files we expect to find
-	expectedFiles := []string{"containers.log", "std.out", "std.err", "deploy.log", "decout", "decerr"}
+	// Production mode - use the file browser API
+	hostIPs, basePath, err := t.extractSandboxInfo(sandboxURL)
+	if err != nil || len(hostIPs) < 2 {
+		return false, nil
+	}
 	
-	// If no files found via parsing, check if the response mentions these files
-	if len(files) == 0 {
-		lowerResp := strings.ToLower(resp)
-		for _, expectedFile := range expectedFiles {
-			if strings.Contains(lowerResp, expectedFile) {
-				files = append(files, expectedFile)
+	hostIP := hostIPs[1] // Use the second part which contains the actual IP
+	
+	// Browse the base directory
+	files, err := t.browseDir(hostIP, basePath)
+	if err != nil {
+		return false, nil
+	}
+	
+	// For k8s deployments, find csi-* directory
+	var targetDir string
+	for _, f := range files {
+		if strings.Contains(f.Path, "/csi-") && strings.HasPrefix(f.Mode, "d") {
+			targetDir = f.Path
+			break
+		}
+	}
+	
+	// If no csi directory found, use the base path
+	if targetDir == "" {
+		targetDir = basePath
+	}
+	
+	// Get files from the target directory
+	targetFiles, err := t.browseDir(hostIP, targetDir)
+	if err != nil {
+		return false, nil
+	}
+	
+	// Also check applogs directory for additional logs
+	applogsPath := fmt.Sprintf("%s/log/applogs", targetDir)
+	applogsFiles, _ := t.browseDir(hostIP, applogsPath) // Ignore error as applogs might not exist
+	
+	// Combine all files
+	allFiles := append(targetFiles, applogsFiles...)
+	
+	// Extract log file names
+	var logFiles []string
+	logFilePatterns := []string{"containers.log", "stdout", "stderr", "std.out", "std.err", 
+		"deploy.log", "wrapper.log", "dce.err", "dce.out"}
+	
+	for _, file := range allFiles {
+		for _, pattern := range logFilePatterns {
+			if strings.HasSuffix(file.Path, pattern) || strings.Contains(file.Name, pattern) {
+				// Store relative path for display
+				logFiles = append(logFiles, file.Name)
+				break
 			}
 		}
 	}
 	
-	return len(files) > 0, files
+	return len(logFiles) > 0, logFiles
 }
 
-// isLogFile checks if a filename looks like a log file
-func isLogFile(fileName string) bool {
-	fileName = strings.ToLower(strings.TrimSpace(fileName))
-	// Check for common log file extensions and names
-	return strings.HasSuffix(fileName, ".log") ||
-		strings.HasSuffix(fileName, ".out") ||
-		strings.HasSuffix(fileName, ".err") ||
-		fileName == "decout" ||
-		fileName == "decerr" ||
-		strings.Contains(fileName, "stdout") ||
-		strings.Contains(fileName, "stderr")
-}
 
-// contains checks if a string slice contains a value
-func contains(slice []string, item string) bool {
-	for _, s := range slice {
-		if s == item {
-			return true
-		}
-	}
-	return false
-}
 
-// constructSubfolderURL constructs a URL for accessing a subfolder
-func (t *IntelligentDebugTool) constructSubfolderURL(baseURL, folderPath string) string {
-	// Parse the base URL to understand its structure
-	parsedURL, err := url.Parse(baseURL)
-	if err != nil {
-		return ""
-	}
-	
-	// Check if the folder path is relative or absolute
-	if strings.HasPrefix(folderPath, "http") {
-		return folderPath
-	}
-	
-	// If it's a relative path, construct the full URL
-	if strings.HasPrefix(folderPath, "/") {
-		// Absolute path from root
-		parsedURL.Path = folderPath
-	} else {
-		// Relative path
-		if strings.HasSuffix(parsedURL.Path, "/") {
-			parsedURL.Path = parsedURL.Path + folderPath
-		} else {
-			parsedURL.Path = filepath.Dir(parsedURL.Path) + "/" + folderPath
-		}
-	}
-	
-	return parsedURL.String()
-}
+
 
 func (t *IntelligentDebugTool) containsFile(files []string, targetFile string) bool {
 	for _, file := range files {
@@ -804,143 +714,9 @@ func (t *IntelligentDebugTool) containsFile(files []string, targetFile string) b
 	return false
 }
 
-func (t *IntelligentDebugTool) analyzeLogFile(sandboxURL, logFile string) string {
-	// In mock mode, use our mock endpoint instead
-	var url string
-	var resp string
-	var err error
-	
-	if config.IsMockMode() {
-		path := extractPathFromURL(sandboxURL)
-		url = fmt.Sprintf("%s/logs?path=%s&file=%s", t.apiEndpoints.SandboxAPI, path, logFile)
-		resp, err = utils.GetHTTP(url)
-	} else {
-		// In production, fetch the log file content from the web interface
-		resp, err = t.fetchLogFileFromHTML(sandboxURL, logFile)
-	}
-	
-	if err != nil {
-		return fmt.Sprintf("Failed to read %s: %v", logFile, err)
-	}
-	
-	return t.performSemanticLogAnalysis(resp, logFile)
-}
 
-// fetchLogFileFromHTML fetches log file content from the HTML web interface
-func (t *IntelligentDebugTool) fetchLogFileFromHTML(sandboxURL, logFile string) (string, error) {
-	// Try different strategies to fetch the log file
-	
-	// Strategy 1: Try appending the file name as a parameter
-	fileURL := fmt.Sprintf("%s&file=%s", sandboxURL, url.QueryEscape(logFile))
-	resp, err := utils.GetHTTP(fileURL)
-	if err == nil && !strings.Contains(resp, "<html") && !strings.Contains(resp, "<!DOCTYPE") {
-		// If we got non-HTML content, it's likely the log file
-		return resp, nil
-	}
-	
-	// Strategy 2: Try modifying the path parameter to include the file
-	parsedURL, err := url.Parse(sandboxURL)
-	if err == nil {
-		q := parsedURL.Query()
-		if path := q.Get("path"); path != "" {
-			// Try appending the file to the path
-			newPath := path
-			if !strings.HasSuffix(path, "/") {
-				newPath += "/"
-			}
-			newPath += logFile
-			q.Set("path", newPath)
-			parsedURL.RawQuery = q.Encode()
-			
-			resp, err := utils.GetHTTP(parsedURL.String())
-			if err == nil && !strings.Contains(resp, "<html") && !strings.Contains(resp, "<!DOCTYPE") {
-				return resp, nil
-			}
-		}
-	}
-	
-	// Strategy 3: Try to find a direct download link in the HTML
-	htmlResp, err := utils.GetHTTP(sandboxURL)
-	if err == nil {
-		// Look for download links for the specific file
-		downloadPattern := regexp.MustCompile(fmt.Sprintf(`href=["']([^"']+)["'][^>]*>\s*(?:download\s*)?%s`, regexp.QuoteMeta(logFile)))
-		matches := downloadPattern.FindStringSubmatch(htmlResp)
-		if len(matches) > 1 {
-			downloadURL := t.constructAbsoluteURL(sandboxURL, matches[1])
-			if downloadURL != "" {
-				resp, err := utils.GetHTTP(downloadURL)
-				if err == nil && !strings.Contains(resp, "<html") {
-					return resp, nil
-				}
-			}
-		}
-		
-		// Look for API endpoints in JavaScript
-		apiPattern := regexp.MustCompile(`["']([^"']*(?:api|download|raw|content)[^"']*` + regexp.QuoteMeta(logFile) + `[^"']*)["']`)
-		matches = apiPattern.FindStringSubmatch(htmlResp)
-		if len(matches) > 1 {
-			apiURL := t.constructAbsoluteURL(sandboxURL, matches[1])
-			if apiURL != "" {
-				resp, err := utils.GetHTTP(apiURL)
-				if err == nil && !strings.Contains(resp, "<html") {
-					return resp, nil
-				}
-			}
-		}
-	}
-	
-	// Strategy 4: Try common API patterns
-	baseURL := t.getBaseURL(sandboxURL)
-	if baseURL != "" {
-		// Try common API endpoints
-		apiPatterns := []string{
-			"%s/api/logs/%s",
-			"%s/api/files/%s",
-			"%s/download/%s",
-			"%s/raw/%s",
-			"%s/content/%s",
-		}
-		
-		for _, pattern := range apiPatterns {
-			tryURL := fmt.Sprintf(pattern, baseURL, url.QueryEscape(logFile))
-			resp, err := utils.GetHTTP(tryURL)
-			if err == nil && !strings.Contains(resp, "<html") && !strings.Contains(resp, "<!DOCTYPE") {
-				return resp, nil
-			}
-		}
-	}
-	
-	return "", fmt.Errorf("unable to fetch log file content from web interface")
-}
 
-// constructAbsoluteURL constructs an absolute URL from a base URL and a potentially relative path
-func (t *IntelligentDebugTool) constructAbsoluteURL(baseURL, path string) string {
-	if strings.HasPrefix(path, "http") {
-		return path
-	}
-	
-	parsedBase, err := url.Parse(baseURL)
-	if err != nil {
-		return ""
-	}
-	
-	parsedPath, err := url.Parse(path)
-	if err != nil {
-		return ""
-	}
-	
-	return parsedBase.ResolveReference(parsedPath).String()
-}
 
-// getBaseURL extracts the base URL from a full URL
-func (t *IntelligentDebugTool) getBaseURL(fullURL string) string {
-	parsedURL, err := url.Parse(fullURL)
-	if err != nil {
-		return ""
-	}
-	
-	return fmt.Sprintf("%s://%s", parsedURL.Scheme, parsedURL.Host)
-}
 
 type LogEntry struct {
 	LineNumber  int
@@ -1368,8 +1144,19 @@ func (t *IntelligentDebugTool) getSmartLogAnalysis(sandboxURL string) string {
 			url := fmt.Sprintf("%s/logs?path=%s&file=%s", t.apiEndpoints.SandboxAPI, path, logFile)
 			resp, err = utils.GetHTTP(url)
 		} else {
-			// In production, fetch the log file content from the web interface
-			resp, err = t.fetchLogFileFromHTML(sandboxURL, logFile)
+			// In production, use the file browser API
+			hostIPs, basePath, extractErr := t.extractSandboxInfo(sandboxURL)
+			if extractErr != nil || len(hostIPs) < 2 {
+				continue
+			}
+			
+			hostIP := hostIPs[1]
+			filePath, findErr := t.findLogFilePath(hostIP, basePath, logFile)
+			if findErr != nil {
+				continue
+			}
+			
+			resp, err = t.downloadLogContent(hostIP, filePath)
 		}
 		
 		if err != nil || resp == "" {
@@ -1462,8 +1249,22 @@ func (t *IntelligentDebugTool) analyzeSpecificLogFile(sandboxURL, logFile string
 		url := fmt.Sprintf("%s/logs?path=%s&file=%s", t.apiEndpoints.SandboxAPI, path, logFile)
 		resp, err = utils.GetHTTP(url)
 	} else {
-		// In production, fetch the log file content from the web interface
-		resp, err = t.fetchLogFileFromHTML(sandboxURL, logFile)
+		// In production, use the file browser API
+		hostIPs, basePath, extractErr := t.extractSandboxInfo(sandboxURL)
+		if extractErr != nil || len(hostIPs) < 2 {
+			return fmt.Sprintf("  ⚠️  Failed to extract sandbox info: %v\n", extractErr)
+		}
+		
+		hostIP := hostIPs[1]
+		
+		// First, find the actual file path by browsing directories
+		filePath, findErr := t.findLogFilePath(hostIP, basePath, logFile)
+		if findErr != nil {
+			return fmt.Sprintf("  ⚠️  Failed to find log file %s: %v\n", logFile, findErr)
+		}
+		
+		// Download the file content
+		resp, err = t.downloadLogContent(hostIP, filePath)
 	}
 	
 	if err != nil {
@@ -1581,8 +1382,19 @@ func (t *IntelligentDebugTool) determineRootCauseFromLogs(logFiles []string, san
 			url := fmt.Sprintf("%s/logs?path=%s&file=%s", t.apiEndpoints.SandboxAPI, path, file)
 			resp, err = utils.GetHTTP(url)
 		} else {
-			// In production, fetch the log file content from the web interface
-			resp, err = t.fetchLogFileFromHTML(sandboxURL, file)
+			// In production, use the file browser API
+			hostIPs, basePath, extractErr := t.extractSandboxInfo(sandboxURL)
+			if extractErr != nil || len(hostIPs) < 2 {
+				continue
+			}
+			
+			hostIP := hostIPs[1]
+			filePath, findErr := t.findLogFilePath(hostIP, basePath, file)
+			if findErr != nil {
+				continue
+			}
+			
+			resp, err = t.downloadLogContent(hostIP, filePath)
 		}
 		
 		if err != nil || resp == "" {
@@ -1760,6 +1572,14 @@ func (t *IntelligentDebugTool) extractKeyPointsFromAnalysis(analysis string) str
 	return summary.String() + "\n"
 }
 
+// min returns the minimum of two integers
+func (t *IntelligentDebugTool) min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
 // extractRootCauseFromPatterns uses pattern matching for common root causes
 func (t *IntelligentDebugTool) extractRootCauseFromPatterns(logSamples []string) string {
 	allSamples := strings.Join(logSamples, " ")
@@ -1801,4 +1621,122 @@ func getStringFromMap(m map[string]interface{}, key string) string {
 		}
 	}
 	return ""
+}
+
+// extractSandboxInfo extracts host IPs and path from sandbox URL
+func (t *IntelligentDebugTool) extractSandboxInfo(sandboxURL string) ([]string, string, error) {
+	// Decode the URL
+	decodedURL, err := url.QueryUnescape(sandboxURL)
+	if err != nil {
+		return nil, "", err
+	}
+	
+	// Split by hostip parameter
+	hostIPs := strings.Split(decodedURL, "&hostip=")
+	
+	// Extract the path
+	downloadURL := ""
+	if len(hostIPs) > 0 {
+		split := strings.Split(hostIPs[0], "browse?path=")
+		if len(split) > 1 {
+			downloadURL = split[1]
+		}
+	}
+	
+	// Extract base path (before /poddat if exists)
+	basePath := downloadURL
+	if idx := strings.Index(downloadURL, "/poddat"); idx != -1 {
+		basePath = downloadURL[:idx]
+	}
+	
+	return hostIPs, basePath, nil
+}
+
+// browseDir uses the file browser API to list directory contents
+func (t *IntelligentDebugTool) browseDir(hostIP, path string) ([]FileEntry, error) {
+	url := fmt.Sprintf("http://%s:5051/files/browse?path=%s", hostIP, path)
+	resp, err := utils.GetHTTP(url)
+	if err != nil {
+		return nil, err
+	}
+	
+	var result DirListResponse
+	if err := json.Unmarshal([]byte(resp), &result); err != nil {
+		return nil, err
+	}
+	return result.Data, nil
+}
+
+// downloadLogContent downloads file content from sandbox
+func (t *IntelligentDebugTool) downloadLogContent(hostIP, filePath string) (string, error) {
+	finalURL := fmt.Sprintf("http://%s:5051/files/download?path=%s", hostIP, filePath)
+	resp, err := utils.GetHTTP(finalURL)
+	if err != nil {
+		return "", fmt.Errorf("failed to download file: %v", err)
+	}
+	return resp, nil
+}
+
+// findLogFilePath searches for a log file in the sandbox directory structure
+func (t *IntelligentDebugTool) findLogFilePath(hostIP, basePath, logFileName string) (string, error) {
+	// First check the base directory
+	files, err := t.browseDir(hostIP, basePath)
+	if err != nil {
+		return "", err
+	}
+	
+	// Check if file exists in base directory
+	for _, f := range files {
+		if f.Name == logFileName || strings.HasSuffix(f.Path, logFileName) {
+			return f.Path, nil
+		}
+	}
+	
+	// Look for csi-* directory for k8s deployments
+	var csiDir string
+	for _, f := range files {
+		if strings.Contains(f.Path, "/csi-") && strings.HasPrefix(f.Mode, "d") {
+			csiDir = f.Path
+			break
+		}
+	}
+	
+	if csiDir != "" {
+		// Check in csi directory
+		csiFiles, err := t.browseDir(hostIP, csiDir)
+		if err == nil {
+			for _, f := range csiFiles {
+				if f.Name == logFileName || strings.HasSuffix(f.Path, logFileName) {
+					return f.Path, nil
+				}
+			}
+		}
+		
+		// Check in applogs subdirectory
+		applogsPath := fmt.Sprintf("%s/log/applogs", csiDir)
+		applogsFiles, err := t.browseDir(hostIP, applogsPath)
+		if err == nil {
+			for _, f := range applogsFiles {
+				if f.Name == logFileName || strings.HasSuffix(f.Path, logFileName) {
+					return f.Path, nil
+				}
+			}
+		}
+	}
+	
+	// Check common subdirectories
+	subdirs := []string{"app", "logs", "applog", "log"}
+	for _, subdir := range subdirs {
+		subPath := fmt.Sprintf("%s/%s", basePath, subdir)
+		subFiles, err := t.browseDir(hostIP, subPath)
+		if err == nil {
+			for _, f := range subFiles {
+				if f.Name == logFileName || strings.HasSuffix(f.Path, logFileName) {
+					return f.Path, nil
+				}
+			}
+		}
+	}
+	
+	return "", fmt.Errorf("log file %s not found in sandbox", logFileName)
 }
